@@ -71,7 +71,7 @@
       (user-mail-address      . "amosbird@gmail.com")
       (mu4e-compose-signature . "---\nAmos Bird\namosbird@gmail.com")))
 
-  (set! :email "lissner.net"
+  (set! :email "software.ict.ac.cn"
     '((mu4e-sent-folder       . "/lissner.net/Sent Mail")
       (mu4e-drafts-folder     . "/lissner.net/Drafts")
       (mu4e-trash-folder      . "/lissner.net/Trash")

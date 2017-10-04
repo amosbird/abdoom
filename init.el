@@ -11,13 +11,16 @@
 ;; host-specific settings
 (pcase (system-name)
   ;; ("triton")
-  ((or "proteus" "halimede")
+  ("t450s"
    ;; smaller screen, smaller fonts
    (set! :font "Fira Mono" :size 10)
    (set! :variable-font "Fira Sans" :size 10)
    (set! :unicode-font "DejaVu Sans Mono" :size 10)
    (setq +doom-modeline-height 25))
-  ;; ("nereid")
-  ;; ("io")
-  ;; ("sao")
+  (_
+   ;; smaller screen, smaller fonts
+   (set! :font "Fira Mono" :size 10)
+   (set! :variable-font "Fira Sans" :size 10)
+   (set! :unicode-font "DejaVu Sans Mono" :size 10)
+   (setq +doom-modeline-height 25))
   )
