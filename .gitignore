@@ -1,2 +1,13 @@
 snippets
 .authinfo.gpg
+
+# compiled files
+*.elc
+*.lib
+*.fas
+*.dat
+*.eld
+
+# transient files
+*.cache-*
+*.log

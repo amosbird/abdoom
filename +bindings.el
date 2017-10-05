@@ -55,20 +55,25 @@
  "M-R"    #'+eval/region-and-replace
  "M-b"    #'+eval/build
  "M-a"    #'mark-whole-buffer
- "M-c"    #'evil-yank
+ "M-m"    #'evil-switch-to-windows-last-buffer
  "M-q"    (if (daemonp) #'delete-frame #'save-buffers-kill-emacs)
- "M-s"    #'save-buffer
- "M-v"    #'clipboard-yank
- "M-f"    #'swiper
- "C-M-f"  #'doom/toggle-fullscreen
- :m "A-j" #'+amos:multi-next-line
- :m "A-k" #'+amos:multi-previous-line
- :nv "C-SPC" #'+evil:fold-toggle
+ "M-w"    #'delete-other-windows
+ "C-l"    #'+amos/redisplay-and-recenter
+ "C-s"    #'swiper
+ "C-S-s"  #'counsel-projectile-rg
+ :m "C-y" #'+amos/yank-buffer-filename-with-line-position
+ :m "C-w"    #'doom/kill-this-buffer
+ :m "M-j" #'+amos:multi-next-line
+ :m "M-k" #'+amos:multi-previous-line
+ :nv "C-SPC" #'+amos/other-window
+ :m "(" #'+amos:previous-open-delim
+ :m ")" #'+amos:next-close-delim
+
  ;; Easier window navigation
- :en "C-h"    #'evil-window-left
- :en "C-j"    #'evil-window-down
- :en "C-k"    #'evil-window-up
- :en "C-l"    #'evil-window-right
+ :en "M-h"    #'evil-window-left
+ :en "M-j"    #'evil-window-down
+ :en "M-k"    #'evil-window-up
+ :en "M-l"    #'evil-window-right
 
  (:prefix "C-x"
    "p" #'doom/other-popup)
@@ -93,7 +98,7 @@
 
    ;; C-u is used by evil
    :desc "Universal argument"    :n "u"  #'universal-argument
-   :desc "window"                :n "w"  evil-window-map
+   :desc "Save current file"     :n "w"  #'save-buffer
 
    (:desc "previous..." :prefix "["
      :desc "Text size"           :nv "[" #'text-scale-decrease
@@ -184,7 +189,8 @@
      :desc "Browse emacs.d"            :n "E" #'+amos/browse-emacsd
      :desc "Recent files"              :n "r" #'recentf-open-files
      :desc "Recent project files"      :n "R" #'projectile-recentf
-     :desc "Yank filename"             :n "y" #'+amos/yank-buffer-filename)
+     :desc "Yank filename"             :n "y" #'+amos/yank-buffer-filename
+     :desc "Yank filename"             :n "Y" #'+amos/yank-buffer-filename-nondir)
 
    (:desc "git" :prefix "g"
      :desc "Git status"        :n  "s" #'magit-status
@@ -306,6 +312,8 @@
  :m  "gd" #'+jump/definition
  :m  "gD" #'+jump/references
  :m  "gh" #'+jump/documentation
+ :n  "go" #'+amos/evil-insert-line-below
+ :n  "gO" #'+amos/evil-insert-line-above
  :n  "gp" #'+evil/reselect-paste
  :n  "gr" #'+eval:region
  :n  "gR" #'+eval/buffer
@@ -387,13 +395,15 @@
  (:after counsel
    (:map counsel-ag-map
      [backtab]  #'+ivy/wgrep-occur  ; search/replace on results
+     "C-i"      #'ivy-call-and-recenter
      "C-SPC"    #'counsel-git-grep-recenter   ; preview
      "M-RET"    (+ivy-do-action! #'+ivy-git-grep-other-window-action)))
 
  ;; dired
  (:after dired
-         (:map dired-mode-map
-               "h"    (dired-up-directory)))
+   (:map dired-mode-map
+         :n  "h"   #'dired-up-directory
+         :n  "l"   #'dired-find-file))
 
  ;; evil-commentary
  :n  "gc"  #'evil-commentary
@@ -449,7 +459,7 @@
  (:after evil-snipe
    ;; Binding to switch to evil-easymotion/avy after a snipe
    :map evil-snipe-parent-transient-map
-   "C-;" (λ! (require 'evil-easymotion)
+   "C-f" (λ! (require 'evil-easymotion)
              (call-interactively
               (evilem-create #'evil-snipe-repeat
                              :bind ((evil-snipe-scope 'whole-buffer)
@@ -457,7 +467,8 @@
                                     (evil-snipe-enable-incremental-highlight))))))
 
  ;; evil-surround
- :v  "S"  #'evil-surround-region
+ :v  "s"  #'evil-surround-region
+ :v  "S"  #'evil-substitute
  :o  "s"  #'evil-surround-edit
  :o  "S"  #'evil-Surround-edit
 
@@ -466,8 +477,8 @@
  :v  "V"  #'er/contract-region
 
  ;; flycheck
- :m  "]e" #'next-error
- :m  "[e" #'previous-error
+ :nm  "C-." #'next-error
+ :nm  "C-," #'previous-error
  (:after flycheck
    :map flycheck-error-list-mode-map
    :n "C-n" #'flycheck-error-list-next-error
@@ -518,7 +529,7 @@
      "C-u"        #'helm-delete-minibuffer-contents
      "C-w"        #'backward-kill-word
      "C-r"        #'evil-paste-from-register ; Evil registers in helm! Glorious!
-     "C-b"        #'backward-word
+     "M-b"        #'backward-word
      [left]       #'backward-char
      [right]      #'forward-char
      [escape]     #'helm-keyboard-quit
@@ -551,47 +562,8 @@
    "C-l" #'ivy-alt-done
    "C-w" #'ivy-backward-kill-word
    "C-u" #'ivy-kill-line
-   "C-b" #'backward-word
-   "C-f" #'forward-word)
-
- ;; neotree
- (:after neotree
-   :map neotree-mode-map
-   :n "g"         nil
-   :n [tab]       #'neotree-quick-look
-   :n "RET"       #'neotree-enter
-   :n [backspace] #'evil-window-prev
-   :n "c"         #'neotree-create-node
-   :n "r"         #'neotree-rename-node
-   :n "d"         #'neotree-delete-node
-   :n "j"         #'neotree-next-line
-   :n "k"         #'neotree-previous-line
-   :n "n"         #'neotree-next-line
-   :n "p"         #'neotree-previous-line
-   :n "h"         #'+neotree/collapse-or-up
-   :n "l"         #'+neotree/expand-or-open
-   :n "J"         #'neotree-select-next-sibling-node
-   :n "K"         #'neotree-select-previous-sibling-node
-   :n "H"         #'neotree-select-up-node
-   :n "L"         #'neotree-select-down-node
-   :n "G"         #'evil-goto-line
-   :n "gg"        #'evil-goto-first-line
-   :n "v"         #'neotree-enter-vertical-split
-   :n "s"         #'neotree-enter-horizontal-split
-   :n "q"         #'neotree-hide
-   :n "R"         #'neotree-refresh)
-
- ;; realgud
- (:after realgud
-   :map realgud:shortkey-mode-map
-   :n "j" #'evil-next-line
-   :n "k" #'evil-previous-line
-   :n "h" #'evil-backward-char
-   :n "l" #'evil-forward-char
-   :m "n" #'realgud:cmd-next
-   :m "b" #'realgud:cmd-break
-   :m "B" #'realgud:cmd-clear
-   :n "c" #'realgud:cmd-continue)
+   "M-b" #'backward-word
+   "M-f" #'forward-word)
 
  ;; rotate-text
  :n  "!"  #'rotate-text
@@ -632,7 +604,7 @@
 
  ;; --- Custom evil text-objects ---------------------
  :textobj "a" #'evil-inner-arg                    #'evil-outer-arg
- :textobj "B" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
+ :textobj "j" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
  :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
  :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
  :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down
@@ -754,8 +726,8 @@
       :i [backspace]    #'delete-backward-char
       :i [M-backspace]  #'doom/backward-kill-to-bol-and-indent
       ;; Emacsien motions for insert mode
-      :i "C-b" #'backward-word
-      :i "C-f" #'forward-word
+      :i "M-b" #'backward-word
+      :i "M-f" #'forward-word
 
       ;; Highjacks space/backspace to:
       ;;   a) balance spaces inside brackets/parentheses ( | ) -> (|)
@@ -785,8 +757,8 @@
         "C-a" #'move-beginning-of-line
         "C-w" #'doom/minibuffer-kill-word
         "C-u" #'doom/minibuffer-kill-line
-        "C-b" #'backward-word
-        "C-f" #'forward-word
+        "M-b" #'backward-word
+        "M-f" #'forward-word
         "M-z" #'doom/minibuffer-undo)
 
       (:map messages-buffer-mode-map

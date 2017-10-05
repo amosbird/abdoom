@@ -16,6 +16,58 @@ private/amos/snippets."
       (message (kill-new (abbreviate-file-name filename)))
     (error "Couldn't find filename in current buffer")))
 
+;;;###autoload
+(defun +amos/yank-buffer-filename-nondir ()
+  "Copy the current buffer's filename to the kill ring."
+  (interactive)
+  (if-let (filename (or buffer-file-name (bound-and-true-p list-buffers-directory)))
+      (message (kill-new (file-name-nondirectory filename)))
+    (error "Couldn't find filename in current buffer")))
+
+;;;###autoload
+(defun +amos/redisplay-and-recenter ()
+  (interactive)
+  (redraw-display)
+  (recenter))
+
+;;;###autoload
+(defun +amos/yank-buffer-filename-with-line-position ()
+  "Copy the current buffer's filename with line number to the kill ring."
+  (interactive)
+  (if-let (filename (or buffer-file-name (bound-and-true-p list-buffers-directory)))
+      (message (kill-new (concat "b " filename ":" (number-to-string (line-number-at-pos)))))
+    (error "Couldn't find filename in current buffer")))
+
+;;;###autoload
+(defun +amos/evil-insert-line-above (count)
+  "Insert one or several lines above the current point's line without changing
+the current state and point position."
+  (interactive "p")
+  (dotimes (_ count) (save-excursion (evil-insert-newline-above))))
+
+;;;###autoload
+(defun +amos/evil-insert-line-below (count)
+  "Insert one or several lines below the current point's line without changing
+the current state and point position."
+  (interactive "p")
+  (dotimes (_ count) (save-excursion (evil-insert-newline-below))))
+
+;;;###autoload
+(defun +amos/evil-visual-insert-snippet ()
+  (interactive)
+  (when (evil-visual-state-p)
+    (call-interactively #'narrow-to-region)
+    (execute-kbd-macro "gv")
+    (setq evil-this-register ?y)
+    (execute-kbd-macro "y")
+    (call-interactively #'widen)
+    (execute-kbd-macro "gv")
+    (setq evil-this-register ?n)
+    (call-interactively #'evil-substitute)
+    (yas-insert-snippet)))
+
+
+
 (defmacro +amos-def-finder! (name dir)
   "Define a pair of find-file and browse functions."
   `(progn

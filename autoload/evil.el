@@ -34,3 +34,35 @@
 buffers."
   (interactive "<a>")
   (doom/kill-matching-buffers pattern bang))
+
+;;;###autoload (autoload '+amos:previous-open-delim "private/amos/autoload/evil" nil t)
+(evil-define-motion +amos:previous-open-delim (count)
+  "Go to [count] previous closest unmatched '([{'."
+  :type exclusive
+  (let* ((paren (save-excursion (if (eq 0 (evil-up-paren ?( ?) (- (or count 1)))) (point) nil)))
+         (bracket (save-excursion (if (eq 0 (evil-up-paren ?[ ?] (- (or count 1)))) (point) nil)))
+         (brace (save-excursion (if (eq 0 (evil-up-paren ?{ ?} (- (or count 1)))) (point) nil)))
+         (delim (condition-case nil (-max (--filter it (list paren bracket brace))) (error nil))))
+    (if delim
+        (progn
+          (goto-char delim)
+          (set-match-data (list (point) (1+ (point))))
+          0)
+      -1)))
+
+;;;###autoload (autoload '+amos:next-close-delim "private/amos/autoload/evil" nil t)
+(evil-define-motion +amos:next-close-delim (count)
+  "Go to [count] next closest unmatched ')]}'."
+  :type exclusive
+  (forward-char)
+  (let* ((paren (save-excursion (if (eq 0 (evil-up-paren ?( ?) (or count 1))) (point) nil)))
+         (bracket (save-excursion (if (eq 0 (evil-up-paren ?[ ?] (or count 1))) (point) nil)))
+         (brace (save-excursion (if (eq 0 (evil-up-paren ?{ ?} (or count 1))) (point) nil)))
+         (delim (condition-case nil (-min (--filter it (list paren bracket brace))) (error nil))))
+    (if delim
+        (progn
+          (goto-char delim)
+          (set-match-data (list (1- (point)) (point)))
+          0)
+      -1))
+  (backward-char))
