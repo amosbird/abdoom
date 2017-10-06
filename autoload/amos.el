@@ -66,7 +66,11 @@ the current state and point position."
     (call-interactively #'evil-substitute)
     (yas-insert-snippet)))
 
-
+;;;###autoload
+(defun +amos/tmux-detach ()
+  "Detach if inside tmux."
+  (interactive)
+  (+tmux/run "detach-client"))
 
 (defmacro +amos-def-finder! (name dir)
   "Define a pair of find-file and browse functions."
@@ -102,3 +106,4 @@ the current state and point position."
 ;;;###autoload (autoload '+amos/find-in-notes "private/amos/autoload/amos" nil t)
 ;;;###autoload (autoload '+amos/browse-notes "private/amos/autoload/amos" nil t)
 (+amos-def-finder! notes +org-dir)
+

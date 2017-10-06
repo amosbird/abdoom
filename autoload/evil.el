@@ -35,6 +35,23 @@ buffers."
   (interactive "<a>")
   (doom/kill-matching-buffers pattern bang))
 
+;;;###autoload (autoload '+amos:evil-find-file-at-point-with-line "private/amos/autoload/evil" nil t)
+(evil-define-command +amos:evil-find-file-at-point-with-line ()
+  "Opens the file at point and goes to line-number."
+  (interactive)
+  (let ((fname (with-no-warnings (ffap-file-at-point))))
+    (if fname
+        (let ((line
+               (save-excursion
+                 (goto-char (cadr ffap-string-at-point-region))
+                 (and (re-search-backward ":\\([0-9]+\\)\\=" (line-beginning-position) t)
+                      (string-to-number (match-string 1))))))
+          (with-no-warnings (ffap))
+          (when line
+            (goto-char (point-min))
+            (forward-line (1- line))))
+      (user-error "File does not exist."))))
+
 ;;;###autoload (autoload '+amos:previous-open-delim "private/amos/autoload/evil" nil t)
 (evil-define-motion +amos:previous-open-delim (count)
   "Go to [count] previous closest unmatched '([{'."

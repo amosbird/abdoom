@@ -16,6 +16,29 @@
     (apply orig-fn args)))
 (advice-add #'tramp-read-passwd :around #'+amos*no-authinfo-for-tramp)
 
+(defvar +amos-evil-cursors '(("normal" "DarkGoldenrod2" box)
+                             ("insert" "chartreuse3" (bar . 2))
+                             ("emacs" "SkyBlue2" box)
+                             ("replace" "chocolate" (hbar . 2))
+                             ("visual" "gray" (hbar . 2))
+                             ("motion" "plum3" box)
+                             ("lisp" "HotPink1" box)
+                             ("iedit" "firebrick1" box)
+                             ("iedit-insert" "firebrick1" (bar . 2)))
+  "Colors assigned to evil states with cursor definitions.")
+(cl-loop for (state color cursor) in +amos-evil-cursors
+         do (set (intern (format "evil-%s-state-cursor" state)) (list color cursor)))
+
+(def-hydra! +amos@paste (:hint nil)
+  "
+         Paste:       p:after        P:before
+  Cycle pastes:       C-j:next       C-l:prev
+"
+  ("C-j" evil-paste-pop)
+  ("C-k" evil-paste-pop-next)
+  ("p" evil-paste-after)
+  ("P" evil-paste-before))
+
 (after! smartparens
   ;; Auto-close more conservatively
   (let ((unless-list '(sp-point-before-word-p
@@ -39,6 +62,7 @@
 
 ;; Don't use default snippets, use mine.
 (after! yasnippet
+  (add-hook! 'yas-minor-mode-hook (yas-activate-extra-mode 'fundamental-mode))
   (setq yas-snippet-dirs
         (append (list '+amos-snippets-dir)
                 (delq 'yas-installed-snippets-dir yas-snippet-dirs))))
@@ -74,110 +98,107 @@
        (osc-nav-right))
      (setq
       interprogram-cut-function 'osc-select-text
-      browse-url-browser-function 'browse-url-osc)))
-  )
+      browse-url-browser-function 'browse-url-osc))))
+
+(def-package! evil-nerd-commenter)
 
 (setq recenter-redisplay nil)
-(centered-window-mode)
+(centered-window-mode +1)
+(blink-cursor-mode -1)
 (remove-hook 'kill-emacs-query-functions #'doom-quit-p)
+(evil-set-initial-state 'Custom-mode 'normal)
 
 ;; may delete the real hyphens
-(defadvice fill-delete-newlines (before my-before-fill-delete-newlines)
+(defadvice +amos*fill-delete-newlines (before my-before-fill-delete-newlines)
   "Replace -\\n with an empty string when calling `fill-paragraph'."
   (when (eq this-command 'unfill-paragraph)
     (goto-char (ad-get-arg 0))
     (while (search-forward "-\n" (ad-get-arg 1) t)
       (replace-match "")
       (ad-set-arg 1 (- (ad-get-arg 1) 2)))))
-(ad-activate 'fill-delete-newlines)
+(ad-activate '+amos*fill-delete-newlines)
 
-(setq compilation-finish-function
-      (lambda (buf str)
-        (if (null (string-match ".*exited abnormally.*" str))
-            (delete-windows-on (get-buffer-create "*compilation*")))))
-
-(evil-set-initial-state 'Custom-mode 'normal)
-
-(define-key key-translation-map (kbd "C-\\") (kbd "C-S-s"))
-(define-key key-translation-map (kbd "C-^") (kbd "C-,"))
-(define-key key-translation-map (kbd "C-_") (kbd "C-."))
-(defun ab-package/post-init-ffap ()
-  (use-package ffap
-    :commands amos-evil-find-file-at-point-with-line
-    :config
-    (evil-define-command amos-evil-find-file-at-point-with-line ()
-      "Opens the file at point and goes to line-number."
-      (let ((fname (with-no-warnings (ffap-file-at-point))))
-        (if fname
-            (let ((line
-                   (save-excursion
-                     (goto-char (cadr ffap-string-at-point-region))
-                     (and (re-search-backward ":\\([0-9]+\\)\\=" (line-beginning-position) t)
-                          (string-to-number (match-string 1))))))
-              (with-no-warnings (ffap))
-              (when line
-                (goto-char (point-min))
-                (forward-line (1- line))))
-          (user-error "File does not exist."))))
-    (define-key evil-normal-state-map "gf" 'amos-evil-find-file-at-point-with-line)
-    (define-key evil-motion-state-map "gf" 'amos-evil-find-file-at-point-with-line)))
-
-(defun ab-package/init-narrow-reindent ()
-  (use-package narrow-reindent
-    :config
-    (defun narrow-reindent-mode-maybe ()
-      (if (not (minibufferp))
-          (narrow-reindent-mode 1)))
-    (define-global-minor-mode global-narrow-reindent-mode
-      narrow-reindent-mode narrow-reindent-mode-maybe
-      :group 'narrow-reindent)
-    (global-narrow-reindent-mode)))
-
-(defun ab-package/post-init-yasnippet ()
-  (use-package yasnippet
-    :config
-    (add-hook 'yas-minor-mode-hook (lambda () (yas-activate-extra-mode 'fundamental-mode)))))
-(defun ab-package/init-emamux ()
-  (use-package emamux
-    :config
-    (global-set-key (kbd "C-x C-c") (lambda () (interactive) (emamux:tmux-run-command nil "detach-client")))
-    (defmacro emamux:ensure-ssh-and-cd (&rest body) ,@body)))
+;; (setq compilation-finish-function
+;;       (lambda (buf str)
+;;         (if (null (string-match ".*exited abnormally.*" str))
+;;             (delete-windows-on (get-buffer-create "*compilation*")))))
 
 
-(defun ab-package/init-fcitx ()
-  (use-package fcitx
-    :config
-    (fcitx-aggressive-setup)))
+
+;; (define-key key-translation-map (kbd "C-\\") (kbd "C-S-s"))
+;; (define-key key-translation-map (kbd "C-^") (kbd "C-,"))
+;; (define-key key-translation-map (kbd "C-_") (kbd "C-."))
+
+(def-package! narrow-reindent
+  :config
+  (defun narrow-reindent-mode-maybe ()
+    (if (not (minibufferp))
+        (narrow-reindent-mode +1)))
+  (define-global-minor-mode global-narrow-reindent-mode
+    narrow-reindent-mode narrow-reindent-mode-maybe
+    :group 'narrow-reindent)
+  (global-narrow-reindent-mode +1))
 
 
-(defun ab-package/init-evil-terminal-cursor-changer ()
-  (use-package evil-terminal-cursor-changer
-    :if (not (display-graphic-p))
-    :init (setq evil-visual-state-cursor 'box
-                evil-insert-state-cursor 'bar
-                evil-emacs-state-cursor 'hbar
-                etcc-use-color 't)
-    :config (evil-terminal-cursor-changer-activate)))
+(def-package! fcitx
+  :config
+  (fcitx-aggressive-setup))
 
-(defun ab-package/init-sdcv ()
-  (use-package sdcv
-    :commands ab-search-word
-    :defer t
-    :config
-    (defun ab-search-word ()
-      (interactive)
-      (sdcv-search-pointer+))))
+(def-package! evil-terminal-cursor-changer
+  :if (not (display-graphic-p))
+  :init (setq evil-visual-state-cursor 'box
+              evil-insert-state-cursor 'bar
+              evil-emacs-state-cursor 'hbar
+              etcc-use-color 't)
+  :config (evil-terminal-cursor-changer-activate))
 
+(def-package! sdcv
+  :commands ab-search-word
+  :init
+  (defun ab-search-word ()
+    (interactive)
+    (sdcv-search-pointer+)))
 
-(defun ab-package/init-pangu-spacing ()
-  (use-package pangu-spacing
-    :config
-    (progn
-      (global-pangu-spacing-mode 1)
-      (spacemacs|hide-lighter pangu-spacing-mode)
-      ;; Always insert `real' space in org-mode.
-      (add-hook
-       'org-mode-hook
-       '(lambda ()
-          (set (make-local-variable 'pangu-spacing-real-insert-separtor) t))))))
+(def-package! pangu-spacing
+  :config
+  (global-pangu-spacing-mode +1)
+  ;; Always insert `real' space in org-mode.
+  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
+
+(def-package! counsel-dash
+  :init
+  (setq
+   counsel-dash-docsets-path "~/.docset"
+   counsel-dash-docsets-url "https://raw.github.com/Kapeli/feeds/master"
+   counsel-dash-min-length 2
+   counsel-dash-candidate-format "%d %n (%t)"
+   counsel-dash-enable-debugging nil
+   counsel-dash-browser-func 'browse-url
+   counsel-dash-ignored-docsets nil)
+  :config
+  (add-hook! go-mode (setq-local helm-dash-common-docsets '("Go")))
+  (add-hook! java-mode (setq-local helm-dash-common-docsets '("Java")))
+  (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
+  (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
+  (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
+  (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
+  (add-hook! elisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
+
+(def-package! easy-hugo
+  :commands easy-hugo
+  :config
+  (evil-set-initial-state 'easy-hugo-mode 'emacs)
+  (defun advice-browse-url (ofun &rest candidate)
+    (if (boundp 'amos-browse)
+        (apply 'browse-url-firefox candidate)
+      (apply ofun candidate)))
+  (advice-add 'browse-url :around #'advice-browse-url)
+  (add-hook! 'easy-hugo-mode-hook (setq-local amos-browse t))
+  (setq
+   easy-hugo-basedir "~/sites/blog"
+   easy-hugo-url "https://wentropy.com"
+   easy-hugo-sshdomain "blog"
+   easy-hugo-root "/var/www/blog/"
+   easy-hugo-previewtime "300"
+   easy-hugo-default-ext ".org"))
 

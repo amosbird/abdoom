@@ -61,10 +61,17 @@
  "C-l"    #'+amos/redisplay-and-recenter
  "C-s"    #'swiper
  "C-S-s"  #'counsel-projectile-rg
+ :m "C-f" #'evilem--motion-evil-find-char
+ :m "C-b" #'evilem--motion-evil-find-char-backward
  :m "C-y" #'+amos/yank-buffer-filename-with-line-position
- :m "C-w"    #'doom/kill-this-buffer
+ :m "C-w" #'doom/kill-this-buffer
  :m "M-j" #'+amos:multi-next-line
  :m "M-k" #'+amos:multi-previous-line
+ :i "M-i" #'yas-insert-snippet
+ :i "C-o" #'kill-line
+ :n "M-i" #'ab-search-word
+ :n "C-t" nil
+
  :nv "C-SPC" #'+amos/other-window
  :m "(" #'+amos:previous-open-delim
  :m ")" #'+amos:next-close-delim
@@ -76,8 +83,11 @@
  :en "M-l"    #'evil-window-right
 
  (:prefix "C-x"
-   "p" #'doom/other-popup)
+   "C-c" #'+amos/tmux-detach
+   "p"   #'doom/other-popup)
 
+ (:prefix "C-c"
+   "C-SPC" #'easy-hugo)
 
  ;; --- <leader> -------------------------------------
  (:leader
@@ -307,6 +317,7 @@
  :n  "[b" #'doom/previous-buffer
  :n  "]w" #'+workspace/switch-right
  :n  "[w" #'+workspace/switch-left
+ :n  "gf" #'+amos:evil-find-file-at-point-with-line
  :m  "gt" #'+workspace/switch-right
  :m  "gT" #'+workspace/switch-left
  :m  "gd" #'+jump/definition
@@ -373,21 +384,22 @@
      ;; Don't interfere with `evil-delete-backward-word' in insert mode
      "C-w"        nil
      "C-o"        #'company-search-kill-others
-     "C-n"        #'company-select-next
-     "C-p"        #'company-select-previous
+     "C-j"        #'company-select-next
+     "C-k"        #'company-select-previous
      "C-h"        #'company-quickhelp-manual-begin
      "C-S-h"      #'company-show-doc-buffer
      "C-S-s"      #'company-search-candidates
      "C-s"        #'company-filter-candidates
      "C-SPC"      #'company-complete-common
+     "C-l"        #'company-complete-selection
      "C-h"        #'company-quickhelp-manual-begin
      [tab]        #'company-complete-common-or-cycle
      [backtab]    #'company-select-previous
      [escape]     (λ! (company-abort) (evil-normal-state 1)))
    ;; Automatically applies to `company-filter-map'
    (:map company-search-map
-     "C-n"        #'company-search-repeat-forward
-     "C-p"        #'company-search-repeat-backward
+     "C-j"        #'company-search-repeat-forward
+     "C-k"        #'company-search-repeat-backward
      "C-s"        (λ! (company-search-abort) (company-filter-candidates))
      [escape]     #'company-search-abort))
 
@@ -405,8 +417,8 @@
          :n  "h"   #'dired-up-directory
          :n  "l"   #'dired-find-file))
 
- ;; evil-commentary
- :n  "gc"  #'evil-commentary
+ ;; evil-nerd-commenter
+ :n  "gc"  #'evilnc-comment-or-uncomment-lines
 
  ;; evil-exchange
  :n  "gx"  #'evil-exchange
@@ -481,11 +493,12 @@
  :nm  "C-," #'previous-error
  (:after flycheck
    :map flycheck-error-list-mode-map
-   :n "C-n" #'flycheck-error-list-next-error
-   :n "C-p" #'flycheck-error-list-previous-error
+   :n "C-j" #'flycheck-error-list-next-error
+   :n "C-k" #'flycheck-error-list-previous-error
    :n "j"   #'flycheck-error-list-next-error
    :n "k"   #'flycheck-error-list-previous-error
-   :n "RET" #'flycheck-error-list-goto-error)
+   :n "RET" #'flycheck-error-list-goto-error
+   :n "C-l" #'flycheck-error-list-goto-error)
 
  ;; flyspell
  :m  "]S" #'flyspell-correct-word-generic
@@ -554,8 +567,8 @@
  (:after ivy
    :map ivy-minibuffer-map
    [escape] #'keyboard-escape-quit
-   "M-v" #'yank
    "M-z" #'undo
+   "M-j" #'ivy-immediate-done
    "C-r" #'evil-paste-from-register
    "C-k" #'ivy-previous-line
    "C-j" #'ivy-next-line
@@ -574,7 +587,7 @@
  :m  "g[" #'smart-backward
 
  ;; undo-tree -- undo/redo for visual regions
- :v "C-u" #'undo-tree-undo
+ :v "u"   #'undo-tree-undo
  :v "C-r" #'undo-tree-redo
 
  ;; yasnippet
@@ -681,7 +694,7 @@
 
 ;; evil-easymotion
 (after! evil-easymotion
-  (let ((prefix (concat doom-leader-key " /")))
+  (let ((prefix "C-t"))
     ;; NOTE `evilem-default-keybinds' unsets all other keys on the prefix (in
     ;; motion state)
     (evilem-default-keybindings prefix)
@@ -709,6 +722,14 @@
 (map! (:map input-decode-map
         [S-iso-lefttab] [backtab]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
+
+      (:map Custom-mode-map
+        :n "q"    #'Custom-buffer-done)
+
+      (:map key-translation-map
+        "C-\\" "C-S-s"
+        "C-^" "C-,"
+        "C-_" "C-.")
 
       ;; I want C-a and C-e to be a little smarter. C-a will jump to
       ;; indentation. Pressing it again will send you to the true bol. Same goes

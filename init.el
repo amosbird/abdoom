@@ -30,7 +30,8 @@
    (set! :font "Ubuntu Mono" :size 14)
    (set! :variable-font "Fira Sans" :size 14)
    (set! :unicode-font "DejaVu Sans Mono" :size 14)
-   (setq +doom-modeline-height 25))
+   (setq +doom-modeline-height 25)
+   (setq helm-dash-browser-func 'browse-url-firefox))
   (_
    ;; smaller screen, smaller fonts
    (set! :font "Fira Mono" :size 10)
