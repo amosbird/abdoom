@@ -91,7 +91,7 @@
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
 (remove-hook! 'doom-post-init-hook #'blink-cursor-mode)
-(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1))
+(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil))
 
 (defun +amos*set-evil-cursors (&rest _)
   (let ((evil-cursors '(("normal" "DarkGoldenrod2" box)
