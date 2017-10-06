@@ -55,6 +55,7 @@
  "M-R"    #'+eval/region-and-replace
  "M-b"    #'+eval/build
  "M-a"    #'mark-whole-buffer
+ "M-e"    #'counsel-dash-at-point
  "M-m"    #'evil-switch-to-windows-last-buffer
  "M-q"    (if (daemonp) #'delete-frame #'save-buffers-kill-emacs)
  "M-w"    #'delete-other-windows
@@ -69,8 +70,10 @@
  :m "M-k" #'+amos:multi-previous-line
  :i "M-i" #'yas-insert-snippet
  :i "C-o" #'kill-line
- :n "M-i" #'ab-search-word
+ :n "M-i" #'yasdcv-translate-at-point
  :n "C-t" nil
+ :n "p"   #'+amos@paste/evil-paste-after
+ :n "P"   #'+amos@paste/evil-paste-before
 
  :nv "C-SPC" #'+amos/other-window
  :m "(" #'+amos:previous-open-delim
@@ -636,6 +639,59 @@
    :n "n"   #'debugger-step-through
    :n "c"   #'debugger-continue)
 
+ (:after edebug
+   :map edebug-mode-map
+   :n " " 'edebug-step-mode
+   :n "n" 'edebug-next-mode
+   :n "g" 'edebug-go-mode
+   :n "G" 'edebug-Go-nonstop-mode
+   :n "t" 'edebug-trace-mode
+   :n "T" 'edebug-Trace-fast-mode
+   :n "c" 'edebug-continue-mode
+   :n "C" 'edebug-Continue-fast-mode
+
+   ;;:n "f" 'edebug-forward not implemented
+   :n "f" 'edebug-forward-sexp
+   :n "h" 'edebug-goto-here
+
+   :n "I" 'edebug-instrument-callee
+   :n "i" 'edebug-step-in
+   :n "o" 'edebug-step-out
+
+   ;; quitting and stopping
+   :n "q" 'top-level
+   :n "Q" 'edebug-top-level-nonstop
+   :n "a" 'abort-recursive-edit
+   :n "S" 'edebug-stop
+
+   ;; breakpoints
+   :n "b" 'edebug-set-breakpoint
+   :n "u" 'edebug-unset-breakpoint
+   :n "B" 'edebug-next-breakpoint
+   :n "x" 'edebug-set-conditional-breakpoint
+   :n "X" 'edebug-set-global-break-condition
+
+   ;; evaluation
+   :n "r" 'edebug-previous-result
+   :n "e" 'edebug-eval-expression
+   :n "\C-x\C-e" 'edebug-eval-last-sexp
+   :n "E" 'edebug-visit-eval-list
+
+   ;; views
+   :n "w" 'edebug-where
+   :n "v" 'edebug-view-outside ;; maybe obsolete??
+   :n "p" 'edebug-bounce-point
+   :n "P" 'edebug-view-outside ;; same as v
+   :n "W" 'edebug-toggle-save-windows
+
+   ;; misc
+   :n "?" 'edebug-help
+   :n "d" 'edebug-backtrace
+   :n "-" 'negative-argument
+
+   ;; statistics
+   :n "=" 'edebug-temp-display-freq-count)
+
  (:map help-mode-map
    :n "[["  #'help-go-back
    :n "]]"  #'help-go-forward
@@ -723,8 +779,13 @@
         [S-iso-lefttab] [backtab]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
 
-      (:map Custom-mode-map
-        :n "q"    #'Custom-buffer-done)
+      (:after cus-edit
+        (:map custom-mode-map
+          :n "q"    #'Custom-buffer-done))
+
+      (:after view
+        (:map view-mode-map
+          :n "q"    #'View-quit))
 
       (:map key-translation-map
         "C-\\" "C-S-s"
@@ -780,6 +841,7 @@
         "C-u" #'doom/minibuffer-kill-line
         "M-b" #'backward-word
         "M-f" #'forward-word
+        "M-d" #'kill-word
         "M-z" #'doom/minibuffer-undo)
 
       (:map messages-buffer-mode-map
@@ -787,7 +849,4 @@
         "A-;" #'eval-expression)
 
       (:map tabulated-list-mode-map
-        [remap evil-record-macro] #'doom/popup-close-maybe)
-
-      (:after view
-        (:map view-mode-map "<escape>" #'View-quit-all)))
+        [remap evil-record-macro] #'doom/popup-close-maybe))

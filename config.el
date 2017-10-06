@@ -16,28 +16,12 @@
     (apply orig-fn args)))
 (advice-add #'tramp-read-passwd :around #'+amos*no-authinfo-for-tramp)
 
-(defvar +amos-evil-cursors '(("normal" "DarkGoldenrod2" box)
-                             ("insert" "chartreuse3" (bar . 2))
-                             ("emacs" "SkyBlue2" box)
-                             ("replace" "chocolate" (hbar . 2))
-                             ("visual" "gray" (hbar . 2))
-                             ("motion" "plum3" box)
-                             ("lisp" "HotPink1" box)
-                             ("iedit" "firebrick1" box)
-                             ("iedit-insert" "firebrick1" (bar . 2)))
-  "Colors assigned to evil states with cursor definitions.")
-(cl-loop for (state color cursor) in +amos-evil-cursors
-         do (set (intern (format "evil-%s-state-cursor" state)) (list color cursor)))
-
 (def-hydra! +amos@paste (:hint nil)
-  "
-         Paste:       p:after        P:before
-  Cycle pastes:       C-j:next       C-l:prev
-"
-  ("C-j" evil-paste-pop)
-  ("C-k" evil-paste-pop-next)
-  ("p" evil-paste-after)
-  ("P" evil-paste-before))
+  "Paste"
+  ("C-j" evil-paste-pop "Next Paste")
+  ("C-k" evil-paste-pop-next "Prev Paste")
+  ("p" evil-paste-after "Paste After")
+  ("P" evil-paste-before "Paste Before"))
 
 (after! smartparens
   ;; Auto-close more conservatively
@@ -83,6 +67,8 @@
       (user-mail-address      . "amosbird@gmail.com")
       (mu4e-compose-signature . "---\nAmos Bird\namosbird@gmail.com"))))
 
+(after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
+
 (def-package! osc
   :demand
   :config
@@ -103,31 +89,38 @@
 (def-package! evil-nerd-commenter)
 
 (setq recenter-redisplay nil)
-(centered-window-mode +1)
-(blink-cursor-mode -1)
-(remove-hook 'kill-emacs-query-functions #'doom-quit-p)
-(evil-set-initial-state 'Custom-mode 'normal)
+(remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
+(remove-hook! 'doom-post-init-hook #'blink-cursor-mode)
+(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1))
+
+(defun +amos*set-evil-cursors (&rest _)
+  (let ((evil-cursors '(("normal" "DarkGoldenrod2" box)
+                        ("insert" "chartreuse3" (bar . 2))
+                        ("emacs" "SkyBlue2" box)
+                        ("replace" "chocolate" (hbar . 2))
+                        ("visual" "gray" (hbar . 2))
+                        ("motion" "plum3" box)
+                        ("lisp" "HotPink1" box)
+                        ("iedit" "firebrick1" box)
+                        ("iedit-insert" "firebrick1" (bar . 2)))))
+    (cl-loop for (state color cursor) in evil-cursors
+             do (set (intern (format "evil-%s-state-cursor" state)) (list color cursor)))))
+(advice-add #'+evil*init-cursors :override #'+amos*set-evil-cursors)
 
 ;; may delete the real hyphens
-(defadvice +amos*fill-delete-newlines (before my-before-fill-delete-newlines)
+(defadvice fill-delete-newlines (before my-before-fill-delete-newlines)
   "Replace -\\n with an empty string when calling `fill-paragraph'."
   (when (eq this-command 'unfill-paragraph)
     (goto-char (ad-get-arg 0))
     (while (search-forward "-\n" (ad-get-arg 1) t)
       (replace-match "")
       (ad-set-arg 1 (- (ad-get-arg 1) 2)))))
-(ad-activate '+amos*fill-delete-newlines)
+(ad-activate 'fill-delete-newlines)
 
 ;; (setq compilation-finish-function
 ;;       (lambda (buf str)
 ;;         (if (null (string-match ".*exited abnormally.*" str))
 ;;             (delete-windows-on (get-buffer-create "*compilation*")))))
-
-
-
-;; (define-key key-translation-map (kbd "C-\\") (kbd "C-S-s"))
-;; (define-key key-translation-map (kbd "C-^") (kbd "C-,"))
-;; (define-key key-translation-map (kbd "C-_") (kbd "C-."))
 
 (def-package! narrow-reindent
   :config
@@ -139,10 +132,12 @@
     :group 'narrow-reindent)
   (global-narrow-reindent-mode +1))
 
-
 (def-package! fcitx
   :config
   (fcitx-aggressive-setup))
+
+(def-package! evil-textobj-line
+  :demand)
 
 (def-package! evil-terminal-cursor-changer
   :if (not (display-graphic-p))
@@ -152,12 +147,12 @@
               etcc-use-color 't)
   :config (evil-terminal-cursor-changer-activate))
 
-(def-package! sdcv
-  :commands ab-search-word
+(def-package! chinese-yasdcv
+  :commands yasdcv-translate-at-point
   :init
-  (defun ab-search-word ()
-    (interactive)
-    (sdcv-search-pointer+)))
+  (custom-set-variables
+   '(yasdcv-sdcv-dicts   '(("jianminghy" "简明汉英词典" "powerword2007" t)))
+   '(yasdcv-sdcv-command "sdcv --non-interactive --utf8-output --utf8-input \"%word\"")))
 
 (def-package! pangu-spacing
   :config
@@ -166,9 +161,10 @@
   (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
 
 (def-package! counsel-dash
+  :demand
   :init
   (setq
-   counsel-dash-docsets-path "~/.docset"
+   counsel-dash-docsets-path "~/.docsets"
    counsel-dash-docsets-url "https://raw.github.com/Kapeli/feeds/master"
    counsel-dash-min-length 2
    counsel-dash-candidate-format "%d %n (%t)"
@@ -176,13 +172,16 @@
    counsel-dash-browser-func 'browse-url
    counsel-dash-ignored-docsets nil)
   :config
+  (defun counsel-dash-at-point ()
+    (interactive)
+    (counsel-dash (thing-at-point 'symbol)))
   (add-hook! go-mode (setq-local helm-dash-common-docsets '("Go")))
   (add-hook! java-mode (setq-local helm-dash-common-docsets '("Java")))
   (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
   (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
   (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
-  (add-hook! elisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
+  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
 
 (def-package! easy-hugo
   :commands easy-hugo
@@ -202,3 +201,18 @@
    easy-hugo-previewtime "300"
    easy-hugo-default-ext ".org"))
 
+(def-package! ox-hugo
+  :after ox
+  :config
+  (custom-set-variables '(org-hugo-default-section-directory "post")))
+
+(def-package! git-gutter
+  :demand
+  :config
+  (global-git-gutter-mode +1))
+(advice-add #'git-gutter:set-window-margin :override #'ignore)
+(defun +amos*git-gutter:before-string (sign)
+  (let ((gutter-sep (concat (make-string (- (car (window-margins (get-buffer-window))) 2) ? ) sign)))
+    (propertize " " 'display `((margin left-margin) ,gutter-sep))))
+(advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
+(add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows)
