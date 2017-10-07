@@ -97,14 +97,14 @@
 
 (defun +amos*set-evil-cursors (&rest _)
   (let ((evil-cursors '(("normal" "DarkGoldenrod" box)
-                        ("insert" "Chartreuse3" (bar . 2))
+                        ("insert" "Chartreuse3" bar)
                         ("emacs" "SkyBlue2" box)
-                        ("replace" "DarkOrange3" (hbar . 2))
-                        ("visual" "Gray" (hbar . 2))
+                        ("replace" "DarkOrange3" hbar)
+                        ("visual" "Gray" hbar)
                         ("motion" "Plum3" box)
                         ("lisp" "HotPink1" box)
                         ("iedit" "firebrick1" box)
-                        ("iedit-insert" "firebrick1" (bar . 2)))))
+                        ("iedit-insert" "firebrick1" bar))))
     (cl-loop for (state color cursor) in evil-cursors
              do (set (intern (format "evil-%s-state-cursor" state)) (list color cursor)))))
 (advice-add #'+evil*init-cursors :override #'+amos*set-evil-cursors)
