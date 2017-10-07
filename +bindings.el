@@ -57,6 +57,7 @@
  "M-a"    #'mark-whole-buffer
  "M-e"    #'counsel-dash-at-point
  "M-m"    #'evil-switch-to-windows-last-buffer
+ "M-g"    #'+amos/counsel-jumpdir-function
  "M-q"    (if (daemonp) #'delete-frame #'save-buffers-kill-emacs)
  "M-w"    #'delete-other-windows
  "C-l"    #'+amos/redisplay-and-recenter
@@ -70,8 +71,12 @@
  :m "M-k" #'+amos:multi-previous-line
  :i "M-i" #'yas-insert-snippet
  :i "C-o" #'kill-line
+ :i "M-r" #'sp-slurp-hybrid-sexp
+ :i "M-R" #'sp-forward-barf-sexp
  :n "M-i" #'yasdcv-translate-at-point
  :n "C-t" nil
+ :n "C-j" #'move-text-down
+ :n "C-k" #'move-text-up
  :n "p"   #'+amos@paste/evil-paste-after
  :n "P"   #'+amos@paste/evil-paste-before
 
@@ -86,10 +91,12 @@
  :en "M-l"    #'evil-window-right
 
  (:prefix "C-x"
+   :nvime "u"   #'link-hint-open-link
    "C-c" #'+amos/tmux-detach
    "p"   #'doom/other-popup)
 
  (:prefix "C-c"
+   "c"     #'org-capture
    "C-SPC" #'easy-hugo)
 
  ;; --- <leader> -------------------------------------
@@ -101,9 +108,8 @@
 
    ;; Most commonly used
    :desc "Find file in project"    :n "SPC" #'projectile-find-file
-   :desc "Switch workspace buffer" :n ","   #'persp-switch-to-buffer
-   :desc "Switch buffer"           :n "<"   #'switch-to-buffer
-   :desc "Browse files"            :n "."   #'find-file
+   :desc "Switch workspace buffer" :n ","   #'switch-to-buffer
+   :desc "Switch buffer"           :n "."   #'switch-to-buffer
    :desc "Toggle last popup"       :n "~"   #'doom/popup-toggle
    :desc "Eval expression"         :n "`"   #'eval-expression
    :desc "Blink cursor line"       :n "DEL" #'+doom/blink-cursor
@@ -243,6 +249,7 @@
      :desc "From snippet"   :nv "s" #'yas-insert-snippet)
 
    (:desc "notes" :prefix "n"
+     :desc "Open todo file"        :n "t" #'+amos/open-todo-file
      :desc "Find file in notes"    :n "n" #'+amos/find-in-notes
      :desc "Browse notes"          :n "N" #'+amos/browse-notes
      :desc "Org capture"           :n "x" #'+org-capture/open
@@ -251,7 +258,7 @@
 
    (:desc "open" :prefix "o"
      :desc "Default browser"     :n  "b" #'browse-url-of-file
-     :desc "Debugger"            :n  "d" #'+debug/open
+     :desc "Dired"               :n  "d" #'+amos/dired-current-dir
      :desc "REPL"                :n  "r" #'+eval/open-repl
                                  :v  "r" #'+eval:repl
      :desc "Neotree"             :n  "n" #'+neotree/toggle
@@ -260,7 +267,7 @@
 
      ;; applications
      :desc "APP: elfeed"  :n "E" #'=rss
-     :desc "APP: email"   :n "M" #'=email
+     :desc "APP: email"   :n "m" #'=email
      :desc "APP: twitter" :n "T" #'=twitter
      :desc "APP: regex"   :n "X" #'=regex
 
@@ -288,6 +295,7 @@
      :desc "Quit (forget session)"   :n "Q" #'+workspace/kill-session-and-quit)
 
    (:desc "remote" :prefix "r"
+     :desc "Ivy resume"             :n "l" #'ivy-resume
      :desc "Upload local"           :n "u" #'+upload/local
      :desc "Upload local (force)"   :n "U" (λ! (+upload/local t))
      :desc "Download remote"        :n "d" #'+upload/remote-download
@@ -324,6 +332,8 @@
  :m  "gt" #'+workspace/switch-right
  :m  "gT" #'+workspace/switch-left
  :m  "gd" #'+jump/definition
+ :m  "gy" #'+amos/copy-and-comment-lines-inverse
+ :m  "gY" #'+amos/copy-and-comment-lines
  :m  "gD" #'+jump/references
  :m  "gh" #'+jump/documentation
  :n  "go" #'+amos/evil-insert-line-below
@@ -417,8 +427,14 @@
  ;; dired
  (:after dired
    (:map dired-mode-map
-         :n  "h"   #'dired-up-directory
-         :n  "l"   #'dired-find-file))
+         "SPC" nil
+         "G"   nil
+         "g"   nil
+         :n  "M-n" #'+amos/counsel-jumpfile-function
+         :n  "M-o" #'+amos/prev-history
+         :n  "M-i" #'+amos/next-history
+         :n  "h"   #'+amos/up-directory
+         :n  "l"   #'+amos/find-file))
 
  ;; evil-nerd-commenter
  :n  "gc"  #'evilnc-comment-or-uncomment-lines
@@ -788,9 +804,10 @@
           :n "q"    #'View-quit))
 
       (:map key-translation-map
-        "C-\\" "C-S-s"
-        "C-^" "C-,"
-        "C-_" "C-.")
+        "C-&" (kbd "C-S-s")
+        "C-@" (kbd "C-SPC")
+        "C-^" (kbd "C-,")
+        "C-_" (kbd "C-."))
 
       ;; I want C-a and C-e to be a little smarter. C-a will jump to
       ;; indentation. Pressing it again will send you to the true bol. Same goes
@@ -819,11 +836,18 @@
       :i [remap delete-backward-char]   #'doom/deflate-space-maybe
       :i [remap newline]                #'doom/newline-and-indent
 
-      (:after org-mode
+      (:after org
         (:map org-mode-map
-          :i [remap doom/inflate-space-maybe] #'org-self-insert-command
-          :i "C-e" #'org-end-of-line
-          :i "C-a" #'org-beginning-of-line))
+          :n "C-j"   #'org-metadown
+          :n "C-k"   #'org-metaup
+          ))
+
+      (:after org-src
+        (:map org-src-mode-map
+          (:prefix "C-c"
+            :nivme "C-c"   #'org-edit-src-exit
+            :nivme "C-k"   #'org-edit-src-abort
+            )))
 
       ;; Restore common editing keys (and ESC) in minibuffer
       (:map (minibuffer-local-map

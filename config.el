@@ -53,32 +53,30 @@
 
 ;; app/email
 (after! mu4e
-  (setq smtpmail-stream-type 'starttls
-        smtpmail-default-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-service 587)
+  '(set! :email "gmail.com"
+    ((user-full-name         . "Amos Bird")
+     (user-mail-address      . "amosbird@gmail.com")
+     (mu4e-compose-signature . "Amos Bird\namosbird@gmail.com"))
+    t)
 
-  (set! :email "gmail.com"
-    '((mu4e-sent-folder       . "/gmail.com/Sent Mail")
-      (mu4e-drafts-folder     . "/gmail.com/Drafts")
-      (mu4e-trash-folder      . "/gmail.com/Trash")
-      (mu4e-refile-folder     . "/gmail.com/All Mail")
-      (smtpmail-smtp-user     . "amosbird")
-      (user-mail-address      . "amosbird@gmail.com")
-      (mu4e-compose-signature . "---\nAmos Bird\namosbird@gmail.com"))))
+  ;; (defun +amos*mu4e-popup-window (buf _height)
+  ;;   (doom-popup-buffer buf '(:size 10 :noselect t :autoclose))
+  ;;   buf)
+  ;; (advice-add #'mu4e~temp-window :override #'+amos*mu4e-popup-window)
+  )
 
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
 
 (def-package! osc
   :demand
-  :config
-  (pcase (system-name)
-    ("t450s"
+  :init
+  (if window-system
+    (progn
      (defun +amos/other-window ()
        (interactive)
        (i3-nav-right))
      (setq browse-url-browser-function 'browse-url-chrome))
-    (_
+    (progn
      (defun +amos/other-window ()
        (interactive)
        (osc-nav-right))
@@ -86,7 +84,11 @@
       interprogram-cut-function 'osc-select-text
       browse-url-browser-function 'browse-url-osc))))
 
-(def-package! evil-nerd-commenter)
+(def-package! evil-nerd-commenter
+  :commands
+  evilnc-invert-comment-line-by-line
+  evilnc-copy-and-comment-lines
+  evilnc-comment-or-uncomment-lines)
 
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
@@ -94,12 +96,12 @@
 (add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil))
 
 (defun +amos*set-evil-cursors (&rest _)
-  (let ((evil-cursors '(("normal" "DarkGoldenrod2" box)
-                        ("insert" "chartreuse3" (bar . 2))
+  (let ((evil-cursors '(("normal" "DarkGoldenrod" box)
+                        ("insert" "Chartreuse3" (bar . 2))
                         ("emacs" "SkyBlue2" box)
-                        ("replace" "chocolate" (hbar . 2))
-                        ("visual" "gray" (hbar . 2))
-                        ("motion" "plum3" box)
+                        ("replace" "DarkOrange3" (hbar . 2))
+                        ("visual" "Gray" (hbar . 2))
+                        ("motion" "Plum3" box)
                         ("lisp" "HotPink1" box)
                         ("iedit" "firebrick1" box)
                         ("iedit-insert" "firebrick1" (bar . 2)))))
@@ -108,14 +110,13 @@
 (advice-add #'+evil*init-cursors :override #'+amos*set-evil-cursors)
 
 ;; may delete the real hyphens
-(defadvice fill-delete-newlines (before my-before-fill-delete-newlines)
+(defadvice fill-delete-newlines (before my-before-fill-delete-newlines activate)
   "Replace -\\n with an empty string when calling `fill-paragraph'."
   (when (eq this-command 'unfill-paragraph)
     (goto-char (ad-get-arg 0))
     (while (search-forward "-\n" (ad-get-arg 1) t)
       (replace-match "")
       (ad-set-arg 1 (- (ad-get-arg 1) 2)))))
-(ad-activate 'fill-delete-newlines)
 
 ;; (setq compilation-finish-function
 ;;       (lambda (buf str)
@@ -123,6 +124,7 @@
 ;;             (delete-windows-on (get-buffer-create "*compilation*")))))
 
 (def-package! narrow-reindent
+  :demand
   :config
   (defun narrow-reindent-mode-maybe ()
     (if (not (minibufferp))
@@ -133,19 +135,34 @@
   (global-narrow-reindent-mode +1))
 
 (def-package! fcitx
+  :if (eq (system-name) "t450s")
   :config
   (fcitx-aggressive-setup))
 
-(def-package! evil-textobj-line
-  :demand)
+(def-package! pangu-spacing
+  :demand
+  :config
+  (global-pangu-spacing-mode +1)
+  ;; Always insert `real' space in org-mode.
+  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
 
-(def-package! evil-terminal-cursor-changer
-  :if (not (display-graphic-p))
-  :init (setq evil-visual-state-cursor 'box
-              evil-insert-state-cursor 'bar
-              evil-emacs-state-cursor 'hbar
-              etcc-use-color 't)
-  :config (evil-terminal-cursor-changer-activate))
+(def-package! git-gutter
+  :demand
+  :config
+  (global-git-gutter-mode +1)
+  (advice-add #'git-gutter:set-window-margin :override #'ignore)
+  (defun +amos*git-gutter:before-string (sign)
+    (let ((gutter-sep (concat (make-string (- (car (window-margins (get-buffer-window))) 2) ? ) sign)))
+      (propertize " " 'display `((margin left-margin) ,gutter-sep))))
+  (advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
+  (add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows))
+
+(def-package! evil-textobj-line
+  :after evil)
+
+(unless window-system
+  (require 'evil-terminal-cursor-changer)
+  (etcc-on))
 
 (def-package! chinese-yasdcv
   :commands yasdcv-translate-at-point
@@ -154,14 +171,8 @@
    '(yasdcv-sdcv-dicts   '(("jianminghy" "简明汉英词典" "powerword2007" t)))
    '(yasdcv-sdcv-command "sdcv --non-interactive --utf8-output --utf8-input \"%word\"")))
 
-(def-package! pangu-spacing
-  :config
-  (global-pangu-spacing-mode +1)
-  ;; Always insert `real' space in org-mode.
-  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
-
 (def-package! counsel-dash
-  :demand
+  :commands counsel-dash
   :init
   (setq
    counsel-dash-docsets-path "~/.docsets"
@@ -171,7 +182,6 @@
    counsel-dash-enable-debugging nil
    counsel-dash-browser-func 'browse-url
    counsel-dash-ignored-docsets nil)
-  :config
   (defun counsel-dash-at-point ()
     (interactive)
     (counsel-dash (thing-at-point 'symbol)))
@@ -206,13 +216,184 @@
   :config
   (custom-set-variables '(org-hugo-default-section-directory "post")))
 
-(def-package! git-gutter
-  :demand
+(after! ox
+  (nconc org-export-backends '(beamer odt)))
+
+(after! org
+  (custom-set-variables
+   '(org-M-RET-may-split-line (quote ((default))))
+   '(org-agenda-files (quote ("~/org/todo.org")))
+   '(org-babel-load-languages
+     (quote
+      ((python . t)
+       (emacs-lisp . t)
+       (dot . t)
+       (gnuplot . t)
+       (C . t)
+       (sql . t)
+       (awk . t))))
+   '(org-beamer-frame-level 2)
+   '(org-beamer-theme "metropolis")
+   '(org-blank-before-new-entry (quote ((heading . t) (plain-list-item . t))))
+   '(org-capture-templates
+     (quote
+      (("c" "code" entry
+        (file+headline "~/org/code.org" "Triage")
+        "** %a " :prepend t :empty-lines-before 1 :empty-lines-after 1)
+       ("n" "notes" entry
+        (file "~/org/notes.org")
+        (file "~/org/template/idea")
+        :empty-lines-before 1 :empty-lines-after 1)
+       ("t" "Templates for todo items")
+       ("te" "ergonomics" entry
+        (file+headline "~/org/todo.org" "Ergonomics")
+        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)
+       ("tw" "working" entry
+        (file+headline "~/org/todo.org" "Work")
+        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)
+       ("tl" "learning" entry
+        (file+headline "~/org/todo.org" "Learning")
+        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1))))
+   '(org-confirm-babel-evaluate nil)
+   '(org-default-notes-file "/home/amos/org/note.org")
+   '(org-emphasis-alist
+     (quote
+      (("*" bold)
+       ("/" italic)
+       ("_" underline)
+       ("=" org-verbatim verbatim)
+       ("~" org-code verbatim)
+       ("+" alert-urgent-face))))
+   ;; '(org-export-backends (quote (ascii beamer html icalendar latex md odt)))
+   '(org-file-apps
+     (quote
+      ((auto-mode . default)
+       ("\\.mm\\'" . default)
+       ("\\.x?html?\\'" . "vivaldi new %s")
+       ("\\.pdf\\'" . "zathura %s")
+       ("\\.odt\\'" . "winopen %s")
+       ("\\.docx?\\'" . "winopen %s"))))
+   '(org-highlight-latex-and-related (quote (latex)))
+   '(org-html-head-extra "<style>.tag {border: 1px solid hotpink;}</style>")
+   '(org-html-text-markup-alist
+     (quote
+      ((bold . "<b>%s</b>")
+       (code . "<code>%s</code>")
+       (italic . "<i>%s</i>")
+       (strike-through . "<strong style=\"color : red;\">%s</strong>")
+       (underline . "<span class=\"underline\">%s</span>")
+       (verbatim . "<code>%s</code>"))))
+   '(org-hugo-default-section-directory "post")
+   '(org-image-actual-width (quote (200)))
+   '(org-latex-compiler "xelatex")
+   '(org-latex-custom-lang-environments nil)
+   '(org-latex-default-packages-alist
+     (quote
+      (("AUTO" "inputenc" t
+        ("pdflatex"))
+       ("T1" "fontenc" t
+        ("pdflatex"))
+       ("" "graphicx" t)
+       ("" "ctex" t)
+       ("" "booktabs" t)
+       ("" "grffile" t)
+       ("" "longtable" nil)
+       ("" "wrapfig" nil)
+       ("" "rotating" nil)
+       ("normalem" "ulem" t)
+       ("" "amsmath" t)
+       ("" "textcomp" t)
+       ("" "amssymb" t)
+       ("" "capt-of" nil)
+       ("" "hyperref" nil))))
+   '(org-latex-tables-booktabs t)
+   '(org-latex-text-markup-alist
+     (quote
+      ((bold . "\\textbf{%s}")
+       (code . protectedtexttt)
+       (italic . "\\emph{%s}")
+       (strike-through . "\\emph{%s}")
+       (underline . "\\uline{%s}")
+       (verbatim . protectedtexttt))))
+   '(org-mime-beautify-quoted-mail t)
+   '(org-preview-latex-default-process (quote imagemagick))
+   '(org-refile-targets (quote ((nil :level . 1))))
+   '(org-reverse-note-order t)
+   '(org-src-block-faces (quote (("c++" default))))
+   '(org-src-tab-acts-natively t)
+   '(org-startup-folded nil)
+   '(org-twbs-text-markup-alist
+     (quote
+      ((bold . "<b>%s</b>")
+       (code . "<code>%s</code>")
+       (italic . "<i>%s</i>")
+       (strike-through . "<strong style=\"color : red;\">%s</strong>")
+       (underline . "<span class=\"underline\">%s</span>")
+       (verbatim . "<code>%s</code>")))))
+
+  (custom-set-faces
+   '(org-level-1 ((t (:inherit bold :foreground "#4f97d7" :height 1.0))))
+   '(org-level-2 ((t (:inherit bold :foreground "#2d9574" :height 1.0))))
+   '(org-level-3 ((t (:foreground "#67b11d" :weight normal :height 1.0)))))
+  )
+
+(def-package! org-autolist
+  :after org
   :config
-  (global-git-gutter-mode +1))
-(advice-add #'git-gutter:set-window-margin :override #'ignore)
-(defun +amos*git-gutter:before-string (sign)
-  (let ((gutter-sep (concat (make-string (- (car (window-margins (get-buffer-window))) 2) ? ) sign)))
-    (propertize " " 'display `((margin left-margin) ,gutter-sep))))
-(advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
-(add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows)
+  (add-hook! org-mode (org-autolist-mode)))
+
+(after! ox
+  ;; remove comments from org document for use with export hook
+  ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
+  (defun +amos|delete-org-comments (&optional backend)
+    (loop for comment in (reverse (org-element-map (org-element-parse-buffer)
+                                                   'comment 'identity))
+          do
+          (setf (buffer-substring (org-element-property :begin comment)
+                                  (org-element-property :end comment)) "")))
+  ;; add to export hook
+  (add-hook! 'org-export-before-processing-hook #'+amos|delete-org-comments)
+
+  (defun +amos--clear-single-linebreak-in-cjk-string (string)
+    "clear single line-break between cjk characters that is usually soft line-breaks"
+    (let* ((regexp "\\([\u4E00-\u9FA5]\\)\n\\([\u4E00-\u9FA5]\\)")
+           (start (string-match regexp string)))
+      (while start
+        (setq string (replace-match "\\1\\2" nil nil string)
+              start (string-match regexp string start))))
+    string)
+  (defun +amos|ox-clear-single-linebreak-for-cjk (string backend info)
+    (+amos--clear-single-linebreak-in-cjk-string string))
+  (add-to-list 'org-export-filter-final-output-functions
+               '+amos|ox-clear-single-linebreak-for-cjk))
+
+(def-package! link-hint
+  :commands link-hint-open-link
+  :config
+  (after! mu4e
+    (defun +amos/mu4e-open-all-attachments ()
+      "Open all visible mu4e attachments."
+      (interactive)
+      (let ((link-hint-ignore-types
+             (remove 'mu4e-attachment link-hint-all-types))
+            link-hint-act-on-all-ignore-types)
+        (link-hint-open-all-links)))))
+
+(def-package! lispyville
+  :commands lispyville-mode)
+
+(after! swiper
+  (custom-set-variables '(swiper-include-line-number-in-search t)))
+
+(def-package! ivy-rich
+  :after ivy
+  :init
+  (setq ivy-virtual-abbreviate 'full
+        ivy-use-virtual-buffers t
+        ivy-rich-switch-buffer-align-virtual-buffer t)
+  (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+
+(def-package! move-text
+  :commands move-text-up move-text-down)
+
+;;; config.el ends here

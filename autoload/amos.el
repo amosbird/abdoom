@@ -107,3 +107,24 @@ the current state and point position."
 ;;;###autoload (autoload '+amos/browse-notes "private/amos/autoload/amos" nil t)
 (+amos-def-finder! notes +org-dir)
 
+;;;###autoload
+(defun +amos/open-todo-file ()
+  (interactive)
+  (find-file "~/org/todo.org"))
+
+;;;###autoload
+(defun +amos/copy-and-comment-lines-inverse (&optional arg)
+  (interactive "p")
+  (let ((evilnc-invert-comment-line-by-line t))
+    (evilnc-copy-and-comment-lines arg)))
+
+;;;###autoload
+(defun +amos/copy-and-comment-lines (&optional arg)
+  (interactive "p")
+  (let ((evilnc-invert-comment-line-by-line nil))
+    (evilnc-copy-and-comment-lines arg)))
+
+;;;###autoload
+(defun +amos/dired-current-dir ()
+  (interactive)
+  (dired default-directory))

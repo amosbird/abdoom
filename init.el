@@ -44,8 +44,13 @@
 ;; booting up (when Doom is byte-compiled).
 (setq-default mode-line-format nil)
 (setq +org-dir (expand-file-name "~/org/"))
+
+(add-hook! :append 'org-load-hook (setq org-agenda-files (directory-files (concat +org-dir "todos/") t "\\.org$" t)))
+
+
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'eldoc-mode :override #'ignore)
+(fset 'fringe-mode nil)
 
 (def-package-hook! centered-window-mode
   :post-config
@@ -57,7 +62,14 @@
   (push #'amos-special-window-p cwm-ignore-window-predicates)
   t)
 
+(def-package-hook! org-bullets
+  :pre-config nil)
+
+(def-package-hook! stripe-buffer
+  :pre-init nil)
+
 (set! :popup "*Stardict Output*" :size 0.6 :autoclose t :noselect t :autofit t)
+(set! :popup " *mu4e-verify*" :size 0.4 :autoclose t :noselect t :autofit t)
 
 ;; host-specific settings
 (pcase (system-name)

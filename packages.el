@@ -2,10 +2,13 @@
 ;;; private/amos/packages.el
 (package! evil-commentary :ignore t)
 (package! vi-tilde-fringe :ignore t)
+(package! stripe-buffer :ignore t)
 (package! git-gutter-fringe :ignore t)
 (package! centered-window-mode :recipe (:fetcher github :repo "amosbird/centered-window-mode"))
+(package! evil-terminal-cursor-changer :recipe (:fetcher github :repo "amosbird/evil-terminal-cursor-changer"))
 (package! evil-textobj-line :recipe (:fetcher github :repo "syohex/evil-textobj-line"))
 (package! osc :recipe (:fetcher github :repo "amosbird/osc.el"))
+(package! ivy-rich :recipe (:fetcher github :repo "Yevgnen/ivy-rich"))
 (package! chinese-yasdcv)
 (package! git-gutter)
 (package! evil-nerd-commenter)
@@ -13,9 +16,12 @@
 (package! fcitx)
 (package! sdcv)
 (package! pangu-spacing)
-(package! evil-terminal-cursor-changer)
 (package! counsel-dash)
 (package! easy-hugo)
 (package! ox-hugo)
-
+(package! org-autolist)
+(package! link-hint)
+(package! lispyville)
+(package! org-bullets)
+(package! move-text)
 
