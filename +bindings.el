@@ -58,9 +58,8 @@
  "M-e"    #'counsel-dash-at-point
  "M-m"    #'evil-switch-to-windows-last-buffer
  "M-g"    #'+amos/counsel-jumpdir-function
- "M-q"    (if (daemonp) #'delete-frame #'save-buffers-kill-emacs)
  "M-w"    #'delete-other-windows
- "C-l"    #'+amos/redisplay-and-recenter
+ "C-l"    #'+amos:redisplay-and-recenter
  "C-s"    #'swiper
  "C-S-s"  #'counsel-projectile-rg
  :m "C-f" #'evilem--motion-evil-find-char
@@ -71,6 +70,7 @@
  :m "M-k" #'+amos:multi-previous-line
  :i "M-i" #'yas-insert-snippet
  :i "C-o" #'kill-line
+ :i "C-d" #'delete-char
  :i "M-r" #'sp-slurp-hybrid-sexp
  :i "M-R" #'sp-forward-barf-sexp
  :n "M-i" #'yasdcv-translate-at-point
@@ -107,9 +107,9 @@
    :desc "Org Capture"             :nv "X"  #'+org-capture/open
 
    ;; Most commonly used
-   :desc "Find file in project"    :n "SPC" #'projectile-find-file
+   :desc "Find file in project"    :n "SPC" #'switch-to-buffer
    :desc "Switch workspace buffer" :n ","   #'switch-to-buffer
-   :desc "Switch buffer"           :n "."   #'switch-to-buffer
+   :desc "Switch buffer"           :n "."   #'projectile-find-file
    :desc "Toggle last popup"       :n "~"   #'doom/popup-toggle
    :desc "Eval expression"         :n "`"   #'eval-expression
    :desc "Blink cursor line"       :n "DEL" #'+doom/blink-cursor
@@ -835,19 +835,6 @@
       :i "SPC"                          #'doom/inflate-space-maybe
       :i [remap delete-backward-char]   #'doom/deflate-space-maybe
       :i [remap newline]                #'doom/newline-and-indent
-
-      (:after org
-        (:map org-mode-map
-          :n "C-j"   #'org-metadown
-          :n "C-k"   #'org-metaup
-          ))
-
-      (:after org-src
-        (:map org-src-mode-map
-          (:prefix "C-c"
-            :nivme "C-c"   #'org-edit-src-exit
-            :nivme "C-k"   #'org-edit-src-abort
-            )))
 
       ;; Restore common editing keys (and ESC) in minibuffer
       (:map (minibuffer-local-map

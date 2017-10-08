@@ -1,5 +1,6 @@
 ;;; private/amos/init.el -*- lexical-binding: t; -*-
 (setq-default
+ show-trailing-whitespace t
  evil-ex-substitute-global t
  intent-tabs-mode t
  tab-always-indent t
@@ -50,6 +51,7 @@
 
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'eldoc-mode :override #'ignore)
+(advice-add #'+org|update-cookies :override #'ignore)
 (fset 'fringe-mode nil)
 
 (def-package-hook! centered-window-mode
@@ -65,11 +67,13 @@
 (def-package-hook! org-bullets
   :pre-config nil)
 
+(def-package-hook! cc-mode
+  :post-config
+  (setq c-tab-always-indent t)
+  t)
+
 (def-package-hook! stripe-buffer
   :pre-init nil)
-
-(set! :popup "*Stardict Output*" :size 0.6 :autoclose t :noselect t :autofit t)
-(set! :popup " *mu4e-verify*" :size 0.4 :autoclose t :noselect t :autofit t)
 
 ;; host-specific settings
 (pcase (system-name)

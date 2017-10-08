@@ -25,12 +25,6 @@ private/amos/snippets."
     (error "Couldn't find filename in current buffer")))
 
 ;;;###autoload
-(defun +amos/redisplay-and-recenter ()
-  (interactive)
-  (redraw-display)
-  (recenter))
-
-;;;###autoload
 (defun +amos/yank-buffer-filename-with-line-position ()
   "Copy the current buffer's filename with line number to the kill ring."
   (interactive)
@@ -128,3 +122,14 @@ the current state and point position."
 (defun +amos/dired-current-dir ()
   (interactive)
   (dired default-directory))
+
+;;;###autoload
+(defun +amos/org-babel-edit (arg)
+  "Edit the source block at point in a popup.
+
+If ARG is non-nil (universal argument), use the current window."
+  (interactive "P")
+  (if arg
+      (call-interactively #'org-edit-special)
+    (with-popup-rules! (("^\\*Org Src" :regexp t :size 0.5 :select t :align 'right :noesc t))
+      (call-interactively #'org-edit-special))))

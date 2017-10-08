@@ -8,7 +8,12 @@
 (defvar +amos-snippets-dir (expand-file-name "snippets/" +amos-dir))
 
 (setq epa-file-encrypt-to user-mail-address
+      c-tab-always-indent t
       auth-sources (list (expand-file-name ".authinfo.gpg" +amos-dir)))
+
+(set! :popup "*Org Export Dispatcher*" :noselect t :size 0.5 :align 'right)
+(set! :popup "*Stardict Output*" :size 0.6 :autoclose t :noselect t :autofit t)
+(set! :popup " *mu4e-verify*" :size 0.4 :autoclose t :noselect t :autofit t)
 
 (defun +amos*no-authinfo-for-tramp (orig-fn &rest args)
   "Don't look into .authinfo for local sudo TRAMP buffers."
@@ -134,9 +139,8 @@
     :group 'narrow-reindent)
   (global-narrow-reindent-mode +1))
 
-(def-package! fcitx
-  :if (eq (system-name) "t450s")
-  :config
+(when (equal (system-name) "t450s")
+  (require 'fcitx)
   (fcitx-aggressive-setup))
 
 (def-package! pangu-spacing
@@ -211,18 +215,16 @@
    easy-hugo-previewtime "300"
    easy-hugo-default-ext ".org"))
 
+(def-package! ox-twbs
+  :after ox)
+
 (def-package! ox-hugo
   :after ox
   :config
   (custom-set-variables '(org-hugo-default-section-directory "post")))
 
-(after! ox
-  (nconc org-export-backends '(beamer odt)))
-
 (after! org
   (custom-set-variables
-   '(org-M-RET-may-split-line (quote ((default))))
-   '(org-agenda-files (quote ("~/org/todo.org")))
    '(org-babel-load-languages
      (quote
       ((python . t)
@@ -234,7 +236,6 @@
        (awk . t))))
    '(org-beamer-frame-level 2)
    '(org-beamer-theme "metropolis")
-   '(org-blank-before-new-entry (quote ((heading . t) (plain-list-item . t))))
    '(org-capture-templates
      (quote
       (("c" "code" entry
@@ -254,27 +255,6 @@
        ("tl" "learning" entry
         (file+headline "~/org/todo.org" "Learning")
         "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1))))
-   '(org-confirm-babel-evaluate nil)
-   '(org-default-notes-file "/home/amos/org/note.org")
-   '(org-emphasis-alist
-     (quote
-      (("*" bold)
-       ("/" italic)
-       ("_" underline)
-       ("=" org-verbatim verbatim)
-       ("~" org-code verbatim)
-       ("+" alert-urgent-face))))
-   ;; '(org-export-backends (quote (ascii beamer html icalendar latex md odt)))
-   '(org-file-apps
-     (quote
-      ((auto-mode . default)
-       ("\\.mm\\'" . default)
-       ("\\.x?html?\\'" . "vivaldi new %s")
-       ("\\.pdf\\'" . "zathura %s")
-       ("\\.odt\\'" . "winopen %s")
-       ("\\.docx?\\'" . "winopen %s"))))
-   '(org-highlight-latex-and-related (quote (latex)))
-   '(org-html-head-extra "<style>.tag {border: 1px solid hotpink;}</style>")
    '(org-html-text-markup-alist
      (quote
       ((bold . "<b>%s</b>")
@@ -283,8 +263,6 @@
        (strike-through . "<strong style=\"color : red;\">%s</strong>")
        (underline . "<span class=\"underline\">%s</span>")
        (verbatim . "<code>%s</code>"))))
-   '(org-hugo-default-section-directory "post")
-   '(org-image-actual-width (quote (200)))
    '(org-latex-compiler "xelatex")
    '(org-latex-custom-lang-environments nil)
    '(org-latex-default-packages-alist
@@ -317,11 +295,8 @@
        (verbatim . protectedtexttt))))
    '(org-mime-beautify-quoted-mail t)
    '(org-preview-latex-default-process (quote imagemagick))
-   '(org-refile-targets (quote ((nil :level . 1))))
-   '(org-reverse-note-order t)
    '(org-src-block-faces (quote (("c++" default))))
    '(org-src-tab-acts-natively t)
-   '(org-startup-folded nil)
    '(org-twbs-text-markup-alist
      (quote
       ((bold . "<b>%s</b>")
@@ -337,12 +312,8 @@
    '(org-level-3 ((t (:foreground "#67b11d" :weight normal :height 1.0)))))
   )
 
-(def-package! org-autolist
-  :after org
-  :config
-  (add-hook! org-mode (org-autolist-mode)))
-
 (after! ox
+  (nconc org-export-backends '(beamer odt))
   ;; remove comments from org document for use with export hook
   ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
   (defun +amos|delete-org-comments (&optional backend)
@@ -396,4 +367,8 @@
 (def-package! move-text
   :commands move-text-up move-text-down)
 
+(def-package! ws-butler
+  :demand
+  :config
+  (ws-butler-global-mode))
 ;;; config.el ends here

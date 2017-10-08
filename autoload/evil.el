@@ -20,6 +20,13 @@
   (interactive "<f>")
   (cd input))
 
+;;;###autoload (autoload '+amos:redisplay-and-recenter "private/amos/autoload/evil" nil t)
+(evil-define-command +amos:redisplay-and-recenter ()
+  :repeat nil
+  (interactive)
+  (redraw-display)
+  (recenter))
+
 ;;;###autoload (autoload '+amos:kill-all-buffers "private/amos/autoload/evil" nil t)
 (evil-define-command +amos:kill-all-buffers (&optional bang)
   "Kill all buffers. If BANG, kill current session too."

@@ -18,10 +18,7 @@
 (package! pangu-spacing)
 (package! counsel-dash)
 (package! easy-hugo)
-(package! ox-hugo)
-(package! org-autolist)
 (package! link-hint)
 (package! lispyville)
-(package! org-bullets)
 (package! move-text)
-
+(package! ws-butler)
