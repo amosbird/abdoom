@@ -77,6 +77,7 @@
               (+amos--update-history find-name))
             ;; select origination file
             (find-file find-name))
+        (message (shell-command-to-string "jump clean"))
         (error "File doesn't exist anymore!")))))
 
 ;;;###autoload
