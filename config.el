@@ -13,7 +13,7 @@
 
 (set! :popup "*Org Export Dispatcher*" :noselect t :size 0.5 :align 'right)
 (set! :popup "*Stardict Output*" :size 0.6 :autoclose t :noselect t :autofit t)
-(set! :popup " *mu4e-verify*" :size 0.4 :autoclose t :noselect t :autofit t)
+(set! :popup " *mu4e-verify*" :size 0.1 :autoclose t :noselect t)
 
 (defun +amos*no-authinfo-for-tramp (orig-fn &rest args)
   "Don't look into .authinfo for local sudo TRAMP buffers."
@@ -63,14 +63,38 @@
      (user-mail-address      . "amosbird@gmail.com")
      (mu4e-compose-signature . "Amos Bird\namosbird@gmail.com"))
     t)
-
-  ;; (defun +amos*mu4e-popup-window (buf _height)
-  ;;   (doom-popup-buffer buf '(:size 10 :noselect t :autoclose))
-  ;;   buf)
-  ;; (advice-add #'mu4e~temp-window :override #'+amos*mu4e-popup-window)
-  )
+  (defun +amos*mu4e-view-verify-msg-popup (&optional msg)
+    "Pop-up a little signature verification window for (optional) MSG
+or message-at-point."
+    (interactive)
+    (let* ((msg (or msg (mu4e-message-at-point)))
+           (path (mu4e-message-field msg :path))
+           (cmd (format "%s verify --verbose %s %s"
+                        mu4e-mu-binary
+                        (shell-quote-argument path)
+                        (if mu4e-decryption-policy
+                            "--decrypt --use-agent"
+                          "")))
+           (output (shell-command-to-string cmd)))
+      "Output to the temp buffer."
+      (let ((buffer-name " *mu4e-verify*"))
+        (with-output-to-temp-buffer buffer-name
+          (let ((inhibit-read-only t))
+            (set-buffer buffer-name)
+            (insert output)
+            (goto-char (point-min)))
+          (setq buffer-read-only t))))
+    (advice-add #'mu4e-view-verify-msg-popup :override #'+amos*mu4e-view-verify-msg-popup)))
 
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
+
+(def-package! evil-magit
+  :after magit)
+
+(after! magit
+  (set! :popup 'magit-status-mode :select t :inhibit-window-quit t :same t)
+  (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
+  (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5))
 
 (def-package! osc
   :demand
@@ -241,6 +265,9 @@
       (("c" "code" entry
         (file+headline "~/org/code.org" "Triage")
         "** %a " :prepend t :empty-lines-before 1 :empty-lines-after 1)
+       ("i" "idea" entry
+        (file "~/org/idea.org")
+        "* %u %?\n%i" :prepend t :empty-lines-before 1 :empty-lines-after 1)
        ("n" "notes" entry
         (file "~/org/notes.org")
         (file "~/org/template/idea")
@@ -366,6 +393,53 @@
 
 (def-package! move-text
   :commands move-text-up move-text-down)
+
+(def-package! fish-mode)
+
+(after! dired
+  (defun joseph-kill-all-other-dired-buffers ( &optional current-buf)
+    "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
+  except current-buf ,if current-buf is nil then kill all"
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (and (not (eq current-buf buf))
+                   (or  (eq 'dired-mode  major-mode)
+                        (eq 'diredp-w32-drives-mode major-mode)))
+          (kill-buffer buf)))))
+
+  (defadvice dired-find-file (around dired-find-file-single-buffer activate)
+    "Replace current buffer if file is a directory."
+    (interactive)
+    (let ((orig (current-buffer))
+          (filename (dired-get-file-for-visit)))
+      ad-do-it
+      (when (and (file-directory-p filename)
+                 (not (eq (current-buffer) orig)))
+        (joseph-kill-all-other-dired-buffers (current-buffer)))))
+
+  (defadvice dired-up-directory (around dired-up-directory-single-buffer activate)
+    "Replace current buffer if file is a directory."
+    (interactive)
+    (let ((orig (current-buffer)))
+      ad-do-it
+      (joseph-kill-all-other-dired-buffers (current-buffer))))
+
+  (defadvice dired (before dired-single-buffer activate)
+    "Replace current buffer if file is a directory."
+    (joseph-kill-all-other-dired-buffers)
+    )
+  (defun dired-mouse-find-alternate-file (event)
+    "In dired, visit the file or directory you click on instead of the dired buffer."
+    (interactive "e")
+    (let (file)
+      (save-excursion
+        (with-current-buffer (window-buffer (posn-window (event-end event)))
+          (save-excursion
+            (goto-char (posn-point (event-end event)))
+            (setq file (dired-get-filename nil t)))))
+      (select-window (posn-window (event-end event)))
+      (find-alternate-file (file-name-sans-versions file t))))
+  (define-key dired-mode-map [mouse-2] 'dired-mouse-find-alternate-file))
 
 (def-package! ws-butler
   :demand

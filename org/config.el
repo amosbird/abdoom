@@ -13,6 +13,8 @@
 (add-hook 'org-load-hook #'+org|init)
 (add-hook 'org-mode-hook #'+org|hook)
 
+(custom-set-faces '(org-hide ((t (:foreground "black" :height 1.0)))))
+
 
 ;;
 ;; Plugins
@@ -43,7 +45,7 @@
   :after org
   :config
   (add-hook! org-mode (evil-org-mode))
-  (evil-org-set-key-theme '(navigation insert textobjects additional)))
+  (evil-org-set-key-theme '(navigation textobjects)))
 
 ;;
 ;; Hooks & bootstraps
@@ -151,6 +153,7 @@ between the two."
           :en "M-j"    #'evil-window-down
           :en "M-k"    #'evil-window-up
           :en "M-l"    #'evil-window-right
+          :i  "C-d"    #'delete-char
           "C-c e"     #'+amos/org-babel-edit
           "C-c C-S-l" #'+org/remove-link)
 
@@ -172,6 +175,7 @@ between the two."
   ;; Let OS decide what to do with files when opened
   (setq org-file-apps
         `(("\\.org$" . emacs)
+          ("\\.cpp$" . emacs)
           (t . ,(cond (IS-MAC "open -R \"%s\"")
                       (IS-LINUX "xdg-open \"%s\"")))))
 
@@ -181,3 +185,37 @@ between the two."
                org-occur-highlights)
       (org-remove-occur-highlights)))
   (add-hook '+evil-esc-hook #'+org|remove-occur-highlights))
+
+(add-hook 'org-load-hook #'+org-export|init t)
+
+;; I don't have any beef with org's built-in export system, but I do wish it
+;; would export to a central directory, rather than `default-directory'. This is
+;; because all my org files are usually in one place, and I want to be able to
+;; refer back to old exports if needed.
+
+(def-package! ox-pandoc
+  :config
+  (unless (executable-find "pandoc")
+    (warn "org-export: couldn't find pandoc, disabling pandoc export"))
+  (setq org-pandoc-options
+        '((standalone . t)
+          (mathjax . t)
+          (parse-raw . t))))
+
+;;
+(defun +org-export|init ()
+  (setq org-export-directory (expand-file-name "export" +org-dir)
+        org-export-backends '(ascii html latex md)
+        org-export-with-toc t
+        org-export-with-author t)
+
+  ;; Always export to a central location
+  (unless (file-directory-p org-export-directory)
+    (make-directory org-export-directory t))
+  (defun +org*export-output-file-name (args)
+    "Return a centralized export location."
+    (unless (nth 2 args)
+      (setq args (append args (list org-export-directory))))
+    args)
+  (advice-add #'org-export-output-file-name
+              :filter-args #'+org*export-output-file-name))

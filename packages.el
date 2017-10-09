@@ -22,3 +22,5 @@
 (package! lispyville)
 (package! move-text)
 (package! ws-butler)
+(package! fish-mode)
+(package! evil-magit)
