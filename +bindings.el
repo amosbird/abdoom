@@ -74,6 +74,7 @@
  :i "M-r" #'sp-slurp-hybrid-sexp
  :i "M-R" #'sp-forward-barf-sexp
  :n "M-i" #'yasdcv-translate-at-point
+ :v "M-i" #'+amos/evil-visual-insert-snippet
  :n "C-t" nil
  :n "C-j" #'move-text-down
  :n "C-k" #'move-text-up
@@ -312,7 +313,7 @@
    (:desc "toggle" :prefix "t"
      :desc "Flyspell"               :n "s" #'flyspell-mode
      :desc "Flycheck"               :n "f" #'flycheck-mode
-     :desc "Line numbers"           :n "l" #'doom/toggle-line-numbers
+     :desc "Truncate lines"         :n "l" #'toggle-truncate-lines
      :desc "Fullscreen"             :n "f" #'doom/toggle-fullscreen
      :desc "Indent guides"          :n "i" #'highlight-indentation-mode
      :desc "Indent guides (column)" :n "I" #'highlight-indentation-current-column-mode
@@ -448,6 +449,7 @@
  ;; evil-magit
  (:after evil-magit
    :map (magit-status-mode-map magit-revision-mode-map)
+   "SPC" nil
    :n "C-j" nil
    :n "C-k" nil)
 
