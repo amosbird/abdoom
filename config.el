@@ -95,11 +95,12 @@ or message-at-point."
   (setq magit-bury-buffer-function #'magit-restore-window-configuration)
   (setq magit-display-buffer-function #'magit-display-buffer-traditional)
 
-  (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
-  (set! :popup 'magit-status-mode :select t :inhibit-window-quit t :same t)
-  (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
-  (set! :popup "COMMITMSG" :same t)
-  (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5))
+  ;; (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
+  ;; (set! :popup 'magit-status-mode :select t :inhibit-window-quit t :same t)
+  ;; (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
+  ;; (set! :popup "COMMITMSG" :same t)
+  ;; (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5)
+  )
 
 (def-package! osc
   :demand
