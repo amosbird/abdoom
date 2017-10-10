@@ -92,6 +92,9 @@ or message-at-point."
   :after magit)
 
 (after! magit
+  (setq magit-bury-buffer-function #'magit-restore-window-configuration)
+  (setq magit-display-buffer-function #'magit-display-buffer-traditional)
+
   (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
   (set! :popup 'magit-status-mode :select t :inhibit-window-quit t :same t)
   (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
@@ -250,6 +253,8 @@ or message-at-point."
   (custom-set-variables '(org-hugo-default-section-directory "post")))
 
 (after! org
+  (setq org-goto-interface 'outline-path-completion)
+  (setq org-outline-path-complete-in-steps nil)
   (custom-set-variables
    '(org-babel-load-languages
      (quote

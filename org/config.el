@@ -155,6 +155,7 @@ between the two."
           :en "M-l"    #'evil-window-right
           :i  "C-d"    #'delete-char
           "C-c e"     #'+amos/org-babel-edit
+          "C-c C-j"    #'counsel-org-goto
           "C-c C-S-l" #'+org/remove-link)
 
         (:after org-agenda

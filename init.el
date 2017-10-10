@@ -1,11 +1,15 @@
 ;;; private/amos/init.el -*- lexical-binding: t; -*-
 (setq-default
+ counsel-org-goto-display-style 'path
+ counsel-org-goto-separator " ➜ "
+ counsel-org-goto-face-style 'org
  show-trailing-whitespace t
  evil-ex-substitute-global t
  intent-tabs-mode t
  tab-always-indent t
  powerline-default-separator 'alternate
  find-file-visit-truename t
+ fringes-outside-margins t
  require-final-newline t
  evil-cjk-emacs-word-boundary t
  evil-shift-width 4
