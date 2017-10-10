@@ -57,7 +57,7 @@
  "M-a"    #'mark-whole-buffer
  "M-e"    #'counsel-dash-at-point
  "M-m"    #'evil-switch-to-windows-last-buffer
- "M-g"    #'+amos/counsel-jumpdir-function
+ :ne "M-g"    #'+amos/counsel-jumpdir-function
  "M-w"    #'delete-other-windows
  "C-l"    #'+amos:redisplay-and-recenter
  "C-s"    #'swiper
