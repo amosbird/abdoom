@@ -152,3 +152,7 @@ This function should be hooked to `buffer-list-update-hook'."
         (+doom-dashboard-reload)))
     (setq +doom-dashboard-inhibit-refresh nil)))
 (advice-add #'+doom-dashboard/open :override #'+amos*dashboard/open)
+
+(require 'server)
+(unless (server-running-p)
+  (server-start))

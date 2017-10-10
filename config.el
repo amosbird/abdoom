@@ -100,7 +100,7 @@ or message-at-point."
   (setq magit-display-buffer-function #'magit-display-buffer-traditional)
 
   (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
-  (set! :popup 'magit-status-mode :select t :inhibit-window-quit t :same t)
+  (set! :popup 'magit-status-mode :select t :same t)
   (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
   (set! :popup "COMMITMSG" :same t)
   (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5)
@@ -420,6 +420,16 @@ or message-at-point."
           (kill-buffer buf)))))
 
   (defadvice dired-find-file (around dired-find-file-single-buffer activate)
+    "Replace current buffer if file is a directory."
+    (interactive)
+    (let ((orig (current-buffer))
+          (filename (dired-get-file-for-visit)))
+      ad-do-it
+      (when (and (file-directory-p filename)
+                 (not (eq (current-buffer) orig)))
+        (joseph-kill-all-other-dired-buffers (current-buffer)))))
+
+  (defadvice +amos/find-file (around dired-find-file-single-buffer activate)
     "Replace current buffer if file is a directory."
     (interactive)
     (let ((orig (current-buffer))
