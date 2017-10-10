@@ -806,7 +806,7 @@
           :n "q"    #'View-quit))
 
       (:map key-translation-map
-        "C-&" (kbd "C-S-s")
+        "M-`" (kbd "C-S-s")
         "C-@" (kbd "C-SPC")
         "C-^" (kbd "C-,")
         "C-_" (kbd "C-."))
