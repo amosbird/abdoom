@@ -3,3 +3,4 @@ cdir := $(dir $(mkfile_path))
 install:
 	@ln -sf $(cdir)email ../
 	@ln -sf $(cdir)org ../
+	@ln -sf $(cdir)init.el ../../../
