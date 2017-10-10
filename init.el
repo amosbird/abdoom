@@ -1,139 +1,154 @@
-;;; init.el -*- lexical-binding: t; -*-
-;;
-;; Author:  Henrik Lissner <henrik@lissner.net>
-;; URL:     https://github.com/hlissner/.emacs.d
-;;
-;;   =================     ===============     ===============   ========  ========
-;;   \\ . . . . . . .\\   //. . . . . . .\\   //. . . . . . .\\  \\. . .\\// . . //
-;;   ||. . ._____. . .|| ||. . ._____. . .|| ||. . ._____. . .|| || . . .\/ . . .||
-;;   || . .||   ||. . || || . .||   ||. . || || . .||   ||. . || ||. . . . . . . ||
-;;   ||. . ||   || . .|| ||. . ||   || . .|| ||. . ||   || . .|| || . | . . . . .||
-;;   || . .||   ||. _-|| ||-_ .||   ||. . || || . .||   ||. _-|| ||-_.|\ . . . . ||
-;;   ||. . ||   ||-'  || ||  `-||   || . .|| ||. . ||   ||-'  || ||  `|\_ . .|. .||
-;;   || . _||   ||    || ||    ||   ||_ . || || . _||   ||    || ||   |\ `-_/| . ||
-;;   ||_-' ||  .|/    || ||    \|.  || `-_|| ||_-' ||  .|/    || ||   | \  / |-_.||
-;;   ||    ||_-'      || ||      `-_||    || ||    ||_-'      || ||   | \  / |  `||
-;;   ||    `'         || ||         `'    || ||    `'         || ||   | \  / |   ||
-;;   ||            .===' `===.         .==='.`===.         .===' /==. |  \/  |   ||
-;;   ||         .=='   \_|-_ `===. .==='   _|_   `===. .===' _-|/   `==  \/  |   ||
-;;   ||      .=='    _-'    `-_  `='    _-'   `-_    `='  _-'   `-_  /|  \/  |   ||
-;;   ||   .=='    _-'          '-__\._-'         '-_./__-'         `' |. /|  |   ||
-;;   ||.=='    _-'                                                     `' |  /==.||
-;;   =='    _-'                                                            \/   `==
-;;   \   _-'                                                                `-_   /
-;;    `''                                                                      ``'
-;;
-;; These demons are not part of GNU Emacs.
-;;
-;;; License: MIT
+;;; private/amos/init.el -*- lexical-binding: t; -*-
+(setq-default
+ counsel-org-goto-display-style 'path
+ counsel-org-goto-separator " ➜ "
+ counsel-org-goto-face-style 'org
+ show-trailing-whitespace t
+ evil-ex-substitute-global t
+ intent-tabs-mode t
+ tab-always-indent t
+ powerline-default-separator 'alternate
+ find-file-visit-truename t
+ fringes-outside-margins t
+ require-final-newline t
+ evil-cjk-emacs-word-boundary t
+ evil-shift-width 4
+ evil-shift-round nil
+ evil-esc-delay 0.001
+ visible-cursor nil
+ package-check-signature nil
+ undo-tree-auto-save-history t
+ undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undo-files"))
+ password-cache-expiry nil
+ user-mail-address "amosbird@gmail.com"
+ user-full-name "Amos Bird"
+ process-environment initial-environment
+ browse-url-chrome-program (expand-file-name "~/scripts/vivaldi")
+ browse-url-firefox-program (expand-file-name "~/scripts/vivaldi")
+ browse-url-firefox-arguments '("new")
+ browse-url-mailto-function 'mu4e~compose-browse-url-mail
+ sp-escape-quotes-after-insert nil
+ reftex-default-bibliography '("~/zotero.bib")
+ helm-bibtex-bibliography '("~/zotero.bib")
+ helm-bibtex-pdf-field "file"
+ helm-bibtex-notes-path "~/bibnotes.org"
+ bibtex-completion-browser-function 'browser-url-chromium
+ bibtex-completion-pdf-open-function
+ (lambda (fpath)
+   (call-process "zathura" nil 0 nil fpath))
+ shell-file-name "/bin/bash"
+ explicit-shell-file-name "/bin/bash"
+ org-ref-default-bibliography '("~/Papers/references.bib")
+ org-ref-pdf-directory "~/Papers/"
+ org-ref-bibliography-notes "~/Papers/notes.org"
+ ws-butler-keep-whitespace-before-point nil
+ org-ref-open-pdf-function
+ (lambda (fpath)
+   (start-process "zathura" "*helm-bibtex-zathura*" "/usr/bin/zathura" fpath)))
 
-(require 'core (concat user-emacs-directory "core/core"))
 
-(doom! :feature
-      ;debugger          ; FIXME stepping through code, to help you add bugs
-       eval              ; run code, run (also, repls)
-       evil              ; come to the dark side, we have cookies
-       file-templates    ; auto-snippets for empty files
-       jump              ; helping you get around
-       services          ; TODO managing external services & code builders
-       snippets          ; my elves. They type so I don't have to
-       spellcheck        ; tasing you for misspelling mispelling
-       syntax-checker    ; tasing you for every semicolon you forget
-       version-control   ; remember, remember that commit in November
-       workspaces        ; tab emulation, persistence & separate workspaces
+(add-hook! '(doom-post-init-hook minibuffer-setup-hook) (setq-local show-trailing-whitespace nil))
 
-       :completion
-       company           ; the ultimate code completion backend
-       ivy               ; a search engine for love and life
-      ;helm              ; the *other* search engine for love and life
-      ;ido               ; the other *other* search engine...
+;; An extra measure to prevent the flash of unstyled mode-line while Emacs is
+;; booting up (when Doom is byte-compiled).
+(setq-default mode-line-format nil)
+(setq +org-dir (expand-file-name "~/org/"))
 
-       :ui
-       doom              ; what makes DOOM look the way it does
-       doom-dashboard    ; a nifty splash screen for Emacs
-       doom-modeline     ; a snazzy Atom-inspired mode-line
-      ;doom-quit         ; DOOM quit-message prompts when you quit Emacs
-       hl-todo           ; highlight TODO/FIXME/NOTE tags
-       nav-flash         ; blink the current line after jumping
-      ;evil-goggles      ; display visual hints when editing in evil
-       unicode           ; extended unicode support for various languages
-      ;tabbar            ; FIXME an (incomplete) tab bar for Emacs
-      ;vi-tilde-fringe   ; fringe tildes to mark beyond EOB
+(add-hook! :append 'org-load-hook (setq org-agenda-files (directory-files (concat +org-dir "todos/") t "\\.org$" t)))
 
-       :tools
-       dired             ; making dired pretty [functional]
-       electric-indent   ; smarter, keyword-based electric-indent
-       ;; eshell            ; a consistent, cross-platform shell (WIP)
-       gist              ; interacting with github gists
-       imenu             ; an imenu sidebar and searchable code index
-       impatient-mode    ; show off code over HTTP
-      ;macos             ; MacOS-specific commands
-       make              ; run make tasks from Emacs
-       ;; neotree           ; a project drawer, like NERDTree for vim
-       password-store    ; password manager for nerds
-       rotate-text       ; cycle region at point between text candidates
-       ;; term              ; terminals in Emacs
-       tmux              ; an API for interacting with tmux
-       upload            ; map local to remote projects via ssh/ftp
 
-       :lang
-       assembly          ; assembly for fun or debugging
-       cc                ; C/C++/Obj-C madness
-       crystal           ; ruby at the speed of c
-      ;csharp            ; unity, .NET, and mono shenanigans
-       data              ; config/data formats
-      ;elixir            ; erlang done right
-       elm               ; care for a cup of TEA?
-       emacs-lisp        ; drown in parentheses
-       go                ; the hipster dialect
-      ;(haskell +intero) ; a language that's lazier than I am
-       hy                ; readability of scheme w/ speed of python
-      ;(java +meghanada) ; the poster child for carpal tunnel syndrome
-       javascript        ; all(hope(abandon(ye(who(enter(here))))))
-       julia             ; a better, faster MATLAB
-       latex             ; writing papers in Emacs has never been so fun
-       ledger            ; an accounting system in Emacs
-       lua               ; one-based indices? one-based indices
-       markdown          ; writing docs for people to ignore
-      ;ocaml             ; an objective camel
-       perl              ; write code no one else can comprehend
-       php               ; make php less awful to work with
-       plantuml          ; diagrams for confusing people more
-       purescript        ; javascript, but functional
-       python            ; beautiful is better than ugly
-       rest              ; Emacs as a REST client
-       ruby              ; 1.step do {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
-       rust              ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
-       scala             ; java, but good
-       sh                ; she sells (ba|z)sh shells on the C xor
-      ;swift             ; who asked for emoji variables?
-       typescript        ; javascript, but better
-       web               ; the tubes
+(advice-add #'nlinum-mode :override #'ignore)
+(advice-add #'eldoc-mode :override #'ignore)
+(advice-add #'+org|update-cookies :override #'ignore)
+(fset 'fringe-mode nil)
 
-       :org
-      ;org               ; organize your plain life in plain text
-       org-babel         ; executable code snippets in org-mode
-       org-attach        ; a simpler attachment system
-       org-capture       ; a better org-capture, in or outside of Emacs
-      ;org-export        ; a custom, centralized export system
-       org-notebook      ; org-mode as a notebook
-       org-present       ; using org-mode for presentations
-      ;org-sync          ; TODO sync with mobile
-      ;org-publish       ; TODO org + blogs
+(after! centered-window-mode
+  (defun amos-special-window-p (window)
+    (let* ((buffer (window-buffer window))
+           (buffname (string-trim (buffer-name buffer))))
+      (or (equal buffname "*doom*")
+          (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
+  (push #'amos-special-window-p cwm-ignore-window-predicates))
 
-       ;; Applications are complex and opinionated modules that transform Emacs
-       ;; toward a specific purpose. They may have additional dependencies and
-       ;; should be loaded last.
-       :app
-      ;email             ; emacs as an email client
-      ;irc               ; how neckbeards socialize
-      ;rss               ; emacs as an RSS reader
-      ;twitter           ; twitter client https://twitter.com/vnought
-       write             ; emacs as a word processor (latex + org + markdown)
+(def-package-hook! org-bullets
+  :pre-config nil)
 
-       ;; Private modules named after your username are loaded automatically.
-       ;; Leaving this here is harmless though.
-       :private
-       amos
-       org
-       email)
+(def-package-hook! cc-mode
+  :post-config
+  (setq c-tab-always-indent t)
+  t)
+
+(def-package-hook! magit
+  :pre-config nil)
+
+(def-package-hook! racer
+  :pre-config
+  (set! :jump 'rust-mode :definition #'racer-find-definition)
+  (unless (file-exists-p racer-cmd)
+    (warn "rust-mode: racer binary can't be found; auto-completion is disabled"))
+  nil)
+
+(def-package-hook! stripe-buffer
+  :pre-init nil)
+
+;; host-specific settings
+(pcase (system-name)
+  ("t450s"
+   ;; smaller screen, smaller fonts
+   (set! :font "Ubuntu Mono" :size 14)
+   (set! :variable-font "Fira Sans" :size 14)
+   (set! :unicode-font "DejaVu Sans Mono" :size 14)
+   (setq +doom-modeline-height 25)
+   (setq helm-dash-browser-func 'browse-url-firefox))
+  (_
+   ;; smaller screen, smaller fonts
+   (set! :font "Fira Mono" :size 10)
+   (set! :variable-font "Fira Sans" :size 10)
+   (set! :unicode-font "DejaVu Sans Mono" :size 10)
+   (setq +doom-modeline-height 25))
+  )
+
+
+(defvar switch-buffer-functions
+  nil
+  "A list of functions to be called when the current buffer has been changed.
+Each is passed two arguments, the previous buffer and the current buffer.")
+
+(defvar switch-buffer-functions--last-buffer
+  nil
+  "The last current buffer.")
+
+(defvar switch-buffer-functions--running-p
+  nil
+  "Non-nil if currently inside of run `switch-buffer-functions-run'.")
+
+(defun switch-buffer-functions-run ()
+  "Run `switch-buffer-functions' if needed.
+This function checks the result of `current-buffer', and run
+`switch-buffer-functions' when it has been changed from
+the last buffer.
+This function should be hooked to `buffer-list-update-hook'."
+  (unless switch-buffer-functions--running-p
+    (let ((switch-buffer-functions--running-p t)
+          (current (current-buffer))
+          (previous switch-buffer-functions--last-buffer))
+      (unless (eq previous
+                  current)
+        (run-hook-with-args 'switch-buffer-functions
+                            previous
+                            current)
+        (setq switch-buffer-functions--last-buffer
+              (current-buffer))))))
+
+(add-hook! 'buffer-list-update-hook #'switch-buffer-functions-run)
+
+(defun +amos*dashboard/open (frame)
+  (interactive (list (selected-frame)))
+  (unless (run-hook-with-args-until-success '+doom-dashboard-inhibit-functions)
+    (unless +doom-dashboard-inhibit-refresh
+      (with-selected-frame frame
+        (switch-to-buffer (doom-fallback-buffer))
+        (setq-local show-trailing-whitespace nil)
+        (+doom-dashboard-reload)))
+    (setq +doom-dashboard-inhibit-refresh nil)))
+(advice-add #'+doom-dashboard/open :override #'+amos*dashboard/open)
