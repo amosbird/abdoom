@@ -54,7 +54,7 @@
  "M-r"    #'+eval/buffer
  "M-R"    #'+eval/region-and-replace
  "M-b"    #'+eval/build
- "M-a"    #'mark-whole-buffer
+ :nvmei "M-a"    #'mark-whole-buffer
  "M-e"    #'counsel-dash-at-point
  "M-m"    #'evil-switch-to-windows-last-buffer
  :ne "M-g"    #'+amos/counsel-jumpdir-function
@@ -62,6 +62,12 @@
  "C-l"    #'+amos:redisplay-and-recenter
  "C-s"    #'swiper
  "C-S-s"  #'counsel-projectile-rg
+ :nm "f"  #'evil-snipe-s
+ :nm "F"  #'evil-snipe-S
+ :nm "t"  #'evil-snipe-x
+ :nm "T"  #'evil-snipe-X
+ :nm "s"  #'evil-substitute
+ :nm "S"  #'evil-change-whole-line
  :m "C-f" #'evilem--motion-evil-find-char
  :m "C-b" #'evilem--motion-evil-find-char-backward
  :m "C-y" #'+amos/yank-buffer-filename-with-line-position
@@ -259,7 +265,7 @@
 
    (:desc "open" :prefix "o"
      :desc "Default browser"     :n  "b" #'browse-url-of-file
-     :desc "Dired"               :n  "d" #'+amos/dired-current-dir
+     :desc "Dired"               :n  "d" #'+amos/dired-jump
      :desc "REPL"                :n  "r" #'+eval/open-repl
                                  :v  "r" #'+eval:repl
      :desc "Neotree"             :n  "n" #'+neotree/toggle
@@ -766,6 +772,11 @@
   (do-repeat! evil-visualstar/begin-search-backward
     evil-ex-search-previous evil-ex-search-next))
 
+(after! profiler
+  (map!
+   (:map profiler-report-mode-map
+     :nm "RET" #'profiler-report-expand-entry)))
+
 ;; evil-easymotion
 (after! evil-easymotion
   (let ((prefix "C-t"))
@@ -774,12 +785,12 @@
     (evilem-default-keybindings prefix)
     (evilem-define (kbd (concat prefix " n")) #'evil-ex-search-next)
     (evilem-define (kbd (concat prefix " N")) #'evil-ex-search-previous)
-    (evilem-define (kbd (concat prefix " s")) #'evil-snipe-repeat
+    (evilem-define (kbd (concat prefix " f")) #'evil-snipe-repeat
                    :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
                    :bind ((evil-snipe-scope 'buffer)
                           (evil-snipe-enable-highlight)
                           (evil-snipe-enable-incremental-highlight)))
-    (evilem-define (kbd (concat prefix " S")) #'evil-snipe-repeat-reverse
+    (evilem-define (kbd (concat prefix " F")) #'evil-snipe-repeat-reverse
                    :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
                    :bind ((evil-snipe-scope 'buffer)
                           (evil-snipe-enable-highlight)

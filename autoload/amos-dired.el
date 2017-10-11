@@ -59,16 +59,32 @@
   (interactive)
   (+amos--jump-history 1))
 
+(defun +amos/kill-all-other-dired-buffers (&optional current-buf)
+  "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
+  except current-buf ,if current-buf is nil then kill all"
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (and (not (eq current-buf buf))
+                 (or  (eq 'dired-mode  major-mode)
+                      (eq 'diredp-w32-drives-mode major-mode)))
+        (kill-buffer buf)))))
+
+(defadvice dired (before dired-single-buffer activate)
+  "Replace current buffer if file is a directory."
+  (+amos/kill-all-other-dired-buffers))
+
 ;;;###autoload
 (defun +amos/up-directory (&optional other-window)
   (interactive)
   (dired-up-directory other-window)
-  (+amos--update-history default-directory))
+  (+amos--update-history default-directory)
+  (+amos/kill-all-other-dired-buffers (current-buffer)))
 
 ;;;###autoload
 (defun +amos/find-file (&optional entry ignore-history)
   (interactive)
-  (let ((find-name (or entry
+  (let ((orig (current-buffer))
+        (find-name (or entry
                        (dired-get-filename nil t))))
     (when find-name
       (if (file-exists-p find-name)
@@ -76,9 +92,25 @@
             (unless ignore-history
               (+amos--update-history find-name))
             ;; select origination file
-            (find-file find-name))
+            (find-file find-name)
+            (when (and (file-directory-p find-name)
+                       (not (eq (current-buffer) orig)))
+              (+amos/kill-all-other-dired-buffers (current-buffer))))
         (message (shell-command-to-string "jump clean"))
         (error "File doesn't exist anymore!")))))
+
+(defun dired-mouse-find-alternate-file (event)
+  "In dired, visit the file or directory you click on instead of the dired buffer."
+  (interactive "e")
+  (let (file)
+    (save-excursion
+      (with-current-buffer (window-buffer (posn-window (event-end event)))
+        (save-excursion
+          (goto-char (posn-point (event-end event)))
+          (setq file (dired-get-filename nil t)))))
+    (select-window (posn-window (event-end event)))
+    (find-alternate-file (file-name-sans-versions file t))))
+(define-key dired-mode-map [mouse-2] 'dired-mouse-find-alternate-file)
 
 ;;;###autoload
 (defun +amos/counsel-jumpfile-function ()
@@ -95,6 +127,12 @@
             :require-match t
             :action #'+amos/find-file
             :caller #'+amos/counsel-jumpdir-function))
+
+;;;###autoload
+(defun +amos/dired-jump ()
+  (interactive)
+  (require 'dired)
+  (dired-jump))
 
 ;;;###autoload
 (defun +amos/show-history (history)

@@ -78,7 +78,7 @@
 
        :lang
        assembly          ; assembly for fun or debugging
-       cc                ; C/C++/Obj-C madness
+      ;cc                ; C/C++/Obj-C madness
        crystal           ; ruby at the speed of c
       ;csharp            ; unity, .NET, and mono shenanigans
        data              ; config/data formats
@@ -135,5 +135,6 @@
        ;; Leaving this here is harmless though.
        :private
        amos
+       cc
        org
        email)

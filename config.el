@@ -28,6 +28,9 @@
   ("p" evil-paste-after "Paste After")
   ("P" evil-paste-before "Paste Before"))
 
+;; (after! dired
+;;   (add-hook! 'dired-after-readin-hook 'hl-line-mode))
+
 (after! smartparens
   ;; Auto-close more conservatively
   (let ((unless-list '(sp-point-before-word-p
@@ -399,6 +402,7 @@ or message-at-point."
   :after ivy
   :init
   (setq ivy-virtual-abbreviate 'full
+        ivy-re-builders-alist '((t . ivy--regex-ignore-order))
         ivy-use-virtual-buffers t
         ivy-rich-switch-buffer-align-virtual-buffer t)
   (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
@@ -406,62 +410,16 @@ or message-at-point."
 (def-package! move-text
   :commands move-text-up move-text-down)
 
-(def-package! fish-mode)
+(def-package! fish-mode
+  :mode "\\.fish")
 
-(after! dired
-  (defun joseph-kill-all-other-dired-buffers ( &optional current-buf)
-    "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
-  except current-buf ,if current-buf is nil then kill all"
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (and (not (eq current-buf buf))
-                   (or  (eq 'dired-mode  major-mode)
-                        (eq 'diredp-w32-drives-mode major-mode)))
-          (kill-buffer buf)))))
-
-  (defadvice dired-find-file (around dired-find-file-single-buffer activate)
-    "Replace current buffer if file is a directory."
-    (interactive)
-    (let ((orig (current-buffer))
-          (filename (dired-get-file-for-visit)))
-      ad-do-it
-      (when (and (file-directory-p filename)
-                 (not (eq (current-buffer) orig)))
-        (joseph-kill-all-other-dired-buffers (current-buffer)))))
-
-  (defadvice +amos/find-file (around dired-find-file-single-buffer activate)
-    "Replace current buffer if file is a directory."
-    (interactive)
-    (let ((orig (current-buffer))
-          (filename (dired-get-file-for-visit)))
-      ad-do-it
-      (when (and (file-directory-p filename)
-                 (not (eq (current-buffer) orig)))
-        (joseph-kill-all-other-dired-buffers (current-buffer)))))
-
-  (defadvice dired-up-directory (around dired-up-directory-single-buffer activate)
-    "Replace current buffer if file is a directory."
-    (interactive)
-    (let ((orig (current-buffer)))
-      ad-do-it
-      (joseph-kill-all-other-dired-buffers (current-buffer))))
-
-  (defadvice dired (before dired-single-buffer activate)
-    "Replace current buffer if file is a directory."
-    (joseph-kill-all-other-dired-buffers)
-    )
-  (defun dired-mouse-find-alternate-file (event)
-    "In dired, visit the file or directory you click on instead of the dired buffer."
-    (interactive "e")
-    (let (file)
-      (save-excursion
-        (with-current-buffer (window-buffer (posn-window (event-end event)))
-          (save-excursion
-            (goto-char (posn-point (event-end event)))
-            (setq file (dired-get-filename nil t)))))
-      (select-window (posn-window (event-end event)))
-      (find-alternate-file (file-name-sans-versions file t))))
-  (define-key dired-mode-map [mouse-2] 'dired-mouse-find-alternate-file))
+(defun dired-list-exa (dir)
+  "List all files in DIR managed by git and display results as a `dired' buffer."
+  (interactive "DDirectory: ")
+  (dired-list dir
+              (concat "exa -alg --git " dir)
+              (concat "exa -alg --git " dir)
+              `(lambda (ignore-auto noconfirm) (dired-list-exa ,dir))))
 
 (def-package! ws-butler
   :demand

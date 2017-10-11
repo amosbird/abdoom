@@ -148,7 +148,7 @@
   "Sets up org-mode and evil keybindings. Tries to fix the idiosyncrasies
 between the two."
   (map! (:map org-mode-map
-          "RET" #'org-return-indent
+          :vn "RET"    #'org-open-at-point
           :en "M-h"    #'evil-window-left
           :en "M-j"    #'evil-window-down
           :en "M-k"    #'evil-window-up

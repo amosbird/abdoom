@@ -46,8 +46,15 @@
  (lambda (fpath)
    (start-process "zathura" "*helm-bibtex-zathura*" "/usr/bin/zathura" fpath)))
 
+;; (add-hook! 'dired-mode-hook (face-remap-add-relative 'hl-line '((:background "DarkSalmon"))))
 
 (add-hook! '(doom-post-init-hook minibuffer-setup-hook) (setq-local show-trailing-whitespace nil))
+
+(after! evil-vars
+  (setq evil-kill-on-visual-paste nil))
+
+(custom-set-variables
+  '(flycheck-pos-tip-mode nil))
 
 ;; An extra measure to prevent the flash of unstyled mode-line while Emacs is
 ;; booting up (when Doom is byte-compiled).
@@ -60,6 +67,7 @@
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'eldoc-mode :override #'ignore)
 (advice-add #'+org|update-cookies :override #'ignore)
+(advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
 (fset 'fringe-mode nil)
 
 (after! centered-window-mode

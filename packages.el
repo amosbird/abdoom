@@ -4,7 +4,6 @@
 (package! vi-tilde-fringe :ignore t)
 (package! stripe-buffer :ignore t)
 (package! git-gutter-fringe :ignore t)
-(package! dired-k :ignore t)
 (package! centered-window-mode :recipe (:fetcher github :repo "amosbird/centered-window-mode"))
 (package! evil-terminal-cursor-changer :recipe (:fetcher github :repo "amosbird/evil-terminal-cursor-changer"))
 (package! evil-textobj-line :recipe (:fetcher github :repo "syohex/evil-textobj-line"))

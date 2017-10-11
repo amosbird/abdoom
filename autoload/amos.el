@@ -119,11 +119,6 @@ the current state and point position."
     (evilnc-copy-and-comment-lines arg)))
 
 ;;;###autoload
-(defun +amos/dired-current-dir ()
-  (interactive)
-  (dired default-directory))
-
-;;;###autoload
 (defun +amos/org-babel-edit (arg)
   "Edit the source block at point in a popup.
 
