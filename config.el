@@ -279,9 +279,7 @@
   (ws-butler-global-mode))
 ;;; config.el ends here
 
-(setq split-width-threshold nil)
-(setq split-height-threshold 0)
-(advice-add #'split-window-below :override #'split-window-right)
+;; (advice-add #'split-window-below :override #'split-window-right)
 
 (setq company-idle-delay 0.1
       company-minimum-prefix-length 2
@@ -368,6 +366,7 @@
   (setq shackle-rules
         '(
           ("*Help*" :size 0.3)
+          ("^\\*doom:scratch" :regexp t :size 0.5 :select t :modeline t :autoclose t :align right)
           )))
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
