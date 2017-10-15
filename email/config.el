@@ -47,7 +47,7 @@ default/fallback account."
 ;;
 
 (def-package! mu4e
-  :commands (mu4e mu4e-compose-new)
+  :commands (mu4e mu4e-compose-new browse-url-mail)
   :config
   (setq
    mail-user-agent 'mu4e-user-agent
@@ -239,12 +239,40 @@ default/fallback account."
               :n "m" #'mu4e-view-mark-for-move))
 
           (:map mu4e~update-mail-mode-map
-            :n "q" #'mu4e-interrupt-update-mail))))
+            :n "q" #'mu4e-interrupt-update-mail)))
+
+  (set! :email "gmail"
+    '((user-full-name         . "Amos Bird")
+     (user-mail-address      . "amosbird@gmail.com")
+     (mu4e-compose-signature . "Amos Bird\namosbird@gmail.com"))
+    t)
+  (set! :email "software"
+    '((user-full-name         . "郑天祺")
+     (user-mail-address      . "zhengtianqi@softwares.ict.ac.cn")
+     (mu4e-compose-signature . "郑天祺\n中科院计算所 网络数据实验室\n"))
+    nil)
+  (set! :email "golaxy"
+    '((user-full-name         . "郑天祺")
+     (user-mail-address      . "zhengtianqi@golaxy.cn")
+     (mu4e-compose-signature . "郑天祺\n中科天玑\n"))
+    nil)
+  (set! :email "ucas"
+    '((user-full-name         . "郑天祺")
+     (user-mail-address      . "zhengtianqi12@mails.ucas.ac.cn")
+     (mu4e-compose-signature . "郑天祺\n中科院计算所 网络数据实验室\n"))
+    nil))
 
 
 (def-package! mu4e-maildirs-extension
   :after mu4e
   :config (mu4e-maildirs-extension-load))
+
+(def-package! notmuch
+  :init
+  (add-to-list 'auto-mode-alist '("amosbird@gmail.com" . notmuch-message-mode))
+  :config
+  (require 'notmuch-company)
+  (require 'notmuch-mua))
 
 
 (def-package! org-mu4e
@@ -259,3 +287,25 @@ default/fallback account."
   (add-hook! 'message-send-hook
     (setq-local org-mu4e-convert-to-html nil)))
 
+(defun +amos*mu4e-view-verify-msg-popup (&optional msg)
+  "Pop-up a little signature verification window for (optional) MSG
+or message-at-point."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (path (mu4e-message-field msg :path))
+         (cmd (format "%s verify --verbose %s %s"
+                      mu4e-mu-binary
+                      (shell-quote-argument path)
+                      (if mu4e-decryption-policy
+                          "--decrypt --use-agent"
+                        "")))
+         (output (shell-command-to-string cmd)))
+    "Output to the temp buffer."
+    (let ((buffer-name " *mu4e-verify*"))
+      (with-output-to-temp-buffer buffer-name
+        (let ((inhibit-read-only t))
+          (set-buffer buffer-name)
+          (insert output)
+          (goto-char (point-min)))
+        (setq buffer-read-only t)))))
+(advice-add #'mu4e-view-verify-msg-popup :override #'+amos*mu4e-view-verify-msg-popup)

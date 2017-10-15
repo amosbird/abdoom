@@ -59,41 +59,8 @@
         (append (list '+amos-snippets-dir)
                 (delq 'yas-installed-snippets-dir yas-snippet-dirs))))
 
-;; app/email
-(after! mu4e
-  '(set! :email "gmail.com"
-    ((user-full-name         . "Amos Bird")
-     (user-mail-address      . "amosbird@gmail.com")
-     (mu4e-compose-signature . "Amos Bird\namosbird@gmail.com"))
-    t)
-  (defun +amos*mu4e-view-verify-msg-popup (&optional msg)
-    "Pop-up a little signature verification window for (optional) MSG
-or message-at-point."
-    (interactive)
-    (let* ((msg (or msg (mu4e-message-at-point)))
-           (path (mu4e-message-field msg :path))
-           (cmd (format "%s verify --verbose %s %s"
-                        mu4e-mu-binary
-                        (shell-quote-argument path)
-                        (if mu4e-decryption-policy
-                            "--decrypt --use-agent"
-                          "")))
-           (output (shell-command-to-string cmd)))
-      "Output to the temp buffer."
-      (let ((buffer-name " *mu4e-verify*"))
-        (with-output-to-temp-buffer buffer-name
-          (let ((inhibit-read-only t))
-            (set-buffer buffer-name)
-            (insert output)
-            (goto-char (point-min)))
-          (setq buffer-read-only t))))
-    (advice-add #'mu4e-view-verify-msg-popup :override #'+amos*mu4e-view-verify-msg-popup)))
 
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
-
-(after! yasnippet
-  (setq yas-triggers-in-field nil
-        yas-wrap-around-region 121))
 
 (def-package! evil-magit
   :after magit)
@@ -112,19 +79,32 @@ or message-at-point."
 (def-package! osc
   :demand
   :init
-  (if window-system
-    (progn
-     (defun +amos/other-window ()
-       (interactive)
-       (i3-nav-right))
-     (setq browse-url-browser-function 'browse-url-chrome))
-    (progn
-     (defun +amos/other-window ()
-       (interactive)
-       (osc-nav-right))
-     (setq
-      interprogram-cut-function 'osc-select-text
-      browse-url-browser-function 'browse-url-osc))))
+  (add-hook! 'after-make-frame-functions
+    (if window-system
+        (progn
+          (defun +amos/other-window ()
+            (interactive)
+            (i3-nav-right))
+          (setq browse-url-browser-function 'browse-url-chrome))
+      (progn
+        (defun +amos/other-window ()
+          (interactive)
+          (osc-nav-right))
+        (setq
+         interprogram-cut-function 'osc-select-text
+         browse-url-browser-function 'browse-url-osc)))))
+
+(defun +amos|init-fonts (&optional frame)
+  (when (display-graphic-p frame)
+    (select-frame frame)
+    (require 'unicode-fonts)
+    (unicode-fonts-setup)
+    (remove-hook! 'after-make-frame-functions #'+amos|init-fonts)))
+
+(add-hook! 'after-init-hook
+  (if initial-window-system
+      (+amos|init-fonts)
+    (add-hook! 'after-make-frame-functions #'+amos|init-fonts)))
 
 (def-package! evil-nerd-commenter
   :commands
@@ -183,6 +163,7 @@ or message-at-point."
 (def-package! pangu-spacing
   :demand
   :config
+  (push 'dired-mode pangu-spacing-inhibit-mode-alist)
   (global-pangu-spacing-mode +1)
   ;; Always insert `real' space in org-mode.
   (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
@@ -206,11 +187,7 @@ or message-at-point."
   (etcc-on))
 
 (def-package! chinese-yasdcv
-  :commands yasdcv-translate-at-point
-  :init
-  (custom-set-variables
-   '(yasdcv-sdcv-dicts   '(("jianminghy" "简明汉英词典" "powerword2007" t)))
-   '(yasdcv-sdcv-command "sdcv --non-interactive --utf8-output --utf8-input \"%word\"")))
+  :commands yasdcv-translate-at-point)
 
 (def-package! counsel-dash
   :commands counsel-dash
@@ -252,133 +229,6 @@ or message-at-point."
    easy-hugo-previewtime "300"
    easy-hugo-default-ext ".org"))
 
-(def-package! ox-twbs
-  :after ox)
-
-(def-package! ox-hugo
-  :after ox
-  :config
-  (custom-set-variables '(org-hugo-default-section-directory "post")))
-
-(after! org
-  (setq org-goto-interface 'outline-path-completion)
-  (setq org-outline-path-complete-in-steps nil)
-  (custom-set-variables
-   '(org-babel-load-languages
-     (quote
-      ((python . t)
-       (emacs-lisp . t)
-       (dot . t)
-       (gnuplot . t)
-       (C . t)
-       (sql . t)
-       (awk . t))))
-   '(org-beamer-frame-level 2)
-   '(org-beamer-theme "metropolis")
-   '(org-capture-templates
-     (quote
-      (("c" "code" entry
-        (file+headline "~/org/code.org" "Triage")
-        "** %a " :prepend t :empty-lines-before 1 :empty-lines-after 1)
-       ("i" "idea" entry
-        (file "~/org/idea.org")
-        "* %u %?\n%i" :prepend t :empty-lines-before 1 :empty-lines-after 1)
-       ("n" "notes" entry
-        (file "~/org/notes.org")
-        (file "~/org/template/idea")
-        :empty-lines-before 1 :empty-lines-after 1)
-       ("t" "Templates for todo items")
-       ("te" "ergonomics" entry
-        (file+headline "~/org/todo.org" "Ergonomics")
-        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)
-       ("tw" "working" entry
-        (file+headline "~/org/todo.org" "Work")
-        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)
-       ("tl" "learning" entry
-        (file+headline "~/org/todo.org" "Learning")
-        "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1))))
-   '(org-html-text-markup-alist
-     (quote
-      ((bold . "<b>%s</b>")
-       (code . "<code>%s</code>")
-       (italic . "<i>%s</i>")
-       (strike-through . "<strong style=\"color : red;\">%s</strong>")
-       (underline . "<span class=\"underline\">%s</span>")
-       (verbatim . "<code>%s</code>"))))
-   '(org-latex-compiler "xelatex")
-   '(org-latex-custom-lang-environments nil)
-   '(org-latex-default-packages-alist
-     (quote
-      (("AUTO" "inputenc" t
-        ("pdflatex"))
-       ("T1" "fontenc" t
-        ("pdflatex"))
-       ("" "graphicx" t)
-       ("" "ctex" t)
-       ("" "booktabs" t)
-       ("" "grffile" t)
-       ("" "longtable" nil)
-       ("" "wrapfig" nil)
-       ("" "rotating" nil)
-       ("normalem" "ulem" t)
-       ("" "amsmath" t)
-       ("" "textcomp" t)
-       ("" "amssymb" t)
-       ("" "capt-of" nil)
-       ("" "hyperref" nil))))
-   '(org-latex-tables-booktabs t)
-   '(org-latex-text-markup-alist
-     (quote
-      ((bold . "\\textbf{%s}")
-       (code . protectedtexttt)
-       (italic . "\\emph{%s}")
-       (strike-through . "\\emph{%s}")
-       (underline . "\\uline{%s}")
-       (verbatim . protectedtexttt))))
-   '(org-mime-beautify-quoted-mail t)
-   '(org-preview-latex-default-process (quote imagemagick))
-   '(org-src-block-faces (quote (("c++" default))))
-   '(org-src-tab-acts-natively t)
-   '(org-twbs-text-markup-alist
-     (quote
-      ((bold . "<b>%s</b>")
-       (code . "<code>%s</code>")
-       (italic . "<i>%s</i>")
-       (strike-through . "<strong style=\"color : red;\">%s</strong>")
-       (underline . "<span class=\"underline\">%s</span>")
-       (verbatim . "<code>%s</code>")))))
-
-  (custom-set-faces
-   '(org-level-1 ((t (:inherit bold :foreground "#4f97d7" :height 1.0))))
-   '(org-level-2 ((t (:inherit bold :foreground "#2d9574" :height 1.0))))
-   '(org-level-3 ((t (:foreground "#67b11d" :weight normal :height 1.0)))))
-  )
-
-(after! ox
-  (nconc org-export-backends '(beamer odt))
-  ;; remove comments from org document for use with export hook
-  ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
-  (defun +amos|delete-org-comments (&optional backend)
-    (loop for comment in (reverse (org-element-map (org-element-parse-buffer)
-                                                   'comment 'identity))
-          do
-          (setf (buffer-substring (org-element-property :begin comment)
-                                  (org-element-property :end comment)) "")))
-  ;; add to export hook
-  (add-hook! 'org-export-before-processing-hook #'+amos|delete-org-comments)
-
-  (defun +amos--clear-single-linebreak-in-cjk-string (string)
-    "clear single line-break between cjk characters that is usually soft line-breaks"
-    (let* ((regexp "\\([\u4E00-\u9FA5]\\)\n\\([\u4E00-\u9FA5]\\)")
-           (start (string-match regexp string)))
-      (while start
-        (setq string (replace-match "\\1\\2" nil nil string)
-              start (string-match regexp string start))))
-    string)
-  (defun +amos|ox-clear-single-linebreak-for-cjk (string backend info)
-    (+amos--clear-single-linebreak-in-cjk-string string))
-  (add-to-list 'org-export-filter-final-output-functions
-               '+amos|ox-clear-single-linebreak-for-cjk))
 
 (def-package! link-hint
   :commands link-hint-open-link
@@ -395,17 +245,19 @@ or message-at-point."
 (def-package! lispyville
   :commands lispyville-mode)
 
-(after! swiper
-  (custom-set-variables '(swiper-include-line-number-in-search t)))
-
-(def-package! ivy-rich
-  :after ivy
-  :init
+(after! ivy
   (setq ivy-virtual-abbreviate 'full
         ivy-re-builders-alist '((t . ivy--regex-ignore-order))
-        ivy-use-virtual-buffers t
-        ivy-rich-switch-buffer-align-virtual-buffer t)
-  (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+        ivy-use-virtual-buffers t))
+
+;; (def-package! ivy-rich
+;;   :after ivy
+;;   :init
+;;   (setq ivy-virtual-abbreviate 'full
+;;         ivy-re-builders-alist '((t . ivy--regex-ignore-order))
+;;         ivy-use-virtual-buffers t
+;;         ivy-rich-switch-buffer-align-virtual-buffer t)
+;;   (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
 
 (def-package! move-text
   :commands move-text-up move-text-down)
@@ -426,3 +278,104 @@ or message-at-point."
   :config
   (ws-butler-global-mode))
 ;;; config.el ends here
+
+(setq split-width-threshold nil)
+(setq split-height-threshold 0)
+(advice-add #'split-window-below :override #'split-window-right)
+
+(setq company-idle-delay 0.1
+      company-minimum-prefix-length 2
+      company-selection-wrap-around t
+      company-show-numbers t
+      company-require-match 'never
+      company-dabbrev-downcase nil
+      company-dabbrev-ignore-case t
+      company-backends '(company-jedi company-nxml
+                                      company-css company-capf
+                                      (company-dabbrev-code company-keywords)
+                                      company-files company-dabbrev)
+      company-jedi-python-bin "python")
+(defun my-company-abort ()
+  (interactive)
+  (company-abort)
+  (when (and (bound-and-true-p evil-mode)
+             (eq evil-state 'insert))
+    (evil-force-normal-state)))
+
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "<escape>") 'my-company-abort)
+  (define-key company-search-map (kbd "<escape>") 'company-search-abort))
+
+(setq company-frontends
+      '(company-pseudo-tooltip-unless-just-one-frontend
+        company-echo-metadata-frontend
+        company-preview-frontend)
+      company-auto-complete t)
+
+(with-eval-after-load 'smartparens
+  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
+  (sp-local-pair 'minibuffer-inactive-mode "`" nil :actions nil)
+  (sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+  (sp-local-pair 'emacs-lisp-mode "`" nil :actions nil)
+  (sp-local-pair 'lisp-interaction-mode "'" nil :actions nil)
+  (sp-local-pair 'lisp-interaction-mode "`" nil :actions nil)
+  (sp-local-pair 'scheme-mode "'" nil :actions nil)
+  (sp-local-pair 'scheme-mode "`" nil :actions nil)
+  (sp-local-pair 'inferior-scheme-mode "'" nil :actions nil)
+  (sp-local-pair 'inferior-scheme-mode "`" nil :actions nil)
+
+  (sp-local-pair 'LaTeX-mode "\"" nil :actions nil)
+  (sp-local-pair 'LaTeX-mode "'" nil :actions nil)
+  (sp-local-pair 'LaTeX-mode "`" nil :actions nil)
+  (sp-local-pair 'latex-mode "\"" nil :actions nil)
+  (sp-local-pair 'latex-mode "'" nil :actions nil)
+  (sp-local-pair 'latex-mode "`" nil :actions nil)
+  (sp-local-pair 'TeX-mode "\"" nil :actions nil)
+  (sp-local-pair 'TeX-mode "'" nil :actions nil)
+  (sp-local-pair 'TeX-mode "`" nil :actions nil)
+  (sp-local-pair 'tex-mode "\"" nil :actions nil)
+  (sp-local-pair 'tex-mode "'" nil :actions nil)
+  (sp-local-pair 'tex-mode "`" nil :actions nil))
+
+(defun my-create-newline-and-enter-sexp (&rest _ignored)
+  "Open a new brace or bracket expression, with relevant newlines and indent."
+  (newline)
+  (indent-according-to-mode)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+(with-eval-after-load 'smartparens
+  (sp-local-pair 'c-mode "{" nil :post-handlers
+                 '((my-create-newline-and-enter-sexp "RET")))
+  (sp-local-pair 'java-mode "{" nil :post-handlers
+                 '((my-create-newline-and-enter-sexp "RET"))))
+
+(setq sp-message-width nil)
+(setq sp-show-pair-from-inside t)
+(setq sp-autoescape-string-quote nil)
+(setq sp-cancel-autoskip-on-backward-movement nil)
+
+(define-key emacs-lisp-mode-map (kbd "C-x e") 'macrostep-expand)
+
+(add-hook 'visual-line-mode-hook 'visual-fill-column-mode)
+
+(defadvice edebug-pop-to-buffer (around +amos*edebug-pop-to-buffer activate)
+  (flet ((old-split-window (&optional window size side pixelwise) (split-window window size side pixelwise))
+         (split-window (window) (old-split-window window nit 'right)))
+    ad-do-it))
+
+(after! shackle
+  (setq shackle-rules
+        '(
+          ("*Help*" :size 0.3)
+          )))
+
+(defadvice hl-line-mode (after +amos*hl-line-mode activate)
+  (set-face-background hl-line-face "Gray13"))
+
+(after! hl-line
+  (global-hl-line-mode +1))
+
+;; (set-face-background 'show-paren-match (face-background 'default))
+;; (set-face-foreground 'show-paren-match (face-foreground 'default))
+;; (set-face-attribute 'show-paren-match nil :weight 'normal)

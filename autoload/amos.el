@@ -128,3 +128,10 @@ If ARG is non-nil (universal argument), use the current window."
       (call-interactively #'org-edit-special)
     (with-popup-rules! (("^\\*Org Src" :regexp t :size 0.5 :select t :align 'right :noesc t))
       (call-interactively #'org-edit-special))))
+
+;;;###autoload
+(defun +amos/prompt-kill-emacs ()
+  "Prompt to save changed buffers and exit Spacemacs"
+  (interactive)
+  (save-some-buffers nil t)
+  (kill-emacs))

@@ -1,5 +1,38 @@
 ;;; private/amos/autoload/evil.el -*- lexical-binding: t; -*-
 
+;;;###autoload (autoload '+amos:evil-backward-symbol-begin "private/amos/autoload/evil" nil nil)
+(evil-define-motion +amos:evil-backward-symbol-begin (count)
+  :type exclusive
+  (let ((thing 'symbol))
+    (evil-signal-at-bob-or-eob (- (or count 1)))
+    (evil-backward-beginning thing count)))
+
+;;;###autoload (autoload '+amos:evil-delete-backward-symbol "private/amos/autoload/evil" nil nil)
+(evil-define-command +amos:evil-delete-backward-symbol ()
+  "Delete previous symbol."
+  (if (and (bolp) (not (bobp)))
+      (progn
+        (unless evil-backspace-join-lines (user-error "Beginning of line"))
+        (delete-char -1))
+    (delete-region (max
+                    (save-excursion
+                      (+amos:evil-backward-symbol-begin)
+                      (point))
+                    (line-beginning-position))
+                   (point))))
+
+;;;###autoload (autoload '+amos:evil-delete-word "private/amos/autoload/evil" nil nil)
+(evil-define-command +amos:evil-delete-word ()
+  "Delete word."
+  (if (and (eolp) (not (eobp)))
+      (delete-char 1)
+    (delete-region (point)
+                   (min
+                    (save-excursion
+                      (evil-forward-word-begin)
+                      (point))
+                    (line-end-position)))))
+
 ;;;###autoload (autoload '+amos:multi-next-line "private/amos/autoload/evil" nil t)
 (evil-define-motion +amos:multi-next-line (count)
   "Move down 6 lines."

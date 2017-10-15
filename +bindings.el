@@ -20,90 +20,87 @@
 (map!
  ;; --- Global keybindings ---------------------------
  ;; Make M-x available everywhere
- :nvime "M-x" #'execute-extended-command
- :nvime "A-x" #'execute-extended-command
+ :nvime "M-x"       #'execute-extended-command
+ :nvime "A-x"       #'execute-extended-command
  ;; Emacs debug utilities
- "M-;"        #'eval-expression
- :nvime "M-;" #'eval-expression
- "M-:"        #'doom/open-scratch-buffer
- :nvime "M-:" #'doom/open-scratch-buffer
+ "M-;"              #'eval-expression
+ :nvime "M-;"       #'eval-expression
+ "M-:"              #'doom/open-scratch-buffer
+ :nvime "M-:"       #'doom/open-scratch-buffer
  ;; Text-scaling
- "M-+"    (λ! (text-scale-set 0))
- "M-="    #'text-scale-increase
- "M--"    #'text-scale-decrease
+ "M-+"              (λ! (text-scale-set 0))
+ "M-="              #'text-scale-increase
+ "M--"              #'text-scale-decrease
  ;; Simple window navigation/manipulation
- "C-`"    #'doom/popup-toggle
- "C-~"    #'doom/popup-raise
- "M-t"    #'+workspace/new
- "M-T"    #'+workspace/display
- "M-w"    #'delete-window
- "M-W"    #'+workspace/close-workspace-or-frame
- "M-n"    #'evil-buffer-new
- "M-N"    #'make-frame
- "M-1"    (λ! (+workspace/switch-to 0))
- "M-2"    (λ! (+workspace/switch-to 1))
- "M-3"    (λ! (+workspace/switch-to 2))
- "M-4"    (λ! (+workspace/switch-to 3))
- "M-5"    (λ! (+workspace/switch-to 4))
- "M-6"    (λ! (+workspace/switch-to 5))
- "M-7"    (λ! (+workspace/switch-to 6))
- "M-8"    (λ! (+workspace/switch-to 7))
- "M-9"    (λ! (+workspace/switch-to 8))
- "M-0"    #'+workspace/switch-to-last
+ "C-`"              #'doom/popup-toggle
+ "C-~"              #'doom/popup-raise
+ "M-t"              #'+workspace/new
+ "M-T"              #'+workspace/display
+ "M-w"              #'delete-window
+ "M-W"              #'+workspace/close-workspace-or-frame
+ "M-n"              #'evil-buffer-new
+ "M-N"              #'make-frame
+ "M-1"              (λ! (+workspace/switch-to 0))
+ "M-2"              (λ! (+workspace/switch-to 1))
+ "M-3"              (λ! (+workspace/switch-to 2))
+ "M-4"              (λ! (+workspace/switch-to 3))
+ "M-5"              (λ! (+workspace/switch-to 4))
+ "M-6"              (λ! (+workspace/switch-to 5))
+ "M-7"              (λ! (+workspace/switch-to 6))
+ "M-8"              (λ! (+workspace/switch-to 7))
+ "M-9"              (λ! (+workspace/switch-to 8))
+ "M-0"              #'+workspace/switch-to-last
  ;; Other sensible, textmate-esque global bindings
- "M-r"    #'+eval/buffer
- "M-R"    #'+eval/region-and-replace
- "M-b"    #'+eval/build
- :nvmei "M-a"    #'mark-whole-buffer
- "M-e"    #'counsel-dash-at-point
- "M-m"    #'evil-switch-to-windows-last-buffer
- :ne "M-g"    #'+amos/counsel-jumpdir-function
- "M-w"    #'delete-other-windows
- "C-l"    #'+amos:redisplay-and-recenter
- "C-s"    #'swiper
- "C-S-s"  #'counsel-projectile-rg
- :nm "f"  #'evil-snipe-s
- :nm "F"  #'evil-snipe-S
- :nm "t"  #'evil-snipe-x
- :nm "T"  #'evil-snipe-X
- :nm "s"  #'evil-substitute
- :nm "S"  #'evil-change-whole-line
- :m "C-f" #'evilem--motion-evil-find-char
- :m "C-b" #'evilem--motion-evil-find-char-backward
- :m "C-y" #'+amos/yank-buffer-filename-with-line-position
- :m "C-w" #'doom/kill-this-buffer
- :m "M-j" #'+amos:multi-next-line
- :m "M-k" #'+amos:multi-previous-line
- :i "M-i" #'yas-insert-snippet
- :i "C-o" #'kill-line
- :i "C-d" #'delete-char
- :i "M-r" #'sp-slurp-hybrid-sexp
- :i "M-R" #'sp-forward-barf-sexp
- :n "M-i" #'yasdcv-translate-at-point
- :v "M-i" #'+amos/evil-visual-insert-snippet
+ "M-r"              #'+eval/buffer
+ "M-R"              #'+eval/region-and-replace
+ "M-b"              #'+eval/build
+ :nvmei "M-a"       #'mark-whole-buffer
+ "M-e"              #'counsel-dash-at-point
+ "M-m"              #'evil-switch-to-windows-last-buffer
+ :ne "M-g"          #'+amos/counsel-jumpdir-function
+ "M-w"              #'delete-other-windows
+ "C-x e"            #'pp-eval-last-sexp
+ "C-l"              #'+amos:redisplay-and-recenter
+ "C-s"              #'swiper
+ "C-S-s"            #'counsel-projectile-rg
+ :nm "s"            #'evil-substitute
+ :nm "S"            #'evil-change-whole-line
+ :m "C-f"           #'evilem--motion-evil-find-char
+ :m "C-b"           #'evilem--motion-evil-find-char-backward
+ :m "C-y"           #'+amos/yank-buffer-filename-with-line-position
+ :m "C-w"           #'doom/kill-this-buffer
+ :m "M-j"           #'+amos:multi-next-line
+ :m "M-k"           #'+amos:multi-previous-line
+ :i "M-i"           #'yas-insert-snippet
+ :i "M-d"           #'kill-word
+ :i "C-o"           #'kill-line
+ :i "C-d"           #'delete-char
+ :i "M-r"           #'sp-slurp-hybrid-sexp
+ :i "M-R"           #'sp-forward-barf-sexp
+ :n "M-i"           #'yasdcv-translate-at-point
+ :v "M-i"           #'+amos/evil-visual-insert-snippet
  :n "C-t" nil
- :n "C-j" #'move-text-down
- :n "C-k" #'move-text-up
- :n "p"   #'+amos@paste/evil-paste-after
- :n "P"   #'+amos@paste/evil-paste-before
+ :n "C-j"           #'move-text-down
+ :n "C-k"           #'move-text-up
+ :n "p"             #'+amos@paste/evil-paste-after
+ :n "P"             #'+amos@paste/evil-paste-before
 
- :nv "C-SPC" #'+amos/other-window
- :m "(" #'+amos:previous-open-delim
- :m ")" #'+amos:next-close-delim
+ :nv "C-SPC"        #'+amos/other-window
+ :m "("             #'+amos:previous-open-delim
+ :m ")"             #'+amos:next-close-delim
 
  ;; Easier window navigation
- :en "M-h"    #'evil-window-left
- :en "M-j"    #'evil-window-down
- :en "M-k"    #'evil-window-up
- :en "M-l"    #'evil-window-right
+ :en "M-h"          #'evil-window-left
+ :en "M-j"          #'evil-window-down
+ :en "M-k"          #'evil-window-up
+ :en "M-l"          #'evil-window-right
 
  (:prefix "C-x"
-   :nvime "u"   #'link-hint-open-link
-   "C-c" #'+amos/tmux-detach
-   "p"   #'doom/other-popup)
+   :nvime "u" #'link-hint-open-link
+   "C-c"      #'+amos/tmux-detach
+   "p"        #'doom/other-popup)
 
  (:prefix "C-c"
-   "c"     #'org-capture
    "C-SPC" #'easy-hugo)
 
  ;; --- <leader> -------------------------------------
@@ -298,7 +295,7 @@
      :desc "Invalidate cache"        :n  "x" #'projectile-invalidate-cache)
 
    (:desc "quit" :prefix "q"
-     :desc "Quit"                    :n "q" #'evil-save-and-quit
+     :desc "Quit"                    :n "q" #'+amos/prompt-kill-emacs
      :desc "Quit (forget session)"   :n "Q" #'+workspace/kill-session-and-quit)
 
    (:desc "remote" :prefix "r"
@@ -501,7 +498,7 @@
    "C-f" (λ! (require 'evil-easymotion)
              (call-interactively
               (evilem-create #'evil-snipe-repeat
-                             :bind ((evil-snipe-scope 'whole-buffer)
+                             :bind ((evil-snipe-scope 'whole-visible-buffer)
                                     (evil-snipe-enable-highlight)
                                     (evil-snipe-enable-incremental-highlight))))))
 
@@ -593,17 +590,18 @@
  ;; ivy
  (:after ivy
    :map ivy-minibuffer-map
-   [escape] #'keyboard-escape-quit
-   "M-z" #'undo
-   "M-j" #'ivy-immediate-done
-   "C-r" #'evil-paste-from-register
-   "C-k" #'ivy-previous-line
-   "C-j" #'ivy-next-line
-   "C-l" #'ivy-alt-done
-   "C-w" #'ivy-backward-kill-word
-   "C-u" #'ivy-kill-line
-   "M-b" #'backward-word
-   "M-f" #'forward-word)
+   [escape]        #'keyboard-escape-quit
+   "M-z"           #'undo
+   "M-j"           #'ivy-immediate-done
+   "C-r"           #'evil-paste-from-register
+   "C-k"           #'ivy-previous-line
+   "C-j"           #'ivy-next-line
+   "C-l"           #'ivy-alt-done
+   "C-w"           #'ivy-backward-kill-word
+   "<M-backspace>" #'ivy-backward-kill-word
+   "C-u"           #'ivy-kill-line
+   "M-b"           #'backward-word
+   "M-f"           #'forward-word)
 
  ;; rotate-text
  :n  "!"  #'rotate-text
@@ -665,28 +663,30 @@
 
  (:after edebug
    :map edebug-mode-map
-   :n " " 'edebug-step-mode
-   :n "n" 'edebug-next-mode
-   :n "g" 'edebug-go-mode
-   :n "G" 'edebug-Go-nonstop-mode
-   :n "t" 'edebug-trace-mode
-   :n "T" 'edebug-Trace-fast-mode
-   :n "c" 'edebug-continue-mode
-   :n "C" 'edebug-Continue-fast-mode
+   "SPC" nil
+   "h"   nil
+   :n "s"   #'edebug-step-mode
+   :n "n"   #'edebug-next-mode
+   :n "g"   #'edebug-go-mode
+   :n "G"   #'edebug-Go-nonstop-mode
+   :n "t"   #'edebug-trace-mode
+   :n "T"   #'edebug-Trace-fast-mode
+   :n "c"   #'edebug-continue-mode
+   :n "C"   #'edebug-Continue-fast-mode
 
    ;;:n "f" 'edebug-forward not implemented
-   :n "f" 'edebug-forward-sexp
-   :n "h" 'edebug-goto-here
+   :n "f"   #'edebug-forward-sexp
+   :n "N"   #'edebug-goto-here
 
-   :n "I" 'edebug-instrument-callee
-   :n "i" 'edebug-step-in
-   :n "o" 'edebug-step-out
+   :n "I"   #'edebug-instrument-callee
+   :n "i"   #'edebug-step-in
+   :n "o"   #'edebug-step-out
 
    ;; quitting and stopping
-   :n "q" 'top-level
-   :n "Q" 'edebug-top-level-nonstop
-   :n "a" 'abort-recursive-edit
-   :n "S" 'edebug-stop
+   :n "q"   #'top-level
+   :n "Q"   #'edebug-top-level-nonstop
+   :n "a"   #'abort-recursive-edit
+   :n "S"   #'edebug-stop
 
    ;; breakpoints
    :n "b" 'edebug-set-breakpoint
@@ -753,8 +753,8 @@
 
 ;; f/F/t/T/s/S
 (after! evil-snipe
-  (setq evil-snipe-repeat-keys nil
-        evil-snipe-override-evil-repeat-keys nil) ; causes problems with remapped ;
+  ;; (setq evil-snipe-repeat-keys nil
+  ;;       evil-snipe-override-evil-repeat-keys nil) ; causes problems with remapped ;
 
   (do-repeat! evil-snipe-f evil-snipe-repeat evil-snipe-repeat-reverse)
   (do-repeat! evil-snipe-F evil-snipe-repeat evil-snipe-repeat-reverse)
@@ -834,9 +834,9 @@
       :i [M-return]     #'evil-open-below
       :i [S-M-return]   #'evil-open-above
       ;; textmate-esque deletion
-      [M-backspace]     #'doom/backward-kill-to-bol-and-indent
+      [M-backspace]     #'+amos:evil-delete-backward-symbol
       :i [backspace]    #'delete-backward-char
-      :i [M-backspace]  #'doom/backward-kill-to-bol-and-indent
+      :i [M-backspace]  #'+amos:evil-delete-backward-symbol
       ;; Emacsien motions for insert mode
       :i "M-b" #'backward-word
       :i "M-f" #'forward-word

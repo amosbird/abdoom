@@ -4,8 +4,11 @@
 (require 'ring)
 (require 'cl-seq)
 
-(defvar +amos-history-ring (make-ring 200))
-(defvar +amos-history-index 0)
+(defvar +amos-dired-history-ring (make-ring 200))
+(defvar +amos-dired-history-index 0)
+
+(defvar +amos-eval-history-ring (make-ring 200))
+(defvar +amos-eval-history-index 0)
 
 (defun +amos--ring-elements (ring)
   "Return deduplicated elements of `ring'"
@@ -20,26 +23,26 @@
     (dotimes (idx (ring-length ring) listing)
       (setq listing (append (cons idx (ring-ref ring idx)) listing)))))
 
-(defun +amos--jump-history (jump)
-  "Move through history ring by increment `jump'"
-  (let* ((ring +amos-history-ring)
-         (curr-index +amos-history-index)
+(defun +amos--update-history (name ring index)
+  "Update history ring and current index"
+  (when (or (ring-empty-p ring)
+            (not (eq name (ring-ref ring 0))))
+    (progn
+      (ring-insert ring (directory-file-name name))
+      (setq index 0))))
+
+(defun +amos--dired-jump-history (jump)
+  "Move through dired history ring by increment `jump'"
+  (let* ((ring +amos-dired-history-ring)
+         (curr-index +amos-dired-history-index)
          (goto-idx (min
                     (max 0 (+ curr-index jump))
                     (- (ring-length ring) 1)))
          (jump-history (ring-ref ring goto-idx)))
-    (message "+amos-history : %i/%i" (+ 1 goto-idx) (ring-length +amos-history-ring))
+    (message "+amos-history : %i/%i" (+ 1 goto-idx) (ring-length +amos-dired-history-ring))
     (when (and (not (= goto-idx curr-index)) jump-history)
-      (setq +amos-history-index goto-idx)
+      (setq +amos-dired-history-index goto-idx)
       (+amos/find-file jump-history t))))
-
-(defun +amos--update-history (name)
-  "Update history ring and current index"
-  (when (or (ring-empty-p +amos-history-ring)
-            (not (eq name (ring-ref +amos-history-ring 0))))
-    (progn
-      (ring-insert +amos-history-ring (directory-file-name name))
-      (setq +amos-history-index 0))))
 
 (defun +amos--get-all-current-files ()
   (split-string (shell-command-to-string "ls -a") "\n" t))
@@ -51,13 +54,13 @@
 (defun +amos/next-history ()
   "Move forward in history"
   (interactive)
-  (+amos--jump-history -1))
+  (+amos--dired-jump-history -1))
 
 ;;;###autoload
 (defun +amos/prev-history ()
   "Move backward in history"
   (interactive)
-  (+amos--jump-history 1))
+  (+amos--dired-jump-history 1))
 
 (defun +amos/kill-all-other-dired-buffers (&optional current-buf)
   "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
@@ -77,7 +80,8 @@
 (defun +amos/up-directory (&optional other-window)
   (interactive)
   (dired-up-directory other-window)
-  (+amos--update-history default-directory)
+  (+amos-store-jump-history)
+  (+amos--update-history default-directory +amos-dired-history-ring +amos-dired-history-index)
   (+amos/kill-all-other-dired-buffers (current-buffer)))
 
 ;;;###autoload
@@ -90,11 +94,12 @@
       (if (file-exists-p find-name)
           (progn
             (unless ignore-history
-              (+amos--update-history find-name))
+              (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))
             ;; select origination file
             (find-file find-name)
             (when (and (file-directory-p find-name)
                        (not (eq (current-buffer) orig)))
+              (+amos-store-jump-history)
               (+amos/kill-all-other-dired-buffers (current-buffer))))
         (message (shell-command-to-string "jump clean"))
         (error "File doesn't exist anymore!")))))
@@ -128,9 +133,13 @@
             :action #'+amos/find-file
             :caller #'+amos/counsel-jumpdir-function))
 
+(defun +amos-store-jump-history ()
+  (shell-command "jump chdir"))
+
 ;;;###autoload
 (defun +amos/dired-jump ()
   (interactive)
+  (+amos-store-jump-history)
   (require 'dired)
   (dired-jump))
 
@@ -140,5 +149,5 @@
   (interactive
    (list
     (completing-read "Select from history: "
-                     (+amos--ring-elements +amos-history-ring))))
+                     (+amos--ring-elements +amos-dired-history-ring))))
   (when history (+amos/find-file history)))

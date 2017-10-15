@@ -13,9 +13,6 @@
 (add-hook 'org-load-hook #'+org|init)
 (add-hook 'org-mode-hook #'+org|hook)
 
-(custom-set-faces '(org-hide ((t (:foreground "black" :height 1.0)))))
-
-
 ;;
 ;; Plugins
 ;;
@@ -148,14 +145,16 @@
   "Sets up org-mode and evil keybindings. Tries to fix the idiosyncrasies
 between the two."
   (map! (:map org-mode-map
-          :vn "RET"    #'org-open-at-point
-          :en "M-h"    #'evil-window-left
-          :en "M-j"    #'evil-window-down
-          :en "M-k"    #'evil-window-up
-          :en "M-l"    #'evil-window-right
-          :i  "C-d"    #'delete-char
+          :vn "RET"   #'org-open-at-point
+          :en "M-h"   #'evil-window-left
+          :en "M-j"   #'evil-window-down
+          :en "M-k"   #'evil-window-up
+          :en "M-l"   #'evil-window-right
+          :en "C-j"   #'org-metadown
+          :en "C-k"   #'org-metaup
+          :i  "C-d"   #'delete-char
           "C-c e"     #'+amos/org-babel-edit
-          "C-c C-j"    #'counsel-org-goto
+          "C-c C-j"   #'counsel-org-goto
           "C-c C-S-l" #'+org/remove-link)
 
         (:after org-agenda
@@ -177,7 +176,9 @@ between the two."
   (setq org-file-apps
         `(("\\.org$" . emacs)
           ("\\.cpp$" . emacs)
-          (t . ,(cond (IS-MAC "open -R \"%s\"")
+          ("\\.odt$" . "winopen %s")
+          (system . default)
+          (t . ,(cond (IS-MAC "open -R %s")
                       (IS-LINUX "xdg-open \"%s\"")))))
 
   (defun +org|remove-occur-highlights ()
@@ -189,11 +190,6 @@ between the two."
 
 (add-hook 'org-load-hook #'+org-export|init t)
 
-;; I don't have any beef with org's built-in export system, but I do wish it
-;; would export to a central directory, rather than `default-directory'. This is
-;; because all my org files are usually in one place, and I want to be able to
-;; refer back to old exports if needed.
-
 (def-package! ox-pandoc
   :config
   (unless (executable-find "pandoc")
@@ -203,10 +199,9 @@ between the two."
           (mathjax . t)
           (parse-raw . t))))
 
-;;
 (defun +org-export|init ()
   (setq org-export-directory (expand-file-name "export" +org-dir)
-        org-export-backends '(ascii html latex md)
+        org-export-backends '(ascii html latex md beamer odt)
         org-export-with-toc t
         org-export-with-author t)
 
@@ -219,4 +214,76 @@ between the two."
       (setq args (append args (list org-export-directory))))
     args)
   (advice-add #'org-export-output-file-name
-              :filter-args #'+org*export-output-file-name))
+              :filter-args #'+org*export-output-file-name)
+
+  (defun +org-export|clear-single-linebreak-in-cjk-string (string &optional backend info)
+    "clear single line-break between cjk characters that is usually soft line-breaks"
+    (let* ((regexp "\\([\u4E00-\u9FA5]\\)\n\\([\u4E00-\u9FA5]\\)")
+           (start (string-match regexp string)))
+      (while start
+        (setq string (replace-match "\\1\\2" nil nil string)
+              start (string-match regexp string start))))
+    string)
+  (add-to-list 'org-export-filter-final-output-functions
+               '+org-export|clear-single-linebreak-in-cjk-string)
+
+  ;; remove comments from org document for use with export hook
+  ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
+  (defun +org-export|delete-org-comments (backend)
+    (loop for comment in (reverse (org-element-map (org-element-parse-buffer)
+                                      'comment 'identity))
+          do
+          (setf (buffer-substring (org-element-property :begin comment)
+                                  (org-element-property :end comment)) "")))
+  (add-hook! 'org-export-before-processing-hook #'+org-export|delete-org-comments))
+
+
+(def-package! ox-twbs
+  :after ox)
+
+(def-package! ox-hugo
+  :after ox)
+
+(defun +org*mu4e-mime-switch-headers-or-body ()
+  "Switch the buffer to either mu4e-compose-mode (when in headers)
+or org-mode (when in the body)."
+  (interactive)
+  (let* ((sepapoint
+	   (save-excursion
+	     (goto-char (point-min))
+	     (search-forward-regexp mail-header-separator nil t))))
+    ;; only do stuff when the sepapoint exist; note that after sending the
+    ;; message, this function maybe called on a message with the sepapoint
+    ;; stripped. This is why we don't use `message-point-in-header'.
+    (when sepapoint
+      (cond
+	;; we're in the body, but in mu4e-compose-mode?
+	;; if so, switch to org-mode
+	((and (> (point) sepapoint) (eq major-mode 'mu4e-compose-mode))
+	  (org-mode)
+	  (add-hook 'before-save-hook
+	    (lambda ()
+	      (mu4e-error "Switch to mu4e-compose-mode (M-m) before saving."))
+	    nil t)
+	  (org~mu4e-mime-decorate-headers)
+	  (local-set-key (kbd "M-m")
+	    (lambda (keyseq)
+	      (interactive "kEnter mu4e-compose-mode key sequence: ")
+	      (let ((func (lookup-key mu4e-compose-mode-map keyseq)))
+		(if func (funcall func) (insert keyseq))))))
+	;; we're in the headers, but in org-mode?
+	;; if so, switch to mu4e-compose-mode
+	((and (<= (point) sepapoint) (eq major-mode 'org-mode))
+      	  (org~mu4e-mime-undecorate-headers)
+	  (mu4e-compose-mode)
+    ;; change to insert mode
+    (evil-change-to-previous-state)
+    (add-hook 'message-send-hook 'org~mu4e-mime-convert-to-html-maybe nil t)))
+      ;; and add the hook
+      (add-hook 'post-command-hook 'org~mu4e-mime-switch-headers-or-body t t))))
+(advice-add #'org~mu4e-mime-switch-headers-or-body :override #'+org*mu4e-mime-switch-headers-or-body)
+
+(defadvice org-open-file (around +org*org-open-file activate)
+  (require 'cl)
+  (flet ((start-process-shell-command (cmd &rest _) (shell-command cmd)))
+    ad-do-it))

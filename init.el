@@ -1,74 +1,99 @@
 ;;; private/amos/init.el -*- lexical-binding: t; -*-
-(setq-default
- counsel-org-goto-display-style 'path
- counsel-org-goto-separator " ➜ "
- counsel-org-goto-face-style 'org
- show-trailing-whitespace t
- evil-ex-substitute-global t
- intent-tabs-mode t
- tab-always-indent t
- powerline-default-separator 'alternate
- find-file-visit-truename t
- fringes-outside-margins t
- require-final-newline t
- evil-cjk-emacs-word-boundary t
- evil-shift-width 4
- evil-shift-round nil
- evil-esc-delay 0.001
- visible-cursor nil
- package-check-signature nil
- undo-tree-auto-save-history t
- undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undo-files"))
- password-cache-expiry nil
- user-mail-address "amosbird@gmail.com"
- user-full-name "Amos Bird"
- process-environment initial-environment
- browse-url-chrome-program (expand-file-name "~/scripts/vivaldi")
- browse-url-firefox-program (expand-file-name "~/scripts/vivaldi")
- browse-url-firefox-arguments '("new")
- browse-url-mailto-function 'mu4e~compose-browse-url-mail
- sp-escape-quotes-after-insert nil
- reftex-default-bibliography '("~/zotero.bib")
- helm-bibtex-bibliography '("~/zotero.bib")
- helm-bibtex-pdf-field "file"
- helm-bibtex-notes-path "~/bibnotes.org"
- bibtex-completion-browser-function 'browser-url-chromium
- bibtex-completion-pdf-open-function
- (lambda (fpath)
-   (call-process "zathura" nil 0 nil fpath))
- shell-file-name "/bin/bash"
- explicit-shell-file-name "/bin/bash"
- org-ref-default-bibliography '("~/Papers/references.bib")
- org-ref-pdf-directory "~/Papers/"
- org-ref-bibliography-notes "~/Papers/notes.org"
- ws-butler-keep-whitespace-before-point nil
- org-ref-open-pdf-function
- (lambda (fpath)
-   (start-process "zathura" "*helm-bibtex-zathura*" "/usr/bin/zathura" fpath)))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(auto-revert-interval 0.3)
+ '(bibtex-completion-browser-function 'browser-url-chromium)
+ '(bibtex-completion-pdf-open-function (lambda (fpath) (call-process "zathura" nil 0 nil fpath)))
+ '(browse-url-chrome-program (expand-file-name "~/scripts/vivaldi"))
+ '(browse-url-firefox-arguments '("new"))
+ '(browse-url-firefox-program (expand-file-name "~/scripts/vivaldi"))
+ '(browse-url-mailto-function 'mu4e~compose-browse-url-mail)
+ '(counsel-org-goto-display-style 'path)
+ '(counsel-org-goto-face-style 'org)
+ '(counsel-org-goto-separator " ➜ ")
+ '(evil-cjk-emacs-word-boundary t)
+ '(evil-esc-delay 0.001)
+ '(evil-ex-substitute-global t)
+ '(evil-kill-on-visual-paste nil)
+ '(evil-shift-round nil)
+ '(evil-shift-width 4)
+ '(explicit-shell-file-name "/bin/bash")
+ '(find-file-visit-truename t)
+ '(flycheck-pos-tip-mode nil)
+ '(fringes-outside-margins t)
+ '(helm-bibtex-bibliography '("~/zotero.bib"))
+ '(helm-bibtex-notes-path "~/bibnotes.org")
+ '(helm-bibtex-pdf-field "file")
+ '(intent-tabs-mode t)
+ '(ivy-use-virtual-buffers t)
+ '(mode-line-format nil)
+ '(org-M-RET-may-split-line '((default)))
+ '(org-agenda-files '("~/org/todo.org"))
+ '(org-goto-interface 'outline-path-completion)
+ '(org-hugo-default-section-directory "post")
+ '(org-outline-path-complete-in-steps nil)
+ '(org-ref-bibliography-notes "~/Papers/notes.org")
+ '(org-ref-default-bibliography '("~/Papers/references.bib"))
+ '(org-ref-open-pdf-function (lambda (fpath) (start-process "zathura" "*helm-bibtex-zathura*" "/usr/bin/zathura" fpath)))
+ '(org-ref-pdf-directory "~/Papers/")
+ '(package-check-signature nil)
+ '(password-cache-expiry nil)
+ '(powerline-default-separator 'alternate)
+ '(process-environment initial-environment)
+ '(reftex-default-bibliography '("~/zotero.bib"))
+ '(require-final-newline t)
+ '(shell-file-name "/bin/bash")
+ '(show-trailing-whitespace t)
+ '(sp-escape-quotes-after-insert nil)
+ '(swiper-include-line-number-in-search t)
+ '(tab-always-indent t)
+ '(undo-tree-auto-save-history t)
+ '(undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undo-files")))
+ '(user-full-name "Amos Bird")
+ '(user-mail-address "amosbird@gmail.com")
+ '(visible-cursor nil)
+ '(ws-butler-keep-whitespace-before-point nil)
+ '(yas-triggers-in-field nil)
+ '(yas-wrap-around-region ?y)
+ '(yasdcv-sdcv-command "sdcv --non-interactive --utf8-output --utf8-input \"%word\"")
+ '(yasdcv-sdcv-dicts (quote (("jianminghy" "简明汉英词典" "powerword2007" t))))
+ )
 
-;; (add-hook! 'dired-mode-hook (face-remap-add-relative 'hl-line '((:background "DarkSalmon"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-hide ((t (:foreground "black" :height 1.0))))
+ '(org-level-1 ((t (:inherit bold :foreground "#4f97d7" :height 1.0))))
+ '(org-level-2 ((t (:inherit bold :foreground "#2d9574" :height 1.0))))
+ '(org-level-3 ((t (:foreground "#67b11d" :weight normal :height 1.0))))
+ )
+
+(setq save-interprogram-paste-before-kill t)
 
 (add-hook! '(doom-post-init-hook minibuffer-setup-hook) (setq-local show-trailing-whitespace nil))
 
-(after! evil-vars
-  (setq evil-kill-on-visual-paste nil))
+(add-hook! 'edebug-mode-hook #'evil-normalize-keymaps)
 
-(custom-set-variables
-  '(flycheck-pos-tip-mode nil))
+(add-hook! 'eval-expression-minibuffer-setup-hook
+  (define-key minibuffer-local-map "\C-p" #'previous-line-or-history-element)
+  (define-key minibuffer-local-map "\C-n" #'next-line-or-history-element))
 
-;; An extra measure to prevent the flash of unstyled mode-line while Emacs is
-;; booting up (when Doom is byte-compiled).
-(setq-default mode-line-format nil)
 (setq +org-dir (expand-file-name "~/org/"))
+(add-hook! :append 'org-load-hook
+  (setq org-agenda-files (directory-files (concat +org-dir "todos/") t "\\.org$" t)))
 
-(add-hook! :append 'org-load-hook (setq org-agenda-files (directory-files (concat +org-dir "todos/") t "\\.org$" t)))
-
-
+;; (advice-add #'unicode-fonts-setup :override #'ignore)
 (advice-add #'nlinum-mode :override #'ignore)
+(advice-add #'fringe-mode :override #'ignore)
+(advice-add #'solaire-mode :override #'ignore)
 (advice-add #'eldoc-mode :override #'ignore)
 (advice-add #'+org|update-cookies :override #'ignore)
 (advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
-(fset 'fringe-mode nil)
 
 (after! centered-window-mode
   (defun amos-special-window-p (window)
@@ -78,16 +103,15 @@
           (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
   (push #'amos-special-window-p cwm-ignore-window-predicates))
 
-(def-package-hook! org-bullets
-  :pre-config nil)
-
-(def-package-hook! cc-mode
+(def-package-hook! org-bullets :pre-config nil)
+(def-package-hook! magit :pre-config nil)
+(def-package-hook! stripe-buffer :pre-init nil)
+(def-package-hook! ivy
   :post-config
-  (setq c-tab-always-indent t)
+  (ivy-set-display-transformer #'ivy-switch-buffer nil)
+  (ivy-set-display-transformer #'ivy-switch-buffer-other-window nil)
+  (ivy-set-display-transformer #'+ivy/switch-workspace-buffer nil)
   t)
-
-(def-package-hook! magit
-  :pre-config nil)
 
 (def-package-hook! racer
   :pre-config
@@ -95,9 +119,6 @@
   (unless (file-exists-p racer-cmd)
     (warn "rust-mode: racer binary can't be found; auto-completion is disabled"))
   nil)
-
-(def-package-hook! stripe-buffer
-  :pre-init nil)
 
 ;; host-specific settings
 (pcase (system-name)
@@ -162,5 +183,7 @@ This function should be hooked to `buffer-list-update-hook'."
 (advice-add #'+doom-dashboard/open :override #'+amos*dashboard/open)
 
 (require 'server)
-(unless (server-running-p)
+(setq server-name (getenv "EMACS_SERVER_NAME"))
+(if (not server-name) (setq server-name "server"))
+(unless (server-running-p server-name)
   (server-start))

@@ -9,6 +9,7 @@
 (package! evil-textobj-line :recipe (:fetcher github :repo "syohex/evil-textobj-line"))
 (package! osc :recipe (:fetcher github :repo "amosbird/osc.el"))
 (package! ivy-rich :recipe (:fetcher github :repo "Yevgnen/ivy-rich"))
+(package! cnfonts)
 (package! chinese-yasdcv)
 (package! git-gutter)
 (package! evil-nerd-commenter)

@@ -2,4 +2,4 @@
 ;;; app/email/packages.el
 
 (package! mu4e-maildirs-extension)
-
+(package! notmuch)
