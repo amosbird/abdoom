@@ -153,6 +153,23 @@ default/fallback account."
   (when (fboundp 'imagemagick-register-types)
     (imagemagick-register-types))
 
+  (require 'gnus-dired)
+  ;; make the `gnus-dired-mail-buffers' function also work on
+  ;; message-mode derived modes, such as mu4e-compose-mode
+  (defun gnus-dired-mail-buffers ()
+    "Return a list of active message buffers."
+    (let (buffers)
+      (save-current-buffer
+        (dolist (buffer (buffer-list t))
+          (set-buffer buffer)
+          (when (and (derived-mode-p 'message-mode)
+                     (null message-sent-message-via))
+            (push (buffer-name buffer) buffers))))
+      (nreverse buffers)))
+
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
+  (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+
   (after! evil
     (cl-loop for str in '((mu4e-main-mode . normal)
                           (mu4e-view-mode . normal)
@@ -166,18 +183,17 @@ default/fallback account."
           mu4e-headers-mode-map (make-sparse-keymap)
           mu4e-main-mode-map (make-sparse-keymap))
 
-    (map! (:map (mu4e-main-mode-map mu4e-view-mode-map)
+    (map! (:map (mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
+            :n "C" #'mu4e-compose-new
+            :n "F" #'mu4e-compose-forward
+            :n "R" #'mu4e-compose-reply
+            :n "C" #'mu4e-compose-new
+            :n "E" #'mu4e-compose-edit
             :leader
             :n "," #'mu4e-context-switch
             :n "." #'mu4e-headers-search-bookmark
             :n ">" #'mu4e-headers-search-bookmark-edit
             :n "/" #'mu4e~headers-jump-to-maildir)
-
-          (:map (mu4e-headers-mode-map mu4e-view-mode-map)
-            :n "F" #'mu4e-compose-forward
-            :n "R" #'mu4e-compose-reply
-            :n "C" #'mu4e-compose-new
-            :n "E" #'mu4e-compose-edit)
 
           (:map mu4e-main-mode-map
             :n "q"   #'mu4e-quit
@@ -241,38 +257,46 @@ default/fallback account."
           (:map mu4e~update-mail-mode-map
             :n "q" #'mu4e-interrupt-update-mail)))
 
-  (set! :email "gmail"
-    '((user-full-name         . "Amos Bird")
-     (user-mail-address      . "amosbird@gmail.com")
-     (mu4e-compose-signature . "Amos Bird\namosbird@gmail.com"))
-    t)
-  (set! :email "software"
-    '((user-full-name         . "郑天祺")
-     (user-mail-address      . "zhengtianqi@softwares.ict.ac.cn")
-     (mu4e-compose-signature . "郑天祺\n中科院计算所 网络数据实验室\n"))
-    nil)
-  (set! :email "golaxy"
-    '((user-full-name         . "郑天祺")
-     (user-mail-address      . "zhengtianqi@golaxy.cn")
-     (mu4e-compose-signature . "郑天祺\n中科天玑\n"))
-    nil)
-  (set! :email "ucas"
-    '((user-full-name         . "郑天祺")
-     (user-mail-address      . "zhengtianqi12@mails.ucas.ac.cn")
-     (mu4e-compose-signature . "郑天祺\n中科院计算所 网络数据实验室\n"))
-    nil))
+  (setq mu4e-user-mail-address-list '("amosbird@gmail.com" "zhengtianqi@software.ict.ac.cn" "zhengtianqi@golaxy.cn"))
 
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "gmail"
+             :enter-func (lambda () (mu4e-message "Switch to the gmail context"))
+             ;; :leave-func (lambda () (mu4e-clear-caches))
+             :match-func (lambda (msg) (when msg (mu4e-message-contact-field-matches msg :to "amosbird@gmail.com")))
+             :vars '(( user-mail-address       . "amosbird@gmail.com" )
+                     ( user-full-name          . "Amos Bird" )
+                     ( mu4e-compose-signature  . "Amos Bird\namosbird@gmail.com\n")))
+           ,(make-mu4e-context
+             :name "ict"
+             :enter-func (lambda () (mu4e-message "Switch to the ict context"))
+             ;; :leave-func (lambda () (mu4e-clear-caches))
+             :match-func (lambda (msg) (when msg (mu4e-message-contact-field-matches msg :to "zhengtianqi@software.ict.ac.cn")))
+             :vars '(( user-mail-address       . "zhengtianqi@software.ict.ac.cn" )
+                     ( user-full-name          . "郑天祺" )
+                     ( mu4e-compose-signature  . "郑天祺\n中科院计算所网络数据实验室\n")))
+           ,(make-mu4e-context
+             :name "work"
+             :enter-func (lambda () (mu4e-message "Switch to the golaxy context"))
+             ;; :leave-func (lambda () (mu4e-clear-caches))
+             :match-func (lambda (msg) (when msg (mu4e-message-contact-field-matches msg :to "zhengtianqi@golaxy.cn")))
+             :vars '(( user-mail-address       . "zhengtianqi@golaxy.cn" )
+                     ( user-full-name          . "郑天祺" )
+                     ( mu4e-compose-signature  . "郑天祺\n中科天玑数据科技股份有限公司\n"))))))
 
 (def-package! mu4e-maildirs-extension
   :after mu4e
-  :config (mu4e-maildirs-extension-load))
-
-(def-package! notmuch
-  :init
-  (add-to-list 'auto-mode-alist '("amosbird@gmail.com" . notmuch-message-mode))
   :config
-  (require 'notmuch-company)
-  (require 'notmuch-mua))
+  (mu4e-maildirs-extension-load)
+  (add-hook #'mu4e-view-mode-hook (lambda () (hl-line-mode +1))))
+
+;; (def-package! notmuch
+;;   :init
+;;   (add-to-list 'auto-mode-alist '("amosbird@gmail.com" . notmuch-message-mode))
+;;   :config
+;;   (require 'notmuch-company)
+;;   (require 'notmuch-mua))
 
 
 (def-package! org-mu4e
@@ -309,3 +333,71 @@ or message-at-point."
           (goto-char (point-min)))
         (setq buffer-read-only t)))))
 (advice-add #'mu4e-view-verify-msg-popup :override #'+amos*mu4e-view-verify-msg-popup)
+
+;; maybe useful
+
+;; (require 'subr-x)
+
+;; ;;my favourite contacts - these will be put at front of list
+;; (setq bjm/contact-file "/homeb/bjm/docs/fave-contacts.txt")
+
+;; (defun bjm/read-contact-list ()
+;;   "Return a list of email addresses"
+;;   (with-temp-buffer
+;;     (insert-file-contents bjm/contact-file)
+;;     (split-string (buffer-string) "\n" t)))
+
+;; ;; code from https://github.com/abo-abo/swiper/issues/596
+;; (defun bjm/counsel-email-action (contact)
+;;   (with-ivy-window
+;;     (insert contact)))
+
+;; ;; bind comma to launch new search
+;; (defvar bjm/counsel-email-map
+;;   (let ((map (make-sparse-keymap)))
+;;     (define-key map "," 'bjm/counsel-email-more)
+;;     map))
+
+;; (defun bjm/counsel-email-more ()
+;;   "Insert email address and prompt for another."
+;;   (interactive)
+;;   (ivy-call)
+;;   (with-ivy-window
+;;     (insert ", "))
+;;   (delete-minibuffer-contents)
+;;   (setq ivy-text ""))
+
+;; ;; ivy contacts
+;; (defun bjm/ivy-select-and-insert-contact (&optional start)
+;;   (interactive)
+;;   ;; make sure mu4e contacts list is updated - I was having
+;;   ;; intermittent problems that this was empty but couldn't see why
+;;   (mu4e~request-contacts)
+;;   (let ((eoh ;; end-of-headers
+;;          (save-excursion
+;;            (goto-char (point-min))
+;;            (search-forward-regexp mail-header-separator nil t)))
+;;         ;; append full sorted contacts list to favourites and delete duplicates
+;;         (contacts-list
+;;          (delq nil (delete-dups (append (bjm/read-contact-list) (mu4e~sort-contacts-for-completion (hash-table-keys mu4e~contacts)))))))
+
+;;     ;; only run if we are in the headers section
+;;     (when (and eoh (> eoh (point)) (mail-abbrev-in-expansion-header-p))
+;;       (let* ((end (point))
+;;            (start
+;;             (or start
+;;                 (save-excursion
+;;                   (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+;;                   (goto-char (match-end 0))
+;;                   (point))))
+;;            (initial-input (buffer-substring-no-properties start end)))
+
+;;       (delete-region start end)
+
+;;       (ivy-read "Contact: "
+;;                 contacts-list
+;;                 :re-builder #'ivy--regex
+;;                 :sort nil
+;;                 :initial-input initial-input
+;;                 :action 'bjm/counsel-email-action
+;;                 :keymap bjm/counsel-email-map)))))

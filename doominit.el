@@ -80,6 +80,7 @@
        assembly          ; assembly for fun or debugging
       ;cc                ; C/C++/Obj-C madness
        crystal           ; ruby at the speed of c
+       clojure
       ;csharp            ; unity, .NET, and mono shenanigans
        data              ; config/data formats
       ;elixir            ; erlang done right
@@ -114,7 +115,7 @@
       ;org               ; organize your plain life in plain text
        org-babel         ; executable code snippets in org-mode
        org-attach        ; a simpler attachment system
-       org-capture       ; a better org-capture, in or outside of Emacs
+      ;org-capture       ; a better org-capture, in or outside of Emacs
       ;org-export        ; a custom, centralized export system
        org-notebook      ; org-mode as a notebook
        org-present       ; using org-mode for presentations
@@ -137,4 +138,5 @@
        amos
        cc
        org
+       org-capture
        email)

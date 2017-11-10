@@ -28,8 +28,27 @@
   ("p" evil-paste-after "Paste After")
   ("P" evil-paste-before "Paste Before"))
 
-;; (after! dired
-;;   (add-hook! 'dired-after-readin-hook 'hl-line-mode))
+(after! dired-x
+  (setq dired-omit-files
+        (concat dired-omit-files "\\|\\.directory$")))
+
+(after! dired
+  (add-hook! 'dired-mode-hook
+    (let ((inhibit-message t))
+      (toggle-truncate-lines +1)
+      (dired-omit-mode))))
+
+(define-advice dired-revert (:after (&rest _) +amos*dired-revert)
+  "Call `recenter' after `dired-revert'."
+  (condition-case nil
+      (recenter)
+    (error nil)))
+
+(define-advice +jump-to (:after (&rest _) +amos*jump-to)
+  "Call `recenter' after `+jump-to'."
+  (condition-case nil
+      (recenter)
+    (error nil)))
 
 (after! smartparens
   ;; Auto-close more conservatively
@@ -59,22 +78,13 @@
         (append (list '+amos-snippets-dir)
                 (delq 'yas-installed-snippets-dir yas-snippet-dirs))))
 
-
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
+(after! wdired (evil-set-initial-state 'wdire-mode 'normal))
 
 (def-package! evil-magit
-  :after magit)
-
-(after! magit
-  (setq magit-bury-buffer-function #'magit-restore-window-configuration)
-  (setq magit-display-buffer-function #'magit-display-buffer-traditional)
-
-  (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
-  (set! :popup 'magit-status-mode :select t :same t)
-  (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
-  (set! :popup "COMMITMSG" :same t)
-  (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5)
-  )
+  :after magit
+  :config
+  (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
 
 (def-package! osc
   :demand
@@ -99,6 +109,9 @@
     (select-frame frame)
     (require 'unicode-fonts)
     (unicode-fonts-setup)
+    (dolist (charset '(kana han cjk-misc bopomofo))
+      (set-fontset-font t charset
+                        (font-spec :family "WenQuanYi Micro Hei" :size 13)))
     (remove-hook! 'after-make-frame-functions #'+amos|init-fonts)))
 
 (add-hook! 'after-init-hook
@@ -115,7 +128,8 @@
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
 (remove-hook! 'doom-post-init-hook #'blink-cursor-mode)
-(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil))
+;; (remove-hook! 'doom-init-ui-hook #'show-paren-mode)
+(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil) )
 
 (defun +amos*set-evil-cursors (&rest _)
   (let ((evil-cursors '(("normal" "DarkGoldenrod" box)
@@ -132,7 +146,7 @@
 (advice-add #'+evil*init-cursors :override #'+amos*set-evil-cursors)
 
 ;; may delete the real hyphens
-(defadvice fill-delete-newlines (before my-before-fill-delete-newlines activate)
+(defadvice fill-delete-newlines (before *amos+fill-delete-newlines activate)
   "Replace -\\n with an empty string when calling `fill-paragraph'."
   (when (eq this-command 'unfill-paragraph)
     (goto-char (ad-get-arg 0))
@@ -164,18 +178,37 @@
   :demand
   :config
   (push 'dired-mode pangu-spacing-inhibit-mode-alist)
-  (global-pangu-spacing-mode +1)
   ;; Always insert `real' space in org-mode.
-  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
+  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t) (pangu-spacing-mode +1)))
 
 (def-package! git-gutter
   :demand
   :config
+  (defface +amos:modified
+    '((t (:foreground "chocolate" :weight bold :inherit default)))
+    "Face of modified")
+
+  (defface +amos:added
+    '((t (:foreground "ForestGreen" :weight bold :inherit default)))
+    "Face of added")
+
+  (defface +amos:deleted
+    '((t (:foreground "DarkRed" :weight bold :inherit default)))
+    "Face of deleted")
+
   (global-git-gutter-mode +1)
   (advice-add #'git-gutter:set-window-margin :override #'ignore)
   (defun +amos*git-gutter:before-string (sign)
-    (let ((gutter-sep (concat (make-string (- (car (window-margins (get-buffer-window))) 2) ? ) sign)))
-      (propertize " " 'display `((margin left-margin) ,gutter-sep))))
+    (let* ((gutter-sep (concat " " (make-string (- (car (window-margins (get-buffer-window))) 3) ? ) sign))
+           (face (pcase sign
+                   ("=" '+amos:modified)
+                   ("+" '+amos:added)
+                   ("-" '+amos:deleted)
+                   ))
+           (ovstring (propertize gutter-sep 'face face)))
+      ;; (propertize " " 'display `((margin left-margin) ,gutter-sep)))
+      (propertize " " 'display `((margin left-margin) ,ovstring)))
+    )
   (advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
   (add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows))
 
@@ -211,15 +244,20 @@
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
   (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
 
+(defun advice-browse-url (ofun &rest candidate)
+  (if (boundp 'amos-browse)
+      (apply 'browse-url-firefox candidate)
+    (apply ofun candidate)))
+(advice-add 'browse-url :around #'advice-browse-url)
+
+(defadvice run-skewer (around +amos*run-skewer activate)
+  (setq-local amos-browse t)
+  ad-do-it)
+
 (def-package! easy-hugo
   :commands easy-hugo
   :config
   (evil-set-initial-state 'easy-hugo-mode 'emacs)
-  (defun advice-browse-url (ofun &rest candidate)
-    (if (boundp 'amos-browse)
-        (apply 'browse-url-firefox candidate)
-      (apply ofun candidate)))
-  (advice-add 'browse-url :around #'advice-browse-url)
   (add-hook! 'easy-hugo-mode-hook (setq-local amos-browse t))
   (setq
    easy-hugo-basedir "~/sites/blog"
@@ -246,32 +284,20 @@
   :commands lispyville-mode)
 
 (after! ivy
-  (setq ivy-virtual-abbreviate 'full
-        ivy-re-builders-alist '((t . ivy--regex-ignore-order))
-        ivy-use-virtual-buffers t))
-
-;; (def-package! ivy-rich
-;;   :after ivy
-;;   :init
-;;   (setq ivy-virtual-abbreviate 'full
-;;         ivy-re-builders-alist '((t . ivy--regex-ignore-order))
-;;         ivy-use-virtual-buffers t
-;;         ivy-rich-switch-buffer-align-virtual-buffer t)
-;;   (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+  ;; (defun +amos-ivy-switch-buffer-transformer (str)
+  ;;   (let* ((b (get-buffer str))
+  ;;          (name (buffer-file-name b)))
+  ;;     (if name
+  ;;         (if (buffer-modified-p b) (ivy-append-face name 'ivy-modified-buffer) name)
+  ;;       str)))
+  ;; (ivy-set-display-transformer 'ivy-switch-buffer '+amos-ivy-switch-buffer-transformer)
+  )
 
 (def-package! move-text
   :commands move-text-up move-text-down)
 
 (def-package! fish-mode
   :mode "\\.fish")
-
-(defun dired-list-exa (dir)
-  "List all files in DIR managed by git and display results as a `dired' buffer."
-  (interactive "DDirectory: ")
-  (dired-list dir
-              (concat "exa -alg --git " dir)
-              (concat "exa -alg --git " dir)
-              `(lambda (ignore-auto noconfirm) (dired-list-exa ,dir))))
 
 (def-package! ws-butler
   :demand
@@ -288,10 +314,6 @@
       company-require-match 'never
       company-dabbrev-downcase nil
       company-dabbrev-ignore-case t
-      company-backends '(company-jedi company-nxml
-                                      company-css company-capf
-                                      (company-dabbrev-code company-keywords)
-                                      company-files company-dabbrev)
       company-jedi-python-bin "python")
 (defun my-company-abort ()
   (interactive)
@@ -355,26 +377,593 @@
 
 (define-key emacs-lisp-mode-map (kbd "C-x e") 'macrostep-expand)
 
-(add-hook 'visual-line-mode-hook 'visual-fill-column-mode)
+
+;; stole from https://emacs.stackexchange.com/a/16495/16662
+(defmacro doom-with-advice (args &rest body)
+  (declare (indent 3))
+  (let ((fun-name (car args))
+        (advice   (cadr args))
+        (orig-sym (make-symbol "orig")))
+    `(cl-letf* ((,orig-sym  (symbol-function ',fun-name))
+                ((symbol-function ',fun-name)
+                 (lambda (&rest args)
+                   (apply ,advice ,orig-sym args))))
+       ,@body)))
+
 
 (defadvice edebug-pop-to-buffer (around +amos*edebug-pop-to-buffer activate)
-  (flet ((old-split-window (&optional window size side pixelwise) (split-window window size side pixelwise))
-         (split-window (window) (old-split-window window nit 'right)))
+  (doom-with-advice (split-window (lambda (orig-fun window) (funcall orig-fun window nil 'right)))
     ad-do-it))
 
-(after! shackle
-  (setq shackle-rules
-        '(
-          ("*Help*" :size 0.3)
-          ("^\\*doom:scratch" :regexp t :size 0.5 :select t :modeline t :autoclose t :align right)
-          )))
+(defadvice message-insert-signature (around +amos*message-insert-signature activate)
+  (let ((old-insert (symbol-function 'insert)))
+    (flet ((insert (str) (eval-when-compile (require 'subr-x)) (funcall old-insert (string-trim-right str))))
+      ad-do-it)))
+
+(setq shackle-rules
+      '(
+        ("*Help*" :size 0.3)
+        ("*Messages*"  :noselect t :autoclose t)
+        ("*Pp Eval Output*" :noselect t :autoclose t)
+        ("*Stardict Output*" :noselect t :autoclose t)
+        ("*xref*" :noselect t :autoclose t)
+        ;; (dired-mode :popup t :align right)
+        ;; (magit-status-mode :same t :inhibit-window-quit t)
+        ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
+        ("*compilation*"  :noselect t :autoclose t)
+        ("*Backtrace*" :regexp t :size 0.5 :noselect t :autoclose t :align right)
+        ("^\\*doom:scratch" :regexp t :size 0.5 :select t :modeline t :autoclose t :align right)))
+
+
+;; (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
+;; (set! :popup 'magit-status-mode :select t :same t)
+;; (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
+;; (set! :popup "COMMITMSG" :same t)
+;; (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5)
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
 
-(after! hl-line
-  (global-hl-line-mode +1))
-
 ;; (set-face-background 'show-paren-match (face-background 'default))
 ;; (set-face-foreground 'show-paren-match (face-foreground 'default))
 ;; (set-face-attribute 'show-paren-match nil :weight 'normal)
+
+(def-package! dired-quick-sort
+  :after dired
+  :config
+  (dired-quick-sort-setup))
+
+(def-package! eyebrowse
+  :diminish eyebrowse-mode
+  :demand
+  :config
+  (define-key eyebrowse-mode-map (kbd "M-1") 'eyebrowse-switch-to-window-config-1)
+  (define-key eyebrowse-mode-map (kbd "M-2") 'eyebrowse-switch-to-window-config-2)
+  (define-key eyebrowse-mode-map (kbd "M-3") 'eyebrowse-switch-to-window-config-3)
+  (define-key eyebrowse-mode-map (kbd "M-4") 'eyebrowse-switch-to-window-config-4)
+  (define-key eyebrowse-mode-map (kbd "M-5") 'eyebrowse-switch-to-window-config-5)
+  (define-key eyebrowse-mode-map (kbd "M-6") 'eyebrowse-switch-to-window-config-6)
+  (define-key eyebrowse-mode-map (kbd "M-7") 'eyebrowse-switch-to-window-config-7)
+  (define-key eyebrowse-mode-map (kbd "M-8") 'eyebrowse-switch-to-window-config-8)
+  (define-key eyebrowse-mode-map (kbd "M-9") 'eyebrowse-switch-to-window-config-9)
+  (define-key eyebrowse-mode-map (kbd "M-0") 'eyebrowse-switch-to-window-config-0)
+  (eyebrowse-mode +1)
+  (setq eyebrowse-new-workspace nil) ;; clone
+  ;; (setq eyebrowse-new-workspace t) ;; scratch
+  )
+
+(def-modeline-segment! eyebrowse
+  (when eyebrowse-mode
+    (eyebrowse-mode-line-indicator)))
+
+(def-modeline! main
+  (bar matches " " buffer-info "  %l:%c %p  " selection-info)
+  (eyebrowse " " buffer-encoding major-mode vcs flycheck))
+
+;; (def-package! highlight-parentheses
+;;   :demand
+;;   :config
+;;   (global-highlight-parentheses-mode))
+
+(require 'counsel)
+(require 'xref)
+(require 'cl-seq)
+
+(defvar counsel-xref-alist nil
+  "Holds helm candidates.")
+
+(defun counsel-xref-candidates (xrefs)
+  "Convert XREF-ALIST items to counsel candidates and add them to `counsel-xref-alist'."
+  (dolist (xref xrefs)
+    (with-slots (summary location) xref
+      (let* ((line (xref-location-line location))
+             (marker (xref-location-marker location))
+             (file (xref-location-group location))
+             candidate)
+        (setq candidate
+              (concat
+               (propertize (car (reverse (split-string file "\\/")))
+                           'font-lock-face '(:foreground "cyan"))
+               (when (string= "integer" (type-of line))
+                 (concat
+                  ":"
+                  (propertize (int-to-string line)
+                              'font-lock-face 'compilation-line-number)))
+               ":"
+               summary))
+        (push `(,candidate . ,marker) counsel-xref-alist)))))
+
+(defun counsel-xref-goto-location (location func)
+  "Set buffer and point according to xref-location LOCATION.
+
+Use FUNC to display buffer."
+  (let ((buf (marker-buffer location))
+        (offset (marker-position location)))
+    (with-current-buffer buf
+      (goto-char offset)
+      (funcall func buf))))
+
+;; (defun helm-xref-source ()
+;;   "Return a `helm' source for xref results."
+;;   (helm-build-sync-source "Helm Xref"
+;;     :candidates (lambda ()
+;;                   helm-xref-alist)
+;;     :persistent-action (lambda (candidate)
+;;                          (helm-xref-goto-location candidate 'display-buffer))
+;;     :action (lambda (candidate)
+;;               (helm-xref-goto-location candidate 'switch-to-buffer))
+;;     :candidate-transformer
+;;     :candidate-number-limit 9999))
+
+;;     (lambda (candidates)
+;;                              (let (group
+;;                                    result)
+;;                                (cl-loop for x in (reverse (cl-sort candidates #'string-lessp :key #'car))
+;;           do (cond
+;; 					    ((or (= (length group) 0)
+;; 						 (string= (nth 0 (split-string (car x) ":"))
+;; 							  (nth 0 (split-string (car (nth -1 group)) ":"))))
+;; 					     (push x group))
+;; 					    (t
+;; 					     (dolist (xref (cl-sort group #'> :key #'cdr))
+;; 					       (push xref result))
+;; 					     (setq group nil)
+;; 					     (push x group)))
+;; 					finally (when (> (length group) 0)
+;; 						  (dolist (xref (cl-sort group #'> :key #'cdr))
+;; 						    (push xref result))))
+;;                                result))
+
+(defun counsel-xref-show-xrefs (xrefs _alist)
+  "Function to display XREFS.
+Needs to be set the value of `xref-show-xrefs-function'."
+  (setq counsel-xref-alist nil)
+  (counsel-xref-candidates xrefs)
+  (ivy-read "xref: ")
+  (counsel-xref-alist)
+  :require-match t
+  :caller 'counsel-xref-show-xrefs)
+
+(setq xref-show-xrefs-function #'counsel-xref-show-xrefs)
+;;; helm-xref.el ends here
+
+;; (advice-add #'evil-mouse-drag-region :override #'ignore)
+
+(defun +amos/swiper-replace ()
+  "Swiper replace with mc selction."
+  (interactive)
+  (run-at-time nil nil #'ivy-wgrep-change-to-wgrep-mode)
+  (ivy-occur))
+
+(def-package! peep-dired
+  :after dired)
+
+(defun xah-display-minor-mode-key-priority  ()
+  "Print out minor mode's key priority.
+URL `http://ergoemacs.org/emacs/minor_mode_key_priority.html'
+Version 2017-01-27"
+  (interactive)
+  (mapc
+   (lambda (x) (prin1 (car x)) (terpri))
+   minor-mode-map-alist))
+
+(defun +amos/evil-undefine ()
+  (interactive)
+  (let (evil-mode-map-alist)
+    (call-interactively (key-binding (this-command-keys)))))
+
+(def-package! dired-open
+  :after dired
+  :config
+  (push #'+amos/dired-open-callgrind dired-open-functions))
+
+(def-package! dired-avfs
+  :after dired)
+
+(def-package! org-mime
+  :after org-mu4e)
+
+(def-package! ivy-rich
+  :after ivy
+  :config
+  (push (lambda (buf)
+          (and (get-buffer buf)
+               (with-current-buffer buf
+                 (memq major-mode '(dired-mode wdired-mode)))))
+          ivy-ignore-buffers)
+  (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+
+(defun +amos*switch-buffer-matcher (regexp candidates)
+  "Return REGEXP matching CANDIDATES.
+Skip buffers that match `ivy-ignore-buffers'."
+  (let ((res (ivy--re-filter regexp candidates)))
+    (if (or (null ivy-use-ignore)
+            (null ivy-ignore-buffers)
+            (string-match "\\`\\." ivy-text))
+        res
+      (or (cl-remove-if
+           (lambda (buf)
+             (cl-find-if
+              (lambda (f-or-r)
+                (if (functionp f-or-r)
+                    (funcall f-or-r buf)
+                  (string-match-p f-or-r buf)))
+              ivy-ignore-buffers))
+           res)
+          (and (eq ivy-use-ignore t)
+               res)))))
+(advice-add #'ivy--switch-buffer-matcher :override #'+amos*switch-buffer-matcher)
+
+(def-package! hl-line+
+  :demand
+  :config
+  (global-hl-line-mode +1))
+
+(def-package! rainbow-blocks
+  :commands rainbow-blocks-mode)
+
+(after! evil
+  (defadvice evil-ret-gen (around amos*evil-ret-gen activate)
+    (let ((url (thing-at-point 'url)))
+      (if url (goto-address-at-point)
+        ad-do-it))))
+
+(def-package! unfill
+  :commands (unfill-region unfill-paragraph unfill-toggle)
+  :init
+  (global-set-key [remap fill-paragraph] #'unfill-toggle))
+
+
+(defun +amos|update-window-buffer-list ()
+  (walk-window-tree
+   (lambda (window)
+     (let ((old-buffer (window-parameter window 'my-last-buffer))
+           (new-buffer (window-buffer window)))
+       (unless (eq old-buffer new-buffer)
+         ;; The buffer of a previously existing window has changed or
+         ;; a new window has been added to this frame.
+         (recenter)
+         (setf (window-parameter window 'my-last-buffer) new-buffer))))))
+
+(add-hook! 'window-configuration-change-hook #'+amos|update-window-buffer-list)
+
+(defun +amos/counsel-rg-cur-dir ()
+  (interactive)
+  (counsel-rg nil default-directory))
+
+(def-package! yapfify
+  :after python)
+
+(defun +amos/dired-open-callgrind ()
+  "Open callgrind files according to its name."
+  (interactive)
+  (let ((file (ignore-errors (dired-get-file-for-visit)))
+        process)
+    (when (and file
+               (not (file-directory-p file)))
+      (when (string-match-p "[cachegrind|callgrind].out" file)
+        (setq process (dired-open--start-process file "kcachegrind"))))
+    process))
+
+(def-package! helm-make
+  :after ivy
+  :config
+  (setq helm-make-completion-method 'ivy))
+
+
+
+;; from spacemacs
+(defun +amos/rename-current-buffer-file (&optional arg)
+  "Rename the current buffer and the file it is visiting.
+If the buffer isn't visiting a file, ask if it should
+be saved to a file, or just renamed.
+
+If called without a prefix argument, the prompt is
+initialized with the current filename."
+  (interactive "P")
+  (let* ((name (buffer-name))
+         (filename (buffer-file-name)))
+    (if (and filename (file-exists-p filename))
+        ;; the buffer is visiting a file
+        (let* ((dir (file-name-directory filename))
+               (new-name (read-file-name "New name: " (if arg dir filename))))
+          (cond ((get-buffer new-name)
+                 (error "A buffer named '%s' already exists!" new-name))
+                (t
+                 (let ((dir (file-name-directory new-name)))
+                   (when (and (not (file-exists-p dir))
+                              (yes-or-no-p
+                               (format "Create directory '%s'?" dir)))
+                     (make-directory dir t)))
+                 (rename-file filename new-name 1)
+                 (rename-buffer new-name)
+                 (set-visited-file-name new-name)
+                 (set-buffer-modified-p nil)
+                 (when (fboundp 'recentf-add-file)
+                   (recentf-add-file new-name)
+                   (recentf-remove-if-non-kept filename))
+                 (when (and (featurep 'projectile)
+                            (projectile-project-p))
+                   (call-interactively #'projectile-invalidate-cache))
+                 (message "File '%s' successfully renamed to '%s'"
+                          name (file-name-nondirectory new-name)))))
+      ;; the buffer is not visiting a file
+      (let ((key))
+        (while (not (memq key '(?s ?r)))
+          (setq key (read-key (propertize
+                               (format
+                                (concat "Buffer '%s' is not visiting a file: "
+                                        "[s]ave to file or [r]ename buffer?")
+                                name) 'face 'minibuffer-prompt)))
+          (cond ((eq key ?s)            ; save to file
+                 ;; this allows for saving a new empty (unmodified) buffer
+                 (unless (buffer-modified-p) (set-buffer-modified-p t))
+                 (save-buffer))
+                ((eq key ?r)            ; rename buffer
+                 (let ((new-name (read-string "New buffer name: ")))
+                   (while (get-buffer new-name)
+                     ;; ask to rename again, if the new buffer name exists
+                     (if (yes-or-no-p
+                          (format (concat "A buffer named '%s' already exists: "
+                                          "Rename again?") new-name))
+                         (setq new-name (read-string "New buffer name: "))
+                       (keyboard-quit)))
+                   (rename-buffer new-name)
+                   (message "Buffer '%s' successfully renamed to '%s'"
+                            name new-name)))
+                ;; ?\a = C-g, ?\e = Esc and C-[
+                ((memq key '(?\a ?\e)) (keyboard-quit))))))))
+
+;; from spacemacs
+(defun +amos/delete-current-buffer-file ()
+  "Removes file connected to current buffer and kills buffer."
+  (interactive)
+  (let ((filename (buffer-file-name))
+        (buffer (current-buffer))
+        (name (buffer-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (ido-kill-buffer)
+      (when (yes-or-no-p "Are you sure you want to delete this file? ")
+        (delete-file filename t)
+        (kill-buffer buffer)
+        (when (and (configuration-layer/package-used-p 'projectile)
+                   (projectile-project-p))
+          (call-interactively #'projectile-invalidate-cache))
+        (message "File '%s' successfully removed" filename)))))
+
+
+
+;; BEGIN align functions
+
+;; modified function from http://emacswiki.org/emacs/AlignCommands
+(defun +amos/align-repeat (start end regexp &optional justify-right after)
+  "Repeat alignment with respect to the given regular expression.
+If JUSTIFY-RIGHT is non nil justify to the right instead of the
+left. If AFTER is non-nil, add whitespace to the left instead of
+the right."
+  (interactive "r\nsAlign regexp: ")
+  (let* ((ws-regexp (if (string-empty-p regexp)
+                        "\\(\\s-+\\)"
+                      "\\(\\s-*\\)"))
+         (complete-regexp (if after
+                              (concat regexp ws-regexp)
+                            (concat ws-regexp regexp)))
+         (group (if justify-right -1 1)))
+
+    (unless (use-region-p)
+      (save-excursion
+        (while (and
+                (string-match-p complete-regexp (thing-at-point 'line))
+                (= 0 (forward-line -1)))
+          (setq start (point-at-bol))))
+      (save-excursion
+        (while (and
+                (string-match-p complete-regexp (thing-at-point 'line))
+                (= 0 (forward-line 1)))
+          (setq end (point-at-eol)))))
+
+    (align-regexp start end complete-regexp group 1 t)))
+
+;; Modified answer from http://emacs.stackexchange.com/questions/47/align-vertical-columns-of-numbers-on-the-decimal-point
+(defun +amos/align-repeat-decimal (start end)
+  "Align a table of numbers on decimal points and dollar signs (both optional)"
+  (interactive "r")
+  (require 'align)
+  (align-region start end nil
+                '((nil (regexp . "\\([\t ]*\\)\\$?\\([\t ]+[0-9]+\\)\\.?")
+                       (repeat . t)
+                       (group 1 2)
+                       (spacing 1 1)
+                       (justify nil t)))
+                nil))
+
+(defmacro +amos-create-align-repeat-x! (name regexp &optional justify-right default-after)
+  (let ((new-func (intern (concat "+amos/align-repeat-" name))))
+    `(defun ,new-func (start end switch)
+       (interactive "r\nP")
+       (let ((after (not (eq (if switch t nil) (if ,default-after t nil)))))
+         (+amos/align-repeat start end ,regexp ,justify-right after)))))
+
+(+amos-create-align-repeat-x! "comma" "," nil t)
+(+amos-create-align-repeat-x! "semicolon" ";" nil t)
+(+amos-create-align-repeat-x! "colon" ":" nil t)
+(+amos-create-align-repeat-x! "equal" "=")
+(+amos-create-align-repeat-x! "math-oper" "[+\\-*/]")
+(+amos-create-align-repeat-x! "ampersand" "&")
+(+amos-create-align-repeat-x! "bar" "|")
+(+amos-create-align-repeat-x! "left-paren" "(")
+(+amos-create-align-repeat-x! "right-paren" ")" t)
+(+amos-create-align-repeat-x! "left-curly-brace" "{")
+(+amos-create-align-repeat-x! "right-curly-brace" "}" t)
+(+amos-create-align-repeat-x! "left-square-brace" "\\[")
+(+amos-create-align-repeat-x! "right-square-brace" "\\]" t)
+(+amos-create-align-repeat-x! "backslash" "\\\\")
+
+;; END align functions
+
+(defun +amos/dos2unix ()
+  "Converts the current buffer to UNIX file format."
+  (interactive)
+  (set-buffer-file-coding-system 'undecided-unix nil))
+
+(defun +amos/unix2dos ()
+  "Converts the current buffer to DOS file format."
+  (interactive)
+  (set-buffer-file-coding-system 'undecided-dos nil))
+
+;; from https://www.emacswiki.org/emacs/CopyingWholeLines
+(defun +amos/duplicate-line-or-region (&optional n)
+  "Duplicate current line, or region if active.
+With argument N, make N copies.
+With negative N, comment out original line and use the absolute value."
+  (interactive "*p")
+  (let ((use-region (use-region-p)))
+    (save-excursion
+      (let ((text (if use-region        ; Get region if active, otherwise line
+                      (buffer-substring (region-beginning) (region-end))
+                    (prog1 (thing-at-point 'line)
+                      (end-of-line)
+                      (if (< 0 (forward-line 1)) ; Go to beginning of next line, or make a new one
+                          (newline))))))
+        (dotimes (i (abs (or n 1)))     ; Insert N times, or once if not specified
+          (insert text))))
+    (if use-region nil                  ; Only if we're working with a line (not a region)
+      (let ((pos (- (point) (line-beginning-position)))) ; Save column
+        (if (> 0 n)                             ; Comment out original with negative arg
+            (comment-region (line-beginning-position) (line-end-position)))
+        (forward-line 1)
+        (forward-char pos)))))
+
+(defun +amos/uniquify-lines ()
+  "Remove duplicate adjacent lines in a region or the current buffer"
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (let* ((region-active (or (region-active-p) (evil-visual-state-p)))
+             (beg (if region-active (region-beginning) (point-min)))
+             (end (if region-active (region-end) (point-max))))
+        (goto-char beg)
+        (while (re-search-forward "^\\(.*\n\\)\\1+" end t)
+          (replace-match "\\1"))))))
+
+(defun +amos/sort-lines (&optional reverse)
+  "Sort lines in a region or the current buffer.
+A non-nil argument sorts in reverse order."
+  (interactive "P")
+  (let* ((region-active (or (region-active-p) (evil-visual-state-p)))
+         (beg (if region-active (region-beginning) (point-min)))
+         (end (if region-active (region-end) (point-max))))
+    (sort-lines reverse beg end)))
+
+(defun +amos/sort-lines-reverse ()
+  "Sort lines in reverse order, in a region or the current buffer."
+  (interactive)
+  (+amos/sort-lines -1))
+
+(defun +amos/sort-lines-by-column (&optional reverse)
+  "Sort lines by the selected column,
+using a visual block/rectangle selection.
+A non-nil argument sorts in REVERSE order."
+  (interactive "P")
+  (if (and
+       ;; is there an active selection
+       (or (region-active-p) (evil-visual-state-p))
+       ;; is it a block or rectangle selection
+       (or (eq evil-visual-selection 'block) (eq rectangle-mark-mode t))
+       ;; is the selection height 2 or more lines
+       (>= (1+ (- (line-number-at-pos (region-end))
+                  (line-number-at-pos (region-beginning)))) 2))
+      (sort-columns reverse (region-beginning) (region-end))
+    (error "Sorting by column requires a block/rect selection on 2 or more lines.")))
+
+(defun +amos/sort-lines-by-column-reverse ()
+"Sort lines by the selected column in reverse order,
+using a visual block/rectangle selection."
+  (interactive)
+  (+amos/sort-lines-by-column -1))
+
+(defun +amos/select-current-block ()
+  "Select the current block of text between blank lines."
+  (interactive)
+  (let (p1)
+    (when (re-search-backward "\n[ \t]*\n" nil "move")
+      (re-search-forward "\n[ \t]*\n"))
+    (setq p1 (point))
+    (if (re-search-forward "\n[ \t]*\n" nil "move")
+        (re-search-backward "\n[ \t]*\n"))
+    (set-mark p1)))
+
+;; From http://xugx2007.blogspot.ca/2007/06/benjamin-rutts-emacs-c-development-tips.html
+(setq compilation-finish-function
+      (lambda (buf str)
+
+        (let ((case-fold-search nil))
+          (if (or (string-match "exited abnormally" str)
+                  (string-match "FAILED" (buffer-string)))
+
+              ;; there were errors
+              (message "There were errors. SPC-e-n to visit.")
+            (unless (or (string-match "Grep finished" (buffer-string))
+                        (string-match "Ag finished" (buffer-string))
+                        (string-match "nosetests" (buffer-name)))
+
+              ;; no errors
+              (message "compilation ok."))))))
+
+(defun +amos/close-compilation-window ()
+  "Close the window containing the '*compilation*' buffer."
+  (interactive)
+  (when compilation-last-buffer
+    (delete-windows-on compilation-last-buffer)))
+
+(defun +amos/switch-to-scratch-buffer (&optional arg)
+  "Switch to the `*scratch*' buffer, creating it first if needed.
+if prefix argument ARG is given, switch to it in an other, possibly new window."
+  (interactive "P")
+  (let ((exists (get-buffer "*scratch*")))
+    (if arg
+        (switch-to-buffer-other-window (get-buffer-create "*scratch*"))
+      (switch-to-buffer (get-buffer-create "*scratch*")))
+    (when (and (not exists)
+               (not (eq major-mode dotspacemacs-scratch-mode))
+               (fboundp dotspacemacs-scratch-mode))
+      (funcall dotspacemacs-scratch-mode))))
+
+(defun swap-args (fun)
+  (if (not (equal (interactive-form fun)
+                  '(interactive "P")))
+      (error "Unexpected")
+    (advice-add
+     fun
+     :around
+     (lambda (x &rest args)
+       "Swap the meaning the universal prefix argument"
+       (if (called-interactively-p 'any)
+           (apply x (cons (not (car args)) (cdr args)))
+         (apply x args))))))
+
+(def-package! evil-ediff
+  :after ediff)
+
+(after! evil-surround
+  (setq-default evil-surround-pairs-alist (append '((?` . ("`" . "`")) (?~ . ("~" . "~"))) evil-surround-pairs-alist)))

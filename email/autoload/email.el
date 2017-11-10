@@ -2,7 +2,6 @@
 
 ;;;###autoload
 (defun =email ()
-  "Start email client."
   (interactive)
   (call-interactively #'mu4e))
 

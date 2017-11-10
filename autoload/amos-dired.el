@@ -26,6 +26,7 @@
 (defun +amos--update-history (name ring index)
   "Update history ring and current index"
   (when (or (ring-empty-p ring)
+            (file-directory-p name)
             (not (eq name (ring-ref ring 0))))
     (progn
       (ring-insert ring (directory-file-name name))
@@ -62,15 +63,16 @@
   (interactive)
   (+amos--dired-jump-history 1))
 
-(defun +amos/kill-all-other-dired-buffers (&optional current-buf)
-  "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
-  except current-buf ,if current-buf is nil then kill all"
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (when (and (not (eq current-buf buf))
-                 (or  (eq 'dired-mode  major-mode)
-                      (eq 'diredp-w32-drives-mode major-mode)))
-        (kill-buffer buf)))))
+(defun +amos/kill-all-other-dired-buffers (&optional current-buf))
+;; (defun +amos/kill-all-other-dired-buffers (&optional current-buf)
+;;   "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
+;;   except current-buf ,if current-buf is nil then kill all"
+;;   (dolist (buf (buffer-list))
+;;     (with-current-buffer buf
+;;       (when (and (not (eq current-buf buf))
+;;                  (or  (eq 'dired-mode  major-mode)
+;;                       (eq 'diredp-w32-drives-mode major-mode)))
+;;         (kill-buffer buf)))))
 
 (defadvice dired (before dired-single-buffer activate)
   "Replace current buffer if file is a directory."
@@ -93,12 +95,12 @@
     (when find-name
       (if (file-exists-p find-name)
           (progn
-            (unless ignore-history
-              (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))
             ;; select origination file
             (find-file find-name)
             (when (and (file-directory-p find-name)
                        (not (eq (current-buffer) orig)))
+              (unless ignore-history
+                (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))
               (+amos-store-jump-history)
               (+amos/kill-all-other-dired-buffers (current-buffer))))
         (message (shell-command-to-string "jump clean"))
@@ -134,7 +136,7 @@
             :caller #'+amos/counsel-jumpdir-function))
 
 (defun +amos-store-jump-history ()
-  (shell-command "jump chdir"))
+  (shell-command-to-string "jump chdir"))
 
 ;;;###autoload
 (defun +amos/dired-jump ()
@@ -151,3 +153,33 @@
     (completing-read "Select from history: "
                      (+amos--ring-elements +amos-dired-history-ring))))
   (when history (+amos/find-file history)))
+
+;;;###autoload
+(defun +amos/dired-rsync (dest)
+  (interactive
+   (list
+    (expand-file-name
+     (read-file-name
+      "Rsync to:"
+      (dired-dwim-target-directory)))))
+  ;; store all selected files into "files" list
+  (let ((files (dired-get-marked-files
+                nil current-prefix-arg))
+        ;; the rsync command
+        (tmtxt/rsync-command
+         "rsync -arvz --progress "))
+    ;; add all selected file names as arguments
+    ;; to the rsync command
+    (dolist (file files)
+      (setq tmtxt/rsync-command
+            (concat tmtxt/rsync-command
+                    (shell-quote-argument file)
+                    " ")))
+    ;; append the destination
+    (setq tmtxt/rsync-command
+          (concat tmtxt/rsync-command
+                  (shell-quote-argument dest)))
+    ;; run the async shell command
+    (async-shell-command tmtxt/rsync-command "*rsync*")
+    ;; finally, switch to that window
+    (other-window 1)))

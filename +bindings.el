@@ -63,18 +63,17 @@
  "C-l"              #'+amos:redisplay-and-recenter
  "C-s"              #'swiper
  "C-S-s"            #'counsel-projectile-rg
- :nm "s"            #'evil-substitute
- :nm "S"            #'evil-change-whole-line
  :m "C-f"           #'evilem--motion-evil-find-char
  :m "C-b"           #'evilem--motion-evil-find-char-backward
  :m "C-y"           #'+amos/yank-buffer-filename-with-line-position
- :m "C-w"           #'doom/kill-this-buffer
+ :m "C-w"           #'kill-this-buffer
  :m "M-j"           #'+amos:multi-next-line
  :m "M-k"           #'+amos:multi-previous-line
  :i "M-i"           #'yas-insert-snippet
  :i "M-d"           #'kill-word
  :i "C-o"           #'kill-line
  :i "C-d"           #'delete-char
+ :i "C-j"           #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
  :n "M-i"           #'yasdcv-translate-at-point
@@ -95,6 +94,8 @@
  :en "M-k"          #'evil-window-up
  :en "M-l"          #'evil-window-right
 
+ :n ",,"            #'projectile-find-other-file
+
  (:prefix "C-x"
    :nvime "u" #'link-hint-open-link
    "C-c"      #'+amos/tmux-detach
@@ -103,8 +104,11 @@
  (:prefix "C-c"
    "C-SPC" #'easy-hugo)
 
+
  ;; --- <leader> -------------------------------------
  (:leader
+   :desc "Rg current directory" :nv "\\"  #'+amos/counsel-rg-cur-dir
+   :desc "Rg current directory" :nv "|"  #'+amos/counsel-rg-cur-dir
    :desc "Ex command"  :nv ";"   #'evil-ex
    :desc "M-x"         :nv ":"   #'execute-extended-command
    :desc "Pop up scratch buffer"   :nv "x"  #'doom/open-scratch-buffer
@@ -181,7 +185,7 @@
      :desc "Switch buffer"           :n "B" #'switch-to-buffer
      :desc "Kill buffer"             :n "k" #'doom/kill-this-buffer
      :desc "Kill other buffers"      :n "o" #'doom/kill-other-buffers
-     :desc "Save buffer"             :n "s" #'save-buffer
+     :desc "Save buffer"             :n "s" #'+amos/switch-to-scratch-buffer
      :desc "Pop scratch buffer"      :n "x" #'doom/open-scratch-buffer
      :desc "Bury buffer"             :n "z" #'bury-buffer
      :desc "Next buffer"             :n "]" #'doom/next-buffer
@@ -207,11 +211,11 @@
      :desc "Find other file"           :n "a" #'projectile-find-other-file
      :desc "Open project editorconfig" :n "c" #'editorconfig-find-current-editorconfig
      :desc "Find file in dotfiles"     :n "d" #'+amos/find-in-dotfiles
-     :desc "Browse dotfiles"           :n "D" #'+amos/browse-dotfiles
+     :desc "Delete current file"       :n "D" #'+amos/delete-current-buffer-file
      :desc "Find file in emacs.d"      :n "e" #'+amos/find-in-emacsd
      :desc "Browse emacs.d"            :n "E" #'+amos/browse-emacsd
      :desc "Recent files"              :n "r" #'recentf-open-files
-     :desc "Recent project files"      :n "R" #'projectile-recentf
+     :desc "Recent project files"      :n "R" #'+amos/rename-current-buffer-file
      :desc "Yank filename"             :n "y" #'+amos/yank-buffer-filename
      :desc "Yank filename"             :n "Y" #'+amos/yank-buffer-filename-nondir)
 
@@ -291,7 +295,7 @@
      :desc "Switch project"          :n  "p" #'projectile-switch-project
      :desc "Recent project files"    :n  "r" #'projectile-recentf
      :desc "List project tasks"      :n  "t" #'+ivy/tasks
-     :desc "Pop term in project"     :n  "o" #'+term/open-popup-in-project
+     :desc "Pop scratch in project"  :n  "o" #'doom/open-project-scratch-buffer
      :desc "Invalidate cache"        :n  "x" #'projectile-invalidate-cache)
 
    (:desc "quit" :prefix "q"
@@ -316,7 +320,9 @@
    (:desc "toggle" :prefix "t"
      :desc "Flyspell"               :n "s" #'flyspell-mode
      :desc "Flycheck"               :n "f" #'flycheck-mode
+     :desc "Rainbow"                :n "r" #'rainbow-mode
      :desc "Truncate lines"         :n "l" #'toggle-truncate-lines
+     :desc "Fullscreen"             :n "w" #'whitespace-mode
      :desc "Fullscreen"             :n "f" #'doom/toggle-fullscreen
      :desc "Indent guides"          :n "i" #'highlight-indentation-mode
      :desc "Indent guides (column)" :n "I" #'highlight-indentation-current-column-mode
@@ -343,7 +349,7 @@
  :n  "go" #'+amos/evil-insert-line-below
  :n  "gO" #'+amos/evil-insert-line-above
  :n  "gp" #'+evil/reselect-paste
- :n  "gr" #'+eval:region
+ :n  "gr" #'+jump/references
  :n  "gR" #'+eval/buffer
  :v  "gR" #'+eval:replace-region
  :v  "@"  #'+evil:macro-on-all-lines
@@ -355,6 +361,10 @@
  :v  ">"  #'+evil/visual-indent  ; vnoremap > >gv
  ;; paste from recent yank register (which isn't overwritten)
  :v  "C-p" "\"0p"
+
+ (:after image-mode
+   (:map image-mode-map
+     :n "q" #'quit-window))
 
  (:map evil-window-map ; prefix "C-w"
    ;; Navigation
@@ -431,14 +441,38 @@
  ;; dired
  (:after dired
    (:map dired-mode-map
-         "SPC" nil
-         "G"   nil
-         "g"   nil
-         :n  "M-n" #'+amos/counsel-jumpfile-function
-         :n  "M-o" #'+amos/prev-history
-         :n  "M-i" #'+amos/next-history
-         :n  "h"   #'+amos/up-directory
-         :n  "l"   #'+amos/find-file))
+     "SPC"     nil
+     "G"       nil
+     "g"       nil
+     "e"       nil
+     "v"       nil
+     "b"       nil
+     "C-o"     nil
+     "C-i"     nil
+     "f"       #'counsel-find-file
+     "S"       #'hydra-dired-quick-sort/body
+     "j"       #'dired-next-line
+     "k"       #'dired-previous-line
+     "W"       (lambda () (interactive) (dired-copy-filename-as-kill 0))
+     :nm "C-p" #'peep-dired
+     :nm "Y"   #'+amos/dired-rsync
+     :nm "S"   #'hydra-dired-quick-sort/body
+     :n  "j"   #'+amos/evil-undefine
+     :n  "k"   #'+amos/evil-undefine
+     :n  "M-n" #'+amos/counsel-jumpfile-function
+     :n  "M-o" #'+amos/prev-history
+     :n  "M-i" #'+amos/next-history
+     :n  "h"   #'+amos/up-directory
+     :n  "l"   #'dired-open-file))
+
+ (:after peep-dired
+   (:map peep-dired-mode-map
+     "j"           #'peep-dired-next-file
+     "k"           #'peep-dired-prev-file
+     "<SPC>"       #'peep-dired-scroll-page-down
+     "C-<SPC>"     #'peep-dired-scroll-page-up
+     "<backspace>" #'peep-dired-scroll-page-up
+     "C-p"         #'peep-dired))
 
  ;; evil-nerd-commenter
  :n  "gc"  #'evilnc-comment-or-uncomment-lines
@@ -447,7 +481,7 @@
  :n  "gx"  #'evil-exchange
 
  ;; evil-matchit
- :nv [tab] #'+evil/matchit-or-toggle-fold
+ :nv [tab] #'evil-jump-forward
 
  ;; evil-magit
  (:after evil-magit
@@ -493,6 +527,9 @@
 
  ;; evil-snipe
  (:after evil-snipe
+   :map evil-snipe-local-mode-map
+   :nm "S" nil
+   :nm "s" nil
    ;; Binding to switch to evil-easymotion/avy after a snipe
    :map evil-snipe-parent-transient-map
    "C-f" (λ! (require 'evil-easymotion)
@@ -591,13 +628,15 @@
  (:after ivy
    :map ivy-minibuffer-map
    [escape]        #'keyboard-escape-quit
+   "C-c C-o"       #'+amos/swiper-replace
+   "TAB"           #'ivy-call-and-recenter
    "M-z"           #'undo
    "M-j"           #'ivy-immediate-done
    "C-r"           #'evil-paste-from-register
    "C-k"           #'ivy-previous-line
    "C-j"           #'ivy-next-line
    "C-l"           #'ivy-alt-done
-   "C-w"           #'ivy-backward-kill-word
+   "C-w"           #'ivy-yank-word
    "<M-backspace>" #'ivy-backward-kill-word
    "C-u"           #'ivy-kill-line
    "M-b"           #'backward-word
@@ -656,6 +695,7 @@
  (:after debug
    ;; For elisp debugging
    :map debugger-mode-map
+   :n "q"   (lambda () (interactive) (top-level) (doom/kill-this-buffer))
    :n "RET" #'debug-help-follow
    :n "e"   #'debugger-eval-expression
    :n "n"   #'debugger-step-through

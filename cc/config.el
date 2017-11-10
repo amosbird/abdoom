@@ -27,7 +27,7 @@ compilation database is present in the project.")
 
 (def-package! cc-mode
   :commands (c-mode c++-mode objc-mode java-mode)
-  :mode ("\\.mm" . objc-mode)
+  :mode ("\\.mm" . objc-mode) ("\\.h\\'" . c++-mode)
   :preface
   (defun +cc-c++-header-file-p ()
     (and buffer-file-name
@@ -54,9 +54,9 @@ compilation database is present in the project.")
   :config
   (set! :electric '(c-mode c++-mode objc-mode java-mode)
         :chars '(?\n ?\}))
-  (set! :company-backend
-        '(c-mode c++-mode objc-mode)
-        '(company-irony-c-headers company-irony))
+  ;; (set! :company-backend
+  ;;       '(c-mode c++-mode objc-mode)
+  ;;       '(company-irony-c-headers company-irony))
 
   ;;; Style/formatting
   ;; C/C++ style settings
@@ -108,16 +108,67 @@ compilation database is present in the project.")
   :commands modern-c++-font-lock-mode
   :init (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
+(def-package! cmake-mode
+  :mode
+  (("/CMakeLists\\.txt\\'" . cmake-mode)
+   ("\\.cmake\\'" . cmake-mode)))
+
 (def-package! cmake-ide
   :after cc-mode
   :config
+  (setq cmake-ide-header-no-flags t)
+
   (require 'rtags)
+  (require 'counsel-dash)
+
+  (set!
+    :jump 'c++-mode
+    :definition #'rtags-find-symbol-at-point
+    :references #'rtags-find-references-at-point
+    :documentation #'counsel-dash-at-point)
+
+  (add-hook! 'rtags-jump-hook 'evil-set-jump)
+  (setq rtags-autostart-diagnostics t)
+
+  (require 'ivy-rtags)
+  (setq rtags-display-result-backend 'ivy)
+
+  ;; (require 'company-rtags)
+  ;; (setq rtags-completions-enabled t)
+  ;; (add-to-list 'company-backends 'company-rtags)
+
+  (require 'flycheck-rtags)
+  (defun my-flycheck-rtags-setup ()
+    (flycheck-select-checker 'rtags)
+    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
+    (setq-local flycheck-check-syntax-automatically nil)
+    (flycheck-mode +1))
+  (add-hook 'c-mode-hook #'my-flycheck-rtags-setup)
+  (add-hook 'c++-mode-hook #'my-flycheck-rtags-setup)
+  (add-hook 'objc-mode-hook #'my-flycheck-rtags-setup)
+
+  (require 'irony)
+  (require 'irony-cdb-json)
+  (require 'company-irony)
+  (require 'company-irony-c-headers)
+  (setq company-irony-ignore-case 'smart)
+  (defun company-c-headers-path-user-irony ()
+    "Return the user include paths for the current buffer."
+    (when irony-mode
+      (irony--extract-user-search-paths irony--compile-options
+                                        irony--working-directory)))
+  (setq company-c-headers-path-user #'company-c-headers-path-user-irony)
+  (add-to-list 'company-backends '(company-irony-c-headers company-irony))
+
+  (require 'flycheck-irony)
+  (add-hook 'irony-mode-hook 'flycheck-irony-setup)
+
   (cmake-ide-setup))
 
-(after! irony
-  ;; Initialize compilation database, if present. Otherwise, fall back on
-  ;; `+cc-compiler-options'.
-  (add-hook 'irony-mode-hook #'+cc|irony-init-compile-options))
+;; (after! irony
+;;   ;; Initialize compilation database, if present. Otherwise, fall back on
+;;   ;; `+cc-compiler-options'.
+;;   (add-hook 'irony-mode-hook #'+cc|irony-init-compile-options))
 
 
 ;;
@@ -129,6 +180,12 @@ compilation database is present in the project.")
 (def-package! cuda-mode :mode "\\.cuh?$")
 
 (def-package! opencl-mode :mode "\\.cl$")
+
+(def-package! counsel-gtags
+  :commands counsel-gtags-mode
+  :init
+  (add-hook 'c-mode-hook 'counsel-gtags-mode)
+  (add-hook 'c++-mode-hook 'counsel-gtags-mode))
 
 (def-package! demangle-mode
   :commands demangle-mode
@@ -152,3 +209,6 @@ compilation database is present in the project.")
     (if (executable-find "glslangValidator")
         (warn "glsl-mode: couldn't find glslangValidator, disabling company-glsl")
       (set! :company-backend 'glsl-mode '(company-glsl)))))
+
+(def-package! clang-format
+  :commands clang-format-buffer clang-format)

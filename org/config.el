@@ -153,6 +153,8 @@ between the two."
           :en "C-j"   #'org-metadown
           :en "C-k"   #'org-metaup
           :i  "C-d"   #'delete-char
+          :n  "g j"   #'evil-next-visual-line
+          :n  "g k"   #'evil-previous-visual-line
           "C-c e"     #'+amos/org-babel-edit
           "C-c C-j"   #'counsel-org-goto
           "C-c C-S-l" #'+org/remove-link)
@@ -287,3 +289,21 @@ or org-mode (when in the body)."
   (require 'cl)
   (flet ((start-process-shell-command (cmd &rest _) (shell-command cmd)))
     ad-do-it))
+
+(after! org-element
+  (defadvice pangu-spacing-search-and-replace (around +org*pangu-spacing-search-and-replace activate)
+    "Addvise the function not to replace the match when one of the match group is from an org-link element"
+    (if (not (eq 'org-mode (buffer-local-value 'major-mode (current-buffer))))
+        ad-do-it
+      (pangu-spacing-search-buffer
+       regexp (point-min) (point-max)
+       (when (not (member 'link
+                          (save-match-data
+                            (save-excursion
+                              (let ((p1 (match-beginning 1))
+                                    (p2 (match-beginning 2)))
+                                (mapcar (lambda (pt) (goto-char pt)
+                                          (org-element-type
+                                           (org-element-context)))
+                                        (list p1 p2)))))))
+         (replace-match match nil nil))))))
