@@ -86,38 +86,26 @@
   :config
   (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
 
-(def-package! osc
-  :demand
-  :init
-  (add-hook! 'after-make-frame-functions
-    (if window-system
-        (progn
-          (defun +amos/other-window ()
-            (interactive)
-            (i3-nav-right))
-          (setq browse-url-browser-function 'browse-url-chrome))
+(defun +amos|init-frame ()
+  (require 'osc)
+  (if (display-graphic-p)
       (progn
         (defun +amos/other-window ()
           (interactive)
-          (osc-nav-right))
-        (setq
-         interprogram-cut-function 'osc-select-text
-         browse-url-browser-function 'browse-url-osc)))))
+          (i3-nav-right))
+        (setq browse-url-browser-function 'browse-url-chrome)
+        (dolist (charset '(kana han cjk-misc bopomofo))
+          (set-fontset-font t charset
+                            (font-spec :family "WenQuanYi Micro Hei" :size 13))))
+    ;;else
+    (defun +amos/other-window ()
+      (interactive)
+      (osc-nav-right))
+    (setq
+     interprogram-cut-function 'osc-select-text
+     browse-url-browser-function 'browse-url-osc)))
 
-(defun +amos|init-fonts (&optional frame)
-  (when (display-graphic-p frame)
-    (select-frame frame)
-    (require 'unicode-fonts)
-    (unicode-fonts-setup)
-    (dolist (charset '(kana han cjk-misc bopomofo))
-      (set-fontset-font t charset
-                        (font-spec :family "WenQuanYi Micro Hei" :size 13)))
-    (remove-hook! 'after-make-frame-functions #'+amos|init-fonts)))
-
-(add-hook! 'after-init-hook
-  (if initial-window-system
-      (+amos|init-fonts)
-    (add-hook! 'after-make-frame-functions #'+amos|init-fonts)))
+(add-hook! 'after-init-hook #'+amos|init-frame)
 
 (def-package! evil-nerd-commenter
   :commands
@@ -242,7 +230,7 @@
   (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
   (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
-  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
+  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs Lisp"))))
 
 (defun advice-browse-url (ofun &rest candidate)
   (if (boundp 'amos-browse)
