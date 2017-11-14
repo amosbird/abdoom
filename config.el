@@ -234,7 +234,7 @@
   (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
   (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
-  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs Lisp"))))
+  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
 
 (defun advice-browse-url (ofun &rest candidate)
   (if (boundp 'amos-browse)
