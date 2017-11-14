@@ -87,28 +87,29 @@
   (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
 
 (defun +amos|init-frame (&optional frame)
-  (require 'osc)
-  (if (display-graphic-p)
-      (progn
-        (defun +amos/other-window ()
-          (interactive)
-          (i3-nav-right))
-        (setq browse-url-browser-function 'browse-url-chrome)
-        (dolist (charset '(kana han cjk-misc bopomofo))
-          (set-fontset-font t charset
-                            (font-spec :family "WenQuanYi Micro Hei" :size 13)))
-        (remove-hook! 'after-make-frame-functions #'+amos|init-frame))
-    ;;else
-    (defun +amos/other-window ()
-      (interactive)
-      (osc-nav-right))
-    (setq
-     interprogram-cut-function 'osc-select-text
-     browse-url-browser-function 'browse-url-osc)))
+  (when (display-graphic-p frame)
+    (with-selected-frame frame
+      (dolist (charset '(kana han cjk-misc bopomofo))
+        (set-fontset-font t charset
+                          (font-spec :family "WenQuanYi Micro Hei" :size 13)))
+      (remove-hook! 'after-make-frame-functions #'+amos|init-frame))))
 
 (add-hook! 'after-init-hook
-  (add-hook! 'after-make-frame-functions #'+amos|init-frame)
-  (+amos|init-frame))
+  (if initial-window-system
+      (+amos|init-frame)
+    (add-hook! 'after-make-frame-functions #'+amos|init-frame)))
+
+(use-package osc
+  :demand
+  :init
+  (defun +amos/other-window ()
+    (interactive)
+    (if (display-graphic-p)
+        (i3-nav-right)
+      (osc-nav-right)))
+  (setq
+   interprogram-cut-function 'osc-select-text
+   browse-url-browser-function 'browse-url-osc))
 
 (def-package! evil-nerd-commenter
   :commands
