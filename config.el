@@ -86,7 +86,7 @@
   :config
   (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
 
-(defun +amos|init-frame ()
+(defun +amos|init-frame (&optional frame)
   (require 'osc)
   (if (display-graphic-p)
       (progn
@@ -96,7 +96,8 @@
         (setq browse-url-browser-function 'browse-url-chrome)
         (dolist (charset '(kana han cjk-misc bopomofo))
           (set-fontset-font t charset
-                            (font-spec :family "WenQuanYi Micro Hei" :size 13))))
+                            (font-spec :family "WenQuanYi Micro Hei" :size 13)))
+        (remove-hook! 'after-make-frame-functions #'+amos|init-frame))
     ;;else
     (defun +amos/other-window ()
       (interactive)
@@ -105,7 +106,9 @@
      interprogram-cut-function 'osc-select-text
      browse-url-browser-function 'browse-url-osc)))
 
-(add-hook! 'after-init-hook #'+amos|init-frame)
+(add-hook! 'after-init-hook
+  (add-hook! 'after-make-frame-functions #'+amos|init-frame)
+  (+amos|init-frame))
 
 (def-package! evil-nerd-commenter
   :commands
