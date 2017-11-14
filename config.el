@@ -734,25 +734,6 @@ initialized with the current filename."
                 ;; ?\a = C-g, ?\e = Esc and C-[
                 ((memq key '(?\a ?\e)) (keyboard-quit))))))))
 
-;; from spacemacs
-(defun +amos/delete-current-buffer-file ()
-  "Removes file connected to current buffer and kills buffer."
-  (interactive)
-  (let ((filename (buffer-file-name))
-        (buffer (current-buffer))
-        (name (buffer-name)))
-    (if (not (and filename (file-exists-p filename)))
-        (ido-kill-buffer)
-      (when (yes-or-no-p "Are you sure you want to delete this file? ")
-        (delete-file filename t)
-        (kill-buffer buffer)
-        (when (and (configuration-layer/package-used-p 'projectile)
-                   (projectile-project-p))
-          (call-interactively #'projectile-invalidate-cache))
-        (message "File '%s' successfully removed" filename)))))
-
-
-
 ;; BEGIN align functions
 
 ;; modified function from http://emacswiki.org/emacs/AlignCommands
@@ -967,3 +948,33 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
 
 (after! evil-surround
   (setq-default evil-surround-pairs-alist (append '((?` . ("`" . "`")) (?~ . ("~" . "~"))) evil-surround-pairs-alist)))
+
+(defadvice dired-clean-up-after-deletion (around +amos*dired-clean-up-after-deletion activate)
+  (doom-with-advice (y-or-n-p (lambda (&rest _) t))
+      ad-do-it))
+
+(after! projectile
+  (setq projectile-require-project-root t
+        projectile-find-dir-includes-top-level t))
+
+(after! counsel-projectile
+  (defun +amos--counsel-projectile-dired ()
+    "Run an dired open in the project."
+    (interactive)
+    (if (projectile-project-p)
+        (+amos/find-file (projectile-project-root))))
+
+  (defun +amos--counsel-projectile-switch-project-action-dired (project)
+  "Action for `counsel-projectile-switch-project' to open
+PROJECT with `dired'."
+  (let ((projectile-switch-project-action '+amos--counsel-projectile-dired))
+    (counsel-projectile-switch-project-action project)))
+
+  (defun +amos/counsel-projectile-switch-project ()
+    (interactive)
+    (let ((ivy-inhibit-action t))
+      (+amos--counsel-projectile-switch-project-action-dired (counsel-projectile-switch-project))))
+
+  (ivy-add-actions
+   'counsel-projectile-switch-project
+   '(("o" +amos--counsel-projectile-switch-project-action-dired "dired open"))))

@@ -211,7 +211,7 @@
      :desc "Find other file"           :n "a" #'projectile-find-other-file
      :desc "Open project editorconfig" :n "c" #'editorconfig-find-current-editorconfig
      :desc "Find file in dotfiles"     :n "d" #'+amos/find-in-dotfiles
-     :desc "Delete current file"       :n "D" #'+amos/delete-current-buffer-file
+     :desc "Delete current file"       :n "D" #'+evil:delete-this-file
      :desc "Find file in emacs.d"      :n "e" #'+amos/find-in-emacsd
      :desc "Browse emacs.d"            :n "E" #'+amos/browse-emacsd
      :desc "Recent files"              :n "r" #'recentf-open-files
@@ -288,7 +288,9 @@
        :desc "Send to Launchbar"         :n "l" #'+macos/send-to-launchbar
        :desc "Send project to Launchbar" :n "L" #'+macos/send-project-to-launchbar))
 
-   (:desc "project" :prefix "p"
+   :desc "Browse project"                :n "p" #'+amos/counsel-projectile-switch-project
+
+   (:desc "project" :prefix "P"
      :desc "Browse project"          :n  "." (find-file-in! (doom-project-root))
      :desc "Find file in project"    :n  "/" #'projectile-find-file
      :desc "Run cmd in project root" :nv "!" #'projectile-run-shell-command-in-root
@@ -433,7 +435,7 @@
  ;; counsel
  (:after counsel
    (:map counsel-ag-map
-     [backtab]  #'+ivy/wgrep-occur  ; search/replace on results
+     "C-c o"    #'+ivy/wgrep-occur  ; search/replace on results
      "C-i"      #'ivy-call-and-recenter
      "C-SPC"    #'counsel-git-grep-recenter   ; preview
      "M-RET"    (+ivy-do-action! #'+ivy-git-grep-other-window-action)))
@@ -628,7 +630,7 @@
  (:after ivy
    :map ivy-minibuffer-map
    [escape]        #'keyboard-escape-quit
-   "C-c C-o"       #'+amos/swiper-replace
+   ;; "C-c C-o"       #'+amos/swiper-replace
    "TAB"           #'ivy-call-and-recenter
    "M-z"           #'undo
    "M-j"           #'ivy-immediate-done
@@ -640,7 +642,10 @@
    "<M-backspace>" #'ivy-backward-kill-word
    "C-u"           #'ivy-kill-line
    "M-b"           #'backward-word
-   "M-f"           #'forward-word)
+   "M-f"           #'forward-word
+   :map ivy-occur-grep-mode-map
+   "C-d" nil
+   "d"   #'ivy-occur-delete-candidate)
 
  ;; rotate-text
  :n  "!"  #'rotate-text
@@ -903,6 +908,7 @@
         "C-a" #'move-beginning-of-line
         "C-w" #'doom/minibuffer-kill-word
         "C-u" #'doom/minibuffer-kill-line
+        "C-d" #'delete-char
         "M-b" #'backward-word
         "M-f" #'forward-word
         "M-d" #'kill-word

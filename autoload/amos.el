@@ -91,7 +91,7 @@ the current state and point position."
 
 ;;;###autoload (autoload '+amos/find-in-dotfiles "private/amos/autoload/amos" nil t)
 ;;;###autoload (autoload '+amos/browse-dotfiles "private/amos/autoload/amos" nil t)
-(+amos-def-finder! dotfiles (expand-file-name ".dotfiles" "~"))
+(+amos-def-finder! dotfiles (expand-file-name "dotfiles" "~"))
 
 ;;;###autoload (autoload '+amos/find-in-emacsd "private/amos/autoload/amos" nil t)
 ;;;###autoload (autoload '+amos/browse-emacsd "private/amos/autoload/amos" nil t)

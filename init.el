@@ -18,6 +18,10 @@
  '(counsel-org-goto-separator " ➜ ")
  '(dired-open-extensions
    '(("pdf" . "xdg-open")
+     ("ps" . "xdg-open")
+     ("txt" . "xdg-open")
+     ("jpg" . "xdg-open")
+     ("iso" . "xdg-open")
      ("callgrind.out.*" . "kcachegrind")
      ("doc" . "xdg-open")
      ("docx" . "xdg-open")

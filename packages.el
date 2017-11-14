@@ -13,6 +13,7 @@
 (package! osc :recipe (:fetcher github :repo "amosbird/osc.el"))
 (package! ivy-rich :recipe (:fetcher github :repo "Yevgnen/ivy-rich"))
 (package! dired-hacks :recipe (:fetcher github :repo "Fuco1/dired-hacks"))
+(package! dired-k :recipe (:fetcher github :repo "amosbird/emacs-dired-k"))
 (package! org-mime)
 (package! crux)
 (package! cnfonts)
