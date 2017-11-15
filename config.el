@@ -109,7 +109,7 @@
       (osc-nav-right)))
   (setq
    interprogram-cut-function 'osc-select-text
-   browse-url-browser-function 'browse-url-osc))
+   browse-url-browser-function (lambda (url &optional _new-window) (browse-url-osc url t))))
 
 (def-package! evil-nerd-commenter
   :commands
@@ -415,6 +415,15 @@
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
+
+(defadvice +tmux/run (after +amos*tmux-run activate)
+  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
+but do not execute them."
+  (interactive
+   (list (read-string "tmux $ ")
+         current-prefix-arg))
+  (+tmux (shell-quote-argument command)
+         (unless noreturn " Enter")))
 
 ;; (set-face-background 'show-paren-match (face-background 'default))
 ;; (set-face-foreground 'show-paren-match (face-foreground 'default))
