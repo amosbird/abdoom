@@ -2,6 +2,7 @@
 ;;; private/amos/packages.el
 (package! evil-commentary :ignore t)
 (package! vi-tilde-fringe :ignore t)
+(package! solaire-mode :ignore t)
 (package! stripe-buffer :ignore t)
 (package! git-gutter-fringe :ignore t)
 (package! visual-fill-column :ignore t)
@@ -38,6 +39,7 @@
 (package! hl-line+)
 (package! rainbow-blocks)
 (package! ov)
+(package! ag)
 (package! unfill)
 (package! evil-ediff)
 (package! yapfify)

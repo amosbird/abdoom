@@ -34,7 +34,7 @@
  ;; Simple window navigation/manipulation
  "C-`"              #'doom/popup-toggle
  "C-~"              #'doom/popup-raise
- "M-w"              #'delete-window
+ "M-w"              #'kill-this-buffer
  "M-W"              #'+workspace/close-workspace-or-frame
  "M-n"              #'evil-buffer-new
  "M-N"              #'make-frame
@@ -56,7 +56,7 @@
  "M-e"              #'counsel-dash-at-point
  "M-m"              #'evil-switch-to-windows-last-buffer
  :ne "M-g"          #'+amos/counsel-jumpdir-function
- "M-w"              #'delete-other-windows
+ "M-w"              #'kill-this-buffer
  "C-x e"            #'pp-eval-last-sexp
  "C-l"              #'+amos:redisplay-and-recenter
  "C-s"              #'swiper
@@ -64,7 +64,7 @@
  :m "C-f"           #'evilem--motion-evil-find-char
  :m "C-b"           #'evilem--motion-evil-find-char-backward
  :m "C-y"           #'+amos/yank-buffer-filename-with-line-position
- :m "C-w"           #'kill-this-buffer
+ :m "C-w"           #'bury-buffer
  :m "M-j"           #'+amos:multi-next-line
  :m "M-k"           #'+amos:multi-previous-line
  :i "M-i"           #'yas-insert-snippet
@@ -489,6 +489,7 @@
    :map (magit-status-mode-map magit-revision-mode-map)
    "SPC" nil
    :n "C-j" nil
+   :n [tab] #'magit-section-toggle
    :n "C-k" nil)
 
  ;; evil-mc
@@ -830,6 +831,11 @@
     (evilem-define (kbd (concat prefix " n")) #'evil-ex-search-next)
     (evilem-define (kbd (concat prefix " N")) #'evil-ex-search-previous)
     (evilem-define (kbd (concat prefix " f")) #'evil-snipe-repeat
+                   :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
+                   :bind ((evil-snipe-scope 'buffer)
+                          (evil-snipe-enable-highlight)
+                          (evil-snipe-enable-incremental-highlight)))
+    (evilem-define (kbd (concat prefix " ,")) #'evil-snipe-repeat-reverse
                    :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
                    :bind ((evil-snipe-scope 'buffer)
                           (evil-snipe-enable-highlight)

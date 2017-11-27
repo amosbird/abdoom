@@ -143,7 +143,8 @@
   (interactive)
   (+amos-store-jump-history)
   (require 'dired)
-  (dired-jump))
+  (dired-jump)
+  (recenter))
 
 ;;;###autoload
 (defun +amos/show-history (history)

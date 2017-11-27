@@ -201,6 +201,7 @@
 (advice-add #'eldoc-mode :override #'ignore)
 (advice-add #'+org|update-cookies :override #'ignore)
 (advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
+(advice-add #'recenter-top-bottom :override #'recenter)
 
 (after! centered-window-mode
   (defun amos-special-window-p (window)
@@ -225,6 +226,7 @@
   nil)
 
 (def-package-hook! visual-fill-column :pre-config nil)
+(def-package-hook! solaire-mode :pre-init nil)
 (def-package-hook! flycheck-pos-tip :pre-config nil)
 (def-package-hook! org-bullets :pre-config nil)
 (def-package-hook! magit :pre-config nil)

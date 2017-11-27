@@ -20,6 +20,8 @@ knows where to look for headers.")
   "A list of default compiler options for the C family. These are ignored if a
 compilation database is present in the project.")
 
+(add-hook! 'c-mode-hook (semantic-mode +1) (semantic-stickyfunc-mode +1))
+(add-hook! 'c++-mode-hook (semantic-mode +1) (semantic-stickyfunc-mode +1))
 
 ;;
 ;; Plugins
@@ -113,7 +115,49 @@ compilation database is present in the project.")
   (("/CMakeLists\\.txt\\'" . cmake-mode)
    ("\\.cmake\\'" . cmake-mode)))
 
+(def-package! rtags
+  :after cc-mode
+  :config
+  (require 'rtags)
+  (require 'counsel-dash)
+
+  (set!
+    :jump 'c++-mode
+    :definition #'rtags-find-symbol-at-point
+    :references #'rtags-find-references-at-point
+    :documentation #'counsel-dash-at-point)
+
+  (add-hook! 'rtags-jump-hook #'evil-set-jump)
+  (add-hook! 'rtags-after-find-file-hook #'recenter)
+  (setq rtags-autostart-diagnostics t)
+
+  (require 'ivy-rtags)
+  (setq rtags-display-result-backend 'ivy)
+
+  ;; (require 'company-rtags)
+  ;; (setq rtags-completions-enabled t)
+  ;; (add-to-list 'company-backends 'company-rtags)
+
+  (require 'flycheck-rtags)
+  (defun my-flycheck-rtags-setup ()
+    (flycheck-select-checker 'rtags)
+    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
+    (setq-local flycheck-check-syntax-automatically nil)
+    (flycheck-mode +1))
+  (add-hook 'c-mode-hook #'my-flycheck-rtags-setup)
+  (add-hook 'c++-mode-hook #'my-flycheck-rtags-setup)
+  (add-hook 'objc-mode-hook #'my-flycheck-rtags-setup))
+
+
+(add-to-list 'load-path "~/git/cquery/emacs")
+(def-package! lsp-cquery
+  :disabled
+  :after cc-mode
+  :config
+  (add-hook 'c-mode-hook #'lsp-cquery-enable))
+
 (def-package! cmake-ide
+  :disabled
   :after cc-mode
   :config
   (setq cmake-ide-header-no-flags t)
@@ -180,12 +224,6 @@ compilation database is present in the project.")
 (def-package! cuda-mode :mode "\\.cuh?$")
 
 (def-package! opencl-mode :mode "\\.cl$")
-
-(def-package! counsel-gtags
-  :commands counsel-gtags-mode
-  :init
-  (add-hook 'c-mode-hook 'counsel-gtags-mode)
-  (add-hook 'c++-mode-hook 'counsel-gtags-mode))
 
 (def-package! demangle-mode
   :commands demangle-mode

@@ -21,7 +21,10 @@
     (apply orig-fn args)))
 (advice-add #'tramp-read-passwd :around #'+amos*no-authinfo-for-tramp)
 
-(def-hydra! +amos@paste (:hint nil)
+(def-hydra! +amos@paste (:hint nil
+                         :color red
+                         :pre (setq hydra-lv nil)
+                         :after-exit (setq hydra-lv t))
   "Paste"
   ("C-j" evil-paste-pop "Next Paste")
   ("C-k" evil-paste-pop-next "Prev Paste")
@@ -234,6 +237,24 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 
 (unless window-system
   (require 'evil-terminal-cursor-changer)
+  (xterm-mouse-mode +1)
+    ;; enable terminal scroll
+  (global-set-key (kbd "<mouse-6>")
+                  (lambda ()
+                    (interactive)
+                    (evil-scroll-column-left 3)))
+  (global-set-key (kbd "<mouse-7>")
+                  (lambda ()
+                    (interactive)
+                    (evil-scroll-column-right 3)))
+  (global-set-key (kbd "<mouse-4>")
+                  (lambda ()
+                    (interactive)
+                    (evil-scroll-line-up 3)))
+  (global-set-key (kbd "<mouse-5>")
+                  (lambda ()
+                    (interactive)
+                    (evil-scroll-line-down 3)))
   (etcc-on))
 
 (def-package! chinese-yasdcv
@@ -254,6 +275,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     (interactive)
     (counsel-dash (thing-at-point 'symbol)))
   (add-hook! go-mode (setq-local helm-dash-common-docsets '("Go")))
+  (add-hook! cmake-mode (setq-local helm-dash-common-docsets '("CMake")))
   (add-hook! java-mode (setq-local helm-dash-common-docsets '("Java")))
   (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
   (add-hook! lua-mode (setq-local helm-dash-common-docsets '("Lua")))
@@ -688,9 +710,12 @@ Skip buffers that match `ivy-ignore-buffers'."
         process)
     (when (and file
                (not (file-directory-p file)))
-      (when (string-match-p "[cachegrind|callgrind].out" file)
+      (when (string-match-p "$[cachegrind|callgrind].out" file)
         (setq process (dired-open--start-process file "kcachegrind"))))
     process))
+
+(def-package! ag
+  :after projectile)
 
 (def-package! helm-make
   :after ivy
@@ -1075,3 +1100,16 @@ PROJECT with `dired'."
           (set-window-buffer (next-window) next-win-buffer)
           (select-window first-win)
           (if this-win-2nd (other-window 1))))))
+
+(defun +amos*ivy-rich-switch-buffer-pad (str len &optional left)
+  "Improved version of `ivy-rich-switch-buffer-pad' that truncates long inputs."
+  (let ((real-len (length str)))
+    (cond
+     ((< real-len len) (if left
+                           (concat (make-string (- len real-len) ? ) str)
+                         (concat str (make-string (- len real-len) ? ))))
+     ((= len real-len) str)
+     (t (concat (substring str 0 (- len 1)) "…")))))
+
+;; Override the original function using advice
+(advice-add 'ivy-rich-switch-buffer-pad :override #'+amos*ivy-rich-switch-buffer-pad)
