@@ -34,8 +34,6 @@
  ;; Simple window navigation/manipulation
  "C-`"              #'doom/popup-toggle
  "C-~"              #'doom/popup-raise
- "M-t"              #'+workspace/new
- "M-T"              #'+workspace/display
  "M-w"              #'delete-window
  "M-W"              #'+workspace/close-workspace-or-frame
  "M-n"              #'evil-buffer-new
@@ -89,10 +87,10 @@
  :m ")"             #'+amos:next-close-delim
 
  ;; Easier window navigation
- :en "M-h"          #'evil-window-left
- :en "M-j"          #'evil-window-down
- :en "M-k"          #'evil-window-up
- :en "M-l"          #'evil-window-right
+ :env "M-h"          #'evil-window-left
+ :env "M-j"          #'evil-window-down
+ :env "M-k"          #'evil-window-up
+ :env "M-l"          #'evil-window-right
 
  :n ",,"            #'projectile-find-other-file
 

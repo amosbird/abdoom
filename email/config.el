@@ -108,6 +108,10 @@ default/fallback account."
                    (let ((maildir (mu4e-message-field msg :maildir)))
                      (format "%s" (substring maildir 1 (string-match-p "/" maildir 1)))))))
 
+  (add-to-list 'mu4e-view-actions
+               '("View in browser" . mu4e-action-view-in-browser) t)
+
+
   ;; In my workflow, emails won't be moved at all. Only their flags/labels are
   ;; changed. Se we redefine the trash and refile marks not to do any moving.
   ;; However, the real magic happens in `+email|gmail-fix-flags'.
@@ -148,7 +152,9 @@ default/fallback account."
   (advice-add #'mu4e-mark-execute-all :after #'+email*refresh)
 
   (when (featurep! :feature spellcheck)
-    (add-hook 'mu4e-compose-mode-hook #'flyspell-mode))
+    (add-hook! 'mu4e-compose-mode-hook #'flyspell-mode))
+
+  (add-hook! 'mu4e-compose-mode-hook (setq fill-column 80))
 
   (when (fboundp 'imagemagick-register-types)
     (imagemagick-register-types))
@@ -222,6 +228,7 @@ default/fallback account."
             :nv "?"   #'+email/mark
             :nv "r"   #'+email/mark
             :nv "m"   #'+email/mark
+            :nv "a"   #'mu4e-headers-action
             :n "x"    #'mu4e-mark-execute-all
 
             :n "]"  #'mu4e-headers-next-unread
@@ -238,6 +245,8 @@ default/fallback account."
 
           (:map mu4e-view-mode-map
             :n "o" #'link-hint-open-link
+            :n "f" #'link-hint-open-link
+            :n "a" #'mu4e-view-action
             :n "q" #'mu4e~view-quit-buffer
 
             :n "C-k" #'mu4e-view-headers-prev
@@ -299,17 +308,17 @@ default/fallback account."
 ;;   (require 'notmuch-mua))
 
 
-(def-package! org-mu4e
-  :commands org-mu4e-compose-org-mode
-  :init (add-hook 'mu4e-compose-mode-hook #'org-mu4e-compose-org-mode)
-  :config
-  (setq org-mu4e-link-query-in-headers-mode nil
-        org-mu4e-convert-to-html t)
+;; (def-package! org-mu4e
+;;   :commands org-mu4e-compose-org-mode
+;;   :init (add-hook 'mu4e-compose-mode-hook #'org-mu4e-compose-org-mode)
+;;   :config
+;;   (setq org-mu4e-link-query-in-headers-mode nil
+;;         org-mu4e-convert-to-html t)
 
-  ;; Only render to html once. If the first send fails for whatever reason,
-  ;; org-mu4e would do so each time you try again.
-  (add-hook! 'message-send-hook
-    (setq-local org-mu4e-convert-to-html nil)))
+;;   ;; Only render to html once. If the first send fails for whatever reason,
+;;   ;; org-mu4e would do so each time you try again.
+;;   (add-hook! 'message-send-hook
+;;     (setq-local org-mu4e-convert-to-html nil)))
 
 (defun +amos*mu4e-view-verify-msg-popup (&optional msg)
   "Pop-up a little signature verification window for (optional) MSG

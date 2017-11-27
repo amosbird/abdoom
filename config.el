@@ -231,6 +231,7 @@
   (add-hook! go-mode (setq-local helm-dash-common-docsets '("Go")))
   (add-hook! java-mode (setq-local helm-dash-common-docsets '("Java")))
   (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
+  (add-hook! lua-mode (setq-local helm-dash-common-docsets '("Lua")))
   (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
   (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
