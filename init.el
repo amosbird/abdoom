@@ -16,6 +16,8 @@
  '(counsel-org-goto-display-style 'path)
  '(counsel-org-goto-face-style 'org)
  '(counsel-org-goto-separator " ➜ ")
+ '(counsel-projectile-ag-use-gitignore-only nil)
+ '(counsel-projectile-rg-use-gitignore-only nil)
  '(dired-open-extensions
    '(("pdf" . "xdg-open")
      ("ps" . "xdg-open")
