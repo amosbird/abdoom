@@ -43,3 +43,15 @@
 (package! yapfify)
 (package! emacsql-sqlite)
 (package! helm-make)
+
+(package! fill-column-indicator)
+(package! gitignore-mode)
+(package! magit-svn)
+(package! smeargle)
+(package! gitconfig-mode)
+(package! gitattributes-mode)
+(package! git-timemachine)
+(package! gitattributes-mode)
+(package! gitattributes-mode)
+
+(package! adoc-mode)

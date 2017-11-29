@@ -476,6 +476,7 @@
 
  ;; evil-nerd-commenter
  :n  "gc"  #'evilnc-comment-or-uncomment-lines
+ :n  "gl"  #'evilnc-comment-or-uncomment-lines
 
  ;; evil-exchange
  :n  "gx"  #'evil-exchange

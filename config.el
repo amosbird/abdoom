@@ -84,10 +84,35 @@
 (def-package! evil-magit
   :after magit
   :config
-  (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
+  (def-hydra! +amos@paste (:hint nil)
+  "Paste"
+  ("C-j" evil-paste-pop "Next Paste")
+  ("C-k" evil-paste-pop-next "Prev Paste")
+  ("p" evil-paste-after "Paste After")
+  ("P" evil-paste-before "Paste Before"))
+
+  (def-hydra! +amos@git-blame (:title "Git Blame Transient State"
+                                      :doc "
+Press [_b_] again to blame further in the history, [_q_] to go up or quit."
+                                      :on-enter (let (golden-ratio-mode)
+                                                  (unless (bound-and-true-p magit-blame-mode)
+                                                    (call-interactively 'magit-blame)))
+                                      :foreign-keys run)
+    ("b" magit-blame)
+    ;; here we use the :exit keyword because we should exit the
+    ;; micro-state only if the magit-blame-quit effectively disable
+    ;; the magit-blame mode.
+    ("q" nil :exit (progn (when (bound-and-true-p magit-blame-mode)
+                            (magit-blame-quit))
+                          (not (bound-and-true-p magit-blame-mode)))))
+
+  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
+  (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     "))
+  (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1))
+  (add-hook! 'git-commit-mode-hook 'fci-mode))
 
 (defun +amos|init-frame (&optional frame)
-  (when (display-graphic-p frame)
+  (when (and frame (display-graphic-p frame))
     (with-selected-frame frame
       (dolist (charset '(kana han cjk-misc bopomofo))
         (set-fontset-font t charset
@@ -233,7 +258,7 @@
   (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
   (add-hook! lua-mode (setq-local helm-dash-common-docsets '("Lua")))
   (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
-  (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc")))
+  (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc" "Boost")))
   (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
   (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
 
@@ -980,3 +1005,73 @@ PROJECT with `dired'."
   (ivy-add-actions
    'counsel-projectile-switch-project
    '(("o" +amos--counsel-projectile-switch-project-action-dired "dired open"))))
+
+(def-package! git-timemachine
+  :defer t
+  :commands +amos@time-machine/body
+  :config
+    (def-hydra! +amos@time-machine (
+                                      :title "Git Timemachine Transient State"
+                                      :doc "
+[_p_/_N_] previous [_n_] next [_c_] current [_g_] goto nth rev [_Y_] copy hash [_q_] quit"
+        :on-enter (let (golden-ratio-mode)
+                    (unless (bound-and-true-p git-timemachine-mode)
+                      (call-interactively 'git-timemachine)))
+        :on-exit (when (bound-and-true-p git-timemachine-mode)
+                   (git-timemachine-quit))
+        :foreign-keys run)
+        ("c" git-timemachine-show-current-revision)
+        ("g" git-timemachine-show-nth-revision)
+        ("p" git-timemachine-show-previous-revision)
+        ("n" git-timemachine-show-next-revision)
+        ("N" git-timemachine-show-previous-revision)
+        ("Y" git-timemachine-kill-revision)
+        ("q" nil :exit t)))
+
+(def-package! gitattributes-mode
+  :defer t)
+
+(def-package! gitconfig-mode
+  :defer t)
+
+(def-package! gitignore-mode
+  :defer t)
+
+(def-package! magit-svn
+  :commands turn-on-magit-svn
+  :init (add-hook 'magit-mode-hook 'turn-on-magit-svn))
+
+(def-package! smeargle
+  :defer t
+  :commands smeargle smeargle-commits smeargle-clear)
+
+(def-package! fill-column-indicator
+  :commands fci-mode)
+
+(def-package! adoc-mode
+  :mode "\\.adoc$")
+
+(defun +amos/toggle-window-split ()
+  (interactive)
+  (if (= (count-windows) 2)
+      (let* ((this-win-buffer (window-buffer))
+             (next-win-buffer (window-buffer (next-window)))
+             (this-win-edges (window-edges (selected-window)))
+             (next-win-edges (window-edges (next-window)))
+             (this-win-2nd (not (and (<= (car this-win-edges)
+                                         (car next-win-edges))
+                                     (<= (cadr this-win-edges)
+                                         (cadr next-win-edges)))))
+             (splitter
+              (if (= (car this-win-edges)
+                     (car (window-edges (next-window))))
+                  'split-window-horizontally
+                'split-window-vertically)))
+        (delete-other-windows)
+        (let ((first-win (selected-window)))
+          (funcall splitter)
+          (if this-win-2nd (other-window 1))
+          (set-window-buffer (selected-window) this-win-buffer)
+          (set-window-buffer (next-window) next-win-buffer)
+          (select-window first-win)
+          (if this-win-2nd (other-window 1))))))
