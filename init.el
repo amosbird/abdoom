@@ -198,6 +198,7 @@
 
 ;; (advice-add #'unicode-fonts-setup :override #'ignore)
 (advice-add #'nlinum-mode :override #'ignore)
+(advice-add #'doom-hide-modeline-mode :override #'ignore)
 (defun doom-popup-p () nil)
 (advice-add #'fringe-mode :override #'ignore)
 (advice-add #'solaire-mode :override #'ignore)
