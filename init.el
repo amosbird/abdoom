@@ -366,3 +366,8 @@ This function should be hooked to `buffer-list-update-hook'."
 
 ;; fix start-process xdg-open
 (setq process-connection-type nil)
+
+(setq package-archives 
+      '(("gnu" . "https://elpa.emacs-china.org/gnu/")
+        ("melpa" . "https://elpa.emacs-china.org/melpa/")))
+

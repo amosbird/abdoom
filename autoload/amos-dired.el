@@ -184,3 +184,76 @@
     (async-shell-command tmtxt/rsync-command "*rsync*")
     ;; finally, switch to that window
     (other-window 1)))
+
+(require 'files)
+(require 'tramp)
+(require 'dired)
+
+(defun dired-toggle-sudo-internal (path &optional sudo-user)
+  "Convert PATH to its sudoed version. root is used by default
+unless SUDO-USER is provided."
+  (let* (;; Handle the case of local files. `tramp-dissect-file-name' does
+	 ;; not raise an error anymore.
+	 (path (if (tramp-tramp-file-p path) path (concat "/:" path)))
+	 (file-vec (or (ignore-errors (tramp-dissect-file-name
+				       path))
+		       (tramp-dissect-file-name
+			(concat "/:" path) 1)))
+	 (method  (tramp-file-name-method file-vec))
+	 (user (tramp-file-name-user file-vec))
+	 (host  (tramp-file-name-host file-vec))
+	 (localname (expand-file-name
+		     (tramp-file-name-localname file-vec))))
+    (when (string= system-name host)
+      (setq host nil))
+    (cond
+     ;; remote directory -> sudo
+     ((and host (string= method "scp"))
+      (setq method "sudo" user sudo-user))
+     ;; remote directory -> normal
+     ((and host (string= method "sudo"))
+      (setq method "scp" user nil))
+     ;; Local directory -> normal
+     ((and (not host) (string= method "scp"))
+      (setq method "sudo"))
+     ;; Local directory -> sudo
+     ((and (not host) (string= method "sudo"))
+      (setq method nil user sudo-user))
+     ;; Local directory -> normal
+     (t
+      (setq method "sudo" user sudo-user)))
+    (replace-regexp-in-string
+     "^/:/" "/"
+     (tramp-make-tramp-file-name method user host localname))))
+
+(defun dired-toggle-sudo-find (fname)
+  "Create a new buffer for file name FNAME."
+  (let ((save-point (point)))
+    (find-alternate-file fname)
+    (goto-char save-point)))
+
+;;;###autoload
+(defun dired-toggle-sudo (&optional sudo-user)
+  "Reopen current file or dired buffer with sudo.
+
+If SUDO-USER is nil assume root.
+
+If called with `universal-argument' (C-u), ask for username.
+"
+  (interactive "P")
+  (let* ((fname (or buffer-file-name
+		    dired-directory))
+	 (sudo-user (if current-prefix-arg
+			(read-string "Username: ")
+		      sudo-user))
+	 (orig (current-buffer))
+         (file-now (if (eq major-mode 'dired-mode)
+                       (dired-get-filename t))))
+    (when fname
+      (setq fname (dired-toggle-sudo-internal fname sudo-user))
+      (if (not (eq major-mode 'dired-mode))
+	  (dired-toggle-sudo-find fname)
+	(kill-buffer orig)
+	(dired fname)
+        (when file-now
+          (dired-goto-file (expand-file-name file-now fname)))))))
