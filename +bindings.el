@@ -70,6 +70,8 @@
  :i "M-i"           #'yas-insert-snippet
  :i "M-d"           #'kill-word
  :i "C-o"           #'kill-line
+ :i "C-n"           #'next-line
+ :i "C-p"           #'previous-line
  :i "C-d"           #'delete-char
  :i "C-j"           #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
@@ -447,6 +449,8 @@
      "e"       nil
      "v"       nil
      "b"       nil
+     "n"       nil
+     "N"       nil
      "C-o"     nil
      "C-i"     nil
      "f"       #'counsel-find-file

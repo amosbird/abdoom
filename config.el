@@ -268,21 +268,23 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
    counsel-dash-docsets-url "https://raw.github.com/Kapeli/feeds/master"
    counsel-dash-min-length 2
    counsel-dash-candidate-format "%d %n (%t)"
-   counsel-dash-enable-debugging nil
+   counsel-dash-enable-debugging t
    counsel-dash-browser-func 'browse-url
    counsel-dash-ignored-docsets nil)
   (defun counsel-dash-at-point ()
     (interactive)
     (counsel-dash (thing-at-point 'symbol)))
-  (add-hook! go-mode (setq-local helm-dash-common-docsets '("Go")))
-  (add-hook! cmake-mode (setq-local helm-dash-common-docsets '("CMake")))
-  (add-hook! java-mode (setq-local helm-dash-common-docsets '("Java")))
-  (add-hook! rust-mode (setq-local helm-dash-common-docsets '("Rust")))
-  (add-hook! lua-mode (setq-local helm-dash-common-docsets '("Lua")))
-  (add-hook! c-mode (setq-local helm-dash-common-docsets '("C" "Linux" "glibc")))
-  (add-hook! c++-mode (setq-local helm-dash-common-docsets '("C++" "Linux" "glibc" "Boost")))
-  (add-hook! python-mode (setq-local helm-dash-common-docsets '("Python_3" "Python_2")))
-  (add-hook! emacs-lisp-mode (setq-local helm-dash-common-docsets '("Emacs_Lisp"))))
+  (add-hook! fish-mode (setq-local helm-dash-docsets '("fish" "Linux_Man_Pages")))
+  (add-hook! sh-mode (setq-local helm-dash-docsets '("Bash" "Linux_Man_Pages")))
+  (add-hook! go-mode (setq-local helm-dash-docsets '("Go")))
+  (add-hook! cmake-mode (setq-local helm-dash-docsets '("CMake")))
+  (add-hook! java-mode (setq-local helm-dash-docsets '("Java")))
+  (add-hook! rust-mode (setq-local helm-dash-docsets '("Rust")))
+  (add-hook! lua-mode (setq-local helm-dash-docsets '("Lua_5.3")))
+  (add-hook! c-mode (setq-local helm-dash-docsets '("C")))
+  (add-hook! c++-mode (setq-local helm-dash-docsets '("C++" "Boost")))
+  (add-hook! python-mode (setq-local helm-dash-docsets '("Python_3" "Python_2")))
+  (add-hook! emacs-lisp-mode (setq-local helm-dash-docsets '("Emacs_Lisp"))))
 
 (defun advice-browse-url (ofun &rest candidate)
   (if (boundp 'amos-browse)
@@ -1113,3 +1115,13 @@ PROJECT with `dired'."
 
 ;; Override the original function using advice
 (advice-add 'ivy-rich-switch-buffer-pad :override #'+amos*ivy-rich-switch-buffer-pad)
+
+
+(defun +amos/save-buffer-without-dtw ()
+  (interactive)
+  (let ((b (current-buffer)))   ; memorize the buffer
+    (with-temp-buffer ; new temp buffer to bind the global value of before-save-hook
+      (let ((before-save-hook (remove 'delete-trailing-whitespace before-save-hook)))
+        (with-current-buffer b  ; go back to the current buffer, before-save-hook is now buffer-local
+          (let ((before-save-hook (remove 'delete-trailing-whitespace before-save-hook)))
+            (save-buffer)))))))

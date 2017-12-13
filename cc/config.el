@@ -47,8 +47,8 @@ compilation database is present in the project.")
          (equal (file-name-extension buffer-file-name) "h")
          (re-search-forward "@\\<interface\\>" magic-mode-regexp-match-limit t)))
 
-  (push (cons #'+cc-c++-header-file-p  'c++-mode)  magic-mode-alist)
-  (push (cons #'+cc-objc-header-file-p 'objc-mode) magic-mode-alist)
+  ;; (push (cons #'+cc-c++-header-file-p  'c++-mode)  magic-mode-alist)
+  ;; (push (cons #'+cc-objc-header-file-p 'objc-mode) magic-mode-alist)
 
   :init
   (setq-default c-basic-offset tab-width)
@@ -65,7 +65,7 @@ compilation database is present in the project.")
   (c-toggle-electric-state -1)
   (c-toggle-auto-newline -1)
   (c-set-offset 'substatement-open '0) ; don't indent brackets
-  (c-set-offset 'inline-open       '+)
+  (c-set-offset 'inline-open       '0)
   (c-set-offset 'block-open        '+)
   (c-set-offset 'brace-list-open   '+)
   (c-set-offset 'case-label        '+)
