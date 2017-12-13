@@ -1125,3 +1125,25 @@ PROJECT with `dired'."
         (with-current-buffer b  ; go back to the current buffer, before-save-hook is now buffer-local
           (let ((before-save-hook (remove 'delete-trailing-whitespace before-save-hook)))
             (save-buffer)))))))
+
+(defun +amos/projectile-current-project-files ()
+  "Return a list of files for the current project."
+  (let ((files (and projectile-enable-caching
+                    (gethash (projectile-project-root) projectile-projects-cache))))
+    ;; nothing is cached
+    (unless files
+      (when projectile-enable-caching
+        (message "Empty cache. Projectile is initializing cache..."))
+      (setq files
+            (split-string
+             (shell-command-to-string
+              (concat
+               "fd '' --hidden "
+               (directory-file-name (projectile-project-root))))))
+      ;; cache the resulting list of files
+      (when projectile-enable-caching
+        (projectile-cache-project (projectile-project-root) files)))
+    (projectile-sort-files files)))
+
+(advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
+(advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
