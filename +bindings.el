@@ -59,7 +59,7 @@
  "M-w"              #'kill-this-buffer
  "C-x e"            #'pp-eval-last-sexp
  "C-l"              #'+amos:redisplay-and-recenter
- "C-s"              #'swiper
+ :nv "C-s"              #'swiper
  "C-S-s"            #'counsel-projectile-rg
  :m "C-f"           #'evilem--motion-evil-find-char
  :m "C-b"           #'evilem--motion-evil-find-char-backward
@@ -70,10 +70,11 @@
  :i "M-i"           #'yas-insert-snippet
  :i "M-d"           #'kill-word
  :i "C-o"           #'kill-line
- :i "C-n"           #'next-line
+ :i "C-j"           #'next-line
  :i "C-p"           #'previous-line
+ :i "C-k"           #'previous-line
  :i "C-d"           #'delete-char
- :i "C-j"           #'company-dabbrev-code
+ :i "C-n"           #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
  :n "M-i"           #'yasdcv-translate-at-point
@@ -675,7 +676,8 @@
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
    (:map yas-minor-mode-map
-     :i "<tab>" yas-maybe-expand
+     :i "C-t" yas-maybe-expand
+     :i "C-s" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
 
 

@@ -192,6 +192,8 @@
   (define-key minibuffer-local-map "\C-p" #'previous-line-or-history-element)
   (define-key minibuffer-local-map "\C-n" #'next-line-or-history-element))
 
+(add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t))
+
 (setq +org-dir (expand-file-name "~/org/"))
 (add-hook! :append 'org-load-hook
   (setq org-agenda-files (directory-files (concat +org-dir "todos/") t "\\.org$" t)))
@@ -367,7 +369,7 @@ This function should be hooked to `buffer-list-update-hook'."
 ;; fix start-process xdg-open
 (setq process-connection-type nil)
 
-(setq package-archives 
+(setq package-archives
       '(("gnu" . "https://elpa.emacs-china.org/gnu/")
         ("melpa" . "https://elpa.emacs-china.org/melpa/")))
 

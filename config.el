@@ -516,44 +516,6 @@ but do not execute them."
 ;;   :config
 ;;   (global-highlight-parentheses-mode))
 
-(require 'counsel)
-(require 'xref)
-(require 'cl-seq)
-
-(defvar counsel-xref-alist nil
-  "Holds helm candidates.")
-
-(defun counsel-xref-candidates (xrefs)
-  "Convert XREF-ALIST items to counsel candidates and add them to `counsel-xref-alist'."
-  (dolist (xref xrefs)
-    (with-slots (summary location) xref
-      (let* ((line (xref-location-line location))
-             (marker (xref-location-marker location))
-             (file (xref-location-group location))
-             candidate)
-        (setq candidate
-              (concat
-               (propertize (car (reverse (split-string file "\\/")))
-                           'font-lock-face '(:foreground "cyan"))
-               (when (string= "integer" (type-of line))
-                 (concat
-                  ":"
-                  (propertize (int-to-string line)
-                              'font-lock-face 'compilation-line-number)))
-               ":"
-               summary))
-        (push `(,candidate . ,marker) counsel-xref-alist)))))
-
-(defun counsel-xref-goto-location (location func)
-  "Set buffer and point according to xref-location LOCATION.
-
-Use FUNC to display buffer."
-  (let ((buf (marker-buffer location))
-        (offset (marker-position location)))
-    (with-current-buffer buf
-      (goto-char offset)
-      (funcall func buf))))
-
 ;; (defun helm-xref-source ()
 ;;   "Return a `helm' source for xref results."
 ;;   (helm-build-sync-source "Helm Xref"
@@ -585,17 +547,6 @@ Use FUNC to display buffer."
 ;; 						    (push xref result))))
 ;;                                result))
 
-(defun counsel-xref-show-xrefs (xrefs _alist)
-  "Function to display XREFS.
-Needs to be set the value of `xref-show-xrefs-function'."
-  (setq counsel-xref-alist nil)
-  (counsel-xref-candidates xrefs)
-  (ivy-read "xref: ")
-  (counsel-xref-alist)
-  :require-match t
-  :caller 'counsel-xref-show-xrefs)
-
-(setq xref-show-xrefs-function #'counsel-xref-show-xrefs)
 ;;; helm-xref.el ends here
 
 ;; (advice-add #'evil-mouse-drag-region :override #'ignore)
@@ -1075,6 +1026,11 @@ PROJECT with `dired'."
 (def-package! fill-column-indicator
   :commands fci-mode)
 
+(def-package! page-break-lines
+  :commands global-page-break-lines-mode
+  :init
+  (global-page-break-lines-mode +1))
+
 (def-package! adoc-mode
   :mode "\\.adoc$")
 
@@ -1147,3 +1103,37 @@ PROJECT with `dired'."
 
 (advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
+
+(after! ivy
+  (defun ivy-xref-make-collection (xrefs)
+    "Transform XREFS into a collection for display via `ivy-read'."
+    (let ((collection nil))
+      (dolist (xref xrefs)
+        (with-slots (summary location) xref
+          (let ((line (xref-location-line location))
+                (file (xref-location-group location))
+                (candidate nil))
+            (setq candidate (concat
+                             ;; use file name only
+                             (car (reverse (split-string file "\\/")))
+                             (when (string= "integer" (type-of line))
+                               (concat ":" (int-to-string line) ": "))
+                             ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
+                             summary))
+            (push `(,candidate . ,location) collection))))
+      collection))
+
+  (defun ivy-xref-select (candidate)
+    "Select CANDIDATE."
+    (let* ((marker (xref-location-marker (cdr candidate)))
+           (buf (marker-buffer marker))
+           (offset (marker-position marker)))
+      (with-current-buffer buf
+        (goto-char offset)
+        (switch-to-buffer buf))))
+
+  (defun ivy-xref-show-xrefs (xrefs _alist)
+    "Show the list of XREFS via ivy."
+    (ivy-read "xref: " (ivy-xref-make-collection xrefs)
+              :require-match t
+              :action #'ivy-xref-select)))

@@ -57,3 +57,4 @@
 (package! gitattributes-mode)
 
 (package! adoc-mode)
+(package! page-break-lines)
