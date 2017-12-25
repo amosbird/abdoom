@@ -228,8 +228,8 @@ between the two."
         (setq string (replace-match "\\1\\2" nil nil string)
               start (string-match regexp string start))))
     string)
-  (add-to-list 'org-export-filter-final-output-functions
-               '+org-export|clear-single-linebreak-in-cjk-string)
+  ;; (add-to-list 'org-export-filter-final-output-functions
+  ;;              '+org-export|clear-single-linebreak-in-cjk-string)
 
   ;; remove comments from org document for use with export hook
   ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
