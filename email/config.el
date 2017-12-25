@@ -47,6 +47,7 @@ default/fallback account."
 ;;
 
 (def-package! mu4e
+  :load-path "/usr/share/emacs/site-lisp/mu4e"
   :commands (mu4e mu4e-compose-new browse-url-mail)
   :config
   (setq

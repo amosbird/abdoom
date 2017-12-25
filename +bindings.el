@@ -61,6 +61,7 @@
  "C-l"              #'+amos:redisplay-and-recenter
  :nv "C-s"              #'swiper
  "C-S-s"            #'counsel-projectile-rg
+ "C-S-d"            #'+amos/counsel-rg-cur-dir
  :m "C-f"           #'evilem--motion-evil-find-char
  :m "C-b"           #'evilem--motion-evil-find-char-backward
  :m "C-y"           #'+amos/yank-buffer-filename-with-line-position
@@ -75,6 +76,7 @@
  :i "C-k"           #'previous-line
  :i "C-d"           #'delete-char
  :i "C-n"           #'company-dabbrev-code
+ :i "C-S-j"         #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
  :n "M-i"           #'yasdcv-translate-at-point
@@ -110,24 +112,21 @@
  (:leader
    :desc "Rg current directory" :nv "\\"  #'+amos/counsel-rg-cur-dir
    :desc "Rg current directory" :nv "|"  #'+amos/counsel-rg-cur-dir
-   :desc "Ex command"  :nv ";"   #'evil-ex
    :desc "M-x"         :nv ":"   #'execute-extended-command
-   :desc "Pop up scratch buffer"   :nv "x"  #'doom/open-scratch-buffer
-   :desc "Org Capture"             :nv "X"  #'+org-capture/open
 
    ;; Most commonly used
    :desc "Find file in project"    :n "SPC" #'switch-to-buffer
-   :desc "Switch workspace buffer" :n ","   #'switch-to-buffer
    :desc "Switch buffer"           :n "."   #'projectile-find-file
-   :desc "Toggle last popup"       :n "~"   #'doom/popup-toggle
-   :desc "Eval expression"         :n "`"   #'eval-expression
-   :desc "Blink cursor line"       :n "DEL" #'+doom/blink-cursor
-   :desc "Jump to bookmark"        :n "RET" #'bookmark-jump
+   :desc "Toggle last popup"       :n ","   #'doom/open-project-scratch-buffer
+   :desc "Toggle last popup"       :n "m"   #'doom/popup-toggle
+   :desc "Blink cursor line"       :n "DEL" #'doom/open-scratch-buffer
+   :desc "Jump to bookmark"        :n "RET" #'eval-expression
 
    ;; C-u is used by evil
    :desc "Universal argument"    :n "u"  #'universal-argument
    :desc "Save current file"     :n "w"  #'save-buffer
-
+   :desc "Next diff hunk"        :nv "j" #'git-gutter:next-hunk
+   :desc "Previous diff hunk"    :nv "k" #'git-gutter:previous-hunk
    (:desc "previous..." :prefix "["
      :desc "Text size"           :nv "[" #'text-scale-decrease
      :desc "Buffer"              :nv "b" #'doom/previous-buffer
@@ -149,36 +148,6 @@
      :desc "Smart jump"          :nv "l" #'smart-forward
      :desc "Spelling error"      :nv "s" #'evil-next-flyspell-error
      :desc "Spelling correction" :n  "S" #'flyspell-correct-word-generic)
-
-   (:desc "search" :prefix "/"
-     :desc "Swiper"                :nv "/" #'swiper
-     :desc "Imenu"                 :nv "i" #'imenu
-     :desc "Imenu across buffers"  :nv "I" #'imenu-anywhere)
-
-   (:desc "workspace" :prefix "TAB"
-     :desc "Display tab bar"          :n "TAB" #'+workspace/display
-     :desc "New workspace"            :n "n"   #'+workspace/new
-     :desc "Load workspace from file" :n "l"   #'+workspace/load
-     :desc "Load last session"        :n "L"   (λ! (+workspace/load-session))
-     :desc "Save workspace to file"   :n "s"   #'+workspace/save
-     :desc "Autosave current session" :n "S"   #'+workspace/save-session
-     :desc "Switch workspace"         :n "."   #'+workspace/switch-to
-     :desc "Kill all buffers"         :n "x"   #'doom/kill-all-buffers
-     :desc "Delete session"           :n "X"   #'+workspace/kill-session
-     :desc "Delete this workspace"    :n "d"   #'+workspace/delete
-     :desc "Load session"             :n "L"   #'+workspace/load-session
-     :desc "Next workspace"           :n "]"   #'+workspace/switch-right
-     :desc "Previous workspace"       :n "["   #'+workspace/switch-left
-     :desc "Switch to 1st workspace"  :n "1"   (λ! (+workspace/switch-to 0))
-     :desc "Switch to 2nd workspace"  :n "2"   (λ! (+workspace/switch-to 1))
-     :desc "Switch to 3rd workspace"  :n "3"   (λ! (+workspace/switch-to 2))
-     :desc "Switch to 4th workspace"  :n "4"   (λ! (+workspace/switch-to 3))
-     :desc "Switch to 5th workspace"  :n "5"   (λ! (+workspace/switch-to 4))
-     :desc "Switch to 6th workspace"  :n "6"   (λ! (+workspace/switch-to 5))
-     :desc "Switch to 7th workspace"  :n "7"   (λ! (+workspace/switch-to 6))
-     :desc "Switch to 8th workspace"  :n "8"   (λ! (+workspace/switch-to 7))
-     :desc "Switch to 9th workspace"  :n "9"   (λ! (+workspace/switch-to 8))
-     :desc "Switch to last workspace" :n "0"   #'+workspace/switch-to-last)
 
    (:desc "buffer" :prefix "b"
      :desc "New empty buffer"        :n "n" #'evil-buffer-new
@@ -258,6 +227,7 @@
      :desc "From snippet"   :nv "s" #'yas-insert-snippet)
 
    (:desc "notes" :prefix "n"
+     :desc "New script"            :n "s" #'+amos/new-script
      :desc "Open todo file"        :n "t" #'+amos/open-todo-file
      :desc "Find file in notes"    :n "n" #'+amos/find-in-notes
      :desc "Browse notes"          :n "N" #'+amos/browse-notes
@@ -862,6 +832,8 @@
 
 (map! (:map input-decode-map
         [S-iso-lefttab] [backtab]
+        "\e[1;5B" [(control shift j)]
+        "\e[1;5A" [(control shift d)]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
 
       (:after cus-edit

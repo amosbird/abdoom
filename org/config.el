@@ -13,6 +13,8 @@
 (add-hook 'org-load-hook #'+org|init)
 (add-hook 'org-mode-hook #'+org|hook)
 
+(advice-add #'+org|update-cookies :override #'ignore)
+
 ;;
 ;; Plugins
 ;;
@@ -192,14 +194,14 @@ between the two."
 
 (add-hook 'org-load-hook #'+org-export|init t)
 
-(def-package! ox-pandoc
-  :config
-  (unless (executable-find "pandoc")
-    (warn "org-export: couldn't find pandoc, disabling pandoc export"))
-  (setq org-pandoc-options
-        '((standalone . t)
-          (mathjax . t)
-          (parse-raw . t))))
+;(def-package! ox-pandoc
+;  :config
+;  (unless (executable-find "pandoc")
+;    (warn "org-export: couldn't find pandoc, disabling pandoc export"))
+;  (setq org-pandoc-options
+;        '((standalone . t)
+;          (mathjax . t)
+;          (parse-raw . t))))
 
 (defun +org-export|init ()
   (setq org-export-directory (expand-file-name "export" +org-dir)

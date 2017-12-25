@@ -145,6 +145,16 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   evilnc-copy-and-comment-lines
   evilnc-comment-or-uncomment-lines)
 
+(def-package! centered-window-mode
+  :commands centered-window-mode
+  :config
+  (defun amos-special-window-p (window)
+    (let* ((buffer (window-buffer window))
+           (buffname (string-trim (buffer-name buffer))))
+      (or (equal buffname "*doom*")
+          (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
+  (push #'amos-special-window-p cwm-ignore-window-predicates))
+
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
 (remove-hook! 'doom-post-init-hook #'blink-cursor-mode)
@@ -497,7 +507,7 @@ but do not execute them."
   (define-key eyebrowse-mode-map (kbd "M-7") 'eyebrowse-switch-to-window-config-7)
   (define-key eyebrowse-mode-map (kbd "M-8") 'eyebrowse-switch-to-window-config-8)
   (define-key eyebrowse-mode-map (kbd "M-9") 'eyebrowse-switch-to-window-config-9)
-  (define-key eyebrowse-mode-map (kbd "M-0") 'eyebrowse-switch-to-window-config-0)
+  (define-key eyebrowse-mode-map (kbd "M-0") 'eyebrowse-close-window-config)
   (eyebrowse-mode +1)
   (setq eyebrowse-new-workspace nil) ;; clone
   ;; (setq eyebrowse-new-workspace t) ;; scratch
@@ -515,41 +525,6 @@ but do not execute them."
 ;;   :demand
 ;;   :config
 ;;   (global-highlight-parentheses-mode))
-
-;; (defun helm-xref-source ()
-;;   "Return a `helm' source for xref results."
-;;   (helm-build-sync-source "Helm Xref"
-;;     :candidates (lambda ()
-;;                   helm-xref-alist)
-;;     :persistent-action (lambda (candidate)
-;;                          (helm-xref-goto-location candidate 'display-buffer))
-;;     :action (lambda (candidate)
-;;               (helm-xref-goto-location candidate 'switch-to-buffer))
-;;     :candidate-transformer
-;;     :candidate-number-limit 9999))
-
-;;     (lambda (candidates)
-;;                              (let (group
-;;                                    result)
-;;                                (cl-loop for x in (reverse (cl-sort candidates #'string-lessp :key #'car))
-;;           do (cond
-;; 					    ((or (= (length group) 0)
-;; 						 (string= (nth 0 (split-string (car x) ":"))
-;; 							  (nth 0 (split-string (car (nth -1 group)) ":"))))
-;; 					     (push x group))
-;; 					    (t
-;; 					     (dolist (xref (cl-sort group #'> :key #'cdr))
-;; 					       (push xref result))
-;; 					     (setq group nil)
-;; 					     (push x group)))
-;; 					finally (when (> (length group) 0)
-;; 						  (dolist (xref (cl-sort group #'> :key #'cdr))
-;; 						    (push xref result))))
-;;                                result))
-
-;;; helm-xref.el ends here
-
-;; (advice-add #'evil-mouse-drag-region :override #'ignore)
 
 (defun +amos/swiper-replace ()
   "Swiper replace with mc selction."
@@ -1104,7 +1079,7 @@ PROJECT with `dired'."
 (advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
 
-(after! ivy
+(after! xref
   (defun ivy-xref-make-collection (xrefs)
     "Transform XREFS into a collection for display via `ivy-read'."
     (let ((collection nil))
@@ -1136,4 +1111,101 @@ PROJECT with `dired'."
     "Show the list of XREFS via ivy."
     (ivy-read "xref: " (ivy-xref-make-collection xrefs)
               :require-match t
-              :action #'ivy-xref-select)))
+              :action #'ivy-xref-select))
+  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+
+(defvar switch-buffer-functions
+  nil
+  "A list of functions to be called when the current buffer has been changed.
+Each is passed two arguments, the previous buffer and the current buffer.")
+
+(defvar switch-buffer-functions--last-buffer
+  nil
+  "The last current buffer.")
+
+(defvar switch-buffer-functions--running-p
+  nil
+  "Non-nil if currently inside of run `switch-buffer-functions-run'.")
+
+(defun switch-buffer-functions-run ()
+  "Run `switch-buffer-functions' if needed.
+This function checks the result of `current-buffer', and run
+`switch-buffer-functions' when it has been changed from
+the last buffer.
+This function should be hooked to `buffer-list-update-hook'."
+  (unless switch-buffer-functions--running-p
+    (let ((switch-buffer-functions--running-p t)
+          (current (current-buffer))
+          (previous switch-buffer-functions--last-buffer))
+      (unless (eq previous
+                  current)
+        (run-hook-with-args 'switch-buffer-functions
+                            previous
+                            current)
+        (setq switch-buffer-functions--last-buffer
+              (current-buffer))))))
+
+(add-hook! 'buffer-list-update-hook #'switch-buffer-functions-run)
+
+(defun endless/sharp ()
+  "Insert #' unless in a string or comment."
+  (interactive)
+  (call-interactively #'self-insert-command)
+  (let ((ppss (syntax-ppss)))
+    (unless (or (elt ppss 3)
+                (elt ppss 4)
+                (eq (char-after) ?'))
+      (insert "'"))))
+
+(define-key emacs-lisp-mode-map "#" #'endless/sharp)
+
+
+
+(setq my-shebang-patterns
+      (list "^#!/usr/.*/perl\\(\\( \\)\\|\\( .+ \\)\\)-w *.*"
+            "^#!/usr/.*/sh"
+            "^#!/usr/.*/bash"
+            "^#!/usr/.*/fish"
+            "^#!/usr/bin/env"
+            "^#!/bin/sh"
+	        "^#!/bin/bash"
+	        "^#!/bin/fish"))
+
+(add-hook! 'after-save-hook
+  (if (not (= (shell-command (concat "test -x " (buffer-file-name))) 0))
+      (progn
+        ;; This puts message in *Message* twice, but minibuffer
+        ;; output looks better.
+        (message (concat "Wrote " (buffer-file-name)))
+        (save-excursion
+          (goto-char (point-min))
+          ;; Always checks every pattern even after
+          ;; match.  Inefficient but easy.
+          (dolist (my-shebang-pat my-shebang-patterns)
+            (if (looking-at my-shebang-pat)
+                (if (= (shell-command
+                        (concat "chmod u+x " (buffer-file-name)))
+                       0)
+                    (message (concat
+                              "Wrote and made executable "
+                              (buffer-file-name))))))))
+    ;; This puts message in *Message* twice, but minibuffer output
+    ;; looks better.
+    (message (concat "Wrote " (buffer-file-name)))))
+
+
+(defun +file-templates-append (args)
+  (cl-destructuring-bind (regexp trigger &optional mode project-only-p) args
+    (define-auto-insert
+      regexp
+      (if trigger
+          (vector
+           `(lambda () (+file-templates--expand ,trigger ',mode ,project-only-p)))
+        #'ignore) 'after)))
+
+(add-to-list 'auto-mode-alist '("/home/amos/scripts/.+" . sh-mode) 'append)
+(+file-templates-append '("/home/amos/scripts/.+"   "__"   sh-mode))
+
+(defun +amos/new-script ()
+  (interactive)
+  (counsel-find-file "/home/amos/scripts/"))

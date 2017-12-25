@@ -10,7 +10,7 @@ knows where to look for headers.")
 (defvar +cc-compiler-options
   `((c-mode . nil)
     (c++-mode
-     . ,(list "-std=c++11" ; use C++11 by default
+     . ,(list "-std=c++17" ; use C++11 by default
               (when IS-MAC
                 ;; NOTE beware: you'll get abi-inconsistencies when passing
                 ;; std-objects to libraries linked with libstdc++ (e.g. if you
@@ -19,13 +19,6 @@ knows where to look for headers.")
     (objc-mode . nil))
   "A list of default compiler options for the C family. These are ignored if a
 compilation database is present in the project.")
-
-(add-hook! 'c-mode-hook (semantic-mode +1) (semantic-stickyfunc-mode +1))
-(add-hook! 'c++-mode-hook (semantic-mode +1) (semantic-stickyfunc-mode +1))
-
-;;
-;; Plugins
-;;
 
 (def-package! cc-mode
   :commands (c-mode c++-mode objc-mode java-mode)
@@ -55,7 +48,7 @@ compilation database is present in the project.")
 
   :config
   (set! :electric '(c-mode c++-mode objc-mode java-mode)
-        :chars '(?\n ?\}))
+    :chars '(?\n ?\}))
   ;; (set! :company-backend
   ;;       '(c-mode c++-mode objc-mode)
   ;;       '(company-irony-c-headers company-irony))
@@ -120,7 +113,51 @@ compilation database is present in the project.")
   :config
   (require 'rtags)
   (require 'counsel-dash)
+  (require 'ivy-rtags)
+  (require 'flycheck-rtags)
 
+  (defconst cmake-ide-rdm-buffer-name "*rdm*" "The rdm buffer name.")
+
+  (defun cmake-ide--system-process-running-p (name)
+    "If a process called NAME is running on the system."
+    (let* ((all-args (mapcar (lambda (x) (cdr (assq 'args (process-attributes x)))) (list-system-processes)))
+           (match-args (cmake-ide--filter (lambda (x) (cmake-ide--string-match (concat "\\b" name "\\b") x)) all-args)))
+      (not (null match-args))))
+
+  (defun cmake-ide--string-match (regexp name)
+    "Wrap 'string-match' of REGEXP and NAME to make sure we don't pass it a nil string."
+    (when name
+      (string-match regexp name)))
+
+  (defun cmake-ide--filter (pred seq)
+    "Apply PRED to filter SEQ."
+    (delq nil (mapcar (lambda (x) (and (funcall pred x) x)) seq)))
+
+  (defun cmake-ide--process-running-p (name)
+    "If a process called NAME is running or not."
+    (or (get-process name) (cmake-ide--system-process-running-p name)))
+
+  (defun cmake-ide--message (str &rest vars)
+    "Output a message with STR and formatted by VARS."
+    (message (apply #'format (concat "cmake-ide [%s]: " str) (cons (current-time-string) vars))))
+
+  (defun cmake-ide-maybe-start-rdm ()
+    "Start the rdm (rtags) server."
+    (unless (cmake-ide--process-running-p "rdm")
+      (let ((buf (get-buffer-create cmake-ide-rdm-buffer-name)))
+        (cmake-ide--message "Starting rdm server")
+        (with-current-buffer buf
+          (let ((rdm-process (start-process "rdm" (current-buffer)
+                                            "rdm")))
+            (set-process-query-on-exit-flag rdm-process nil))))))
+
+  (add-hook! (c-mode c++-mode) #'cmake-ide-maybe-start-rdm)
+
+  (set!
+    :jump 'c-mode
+    :definition #'rtags-find-symbol-at-point
+    :references #'rtags-find-references-at-point
+    :documentation #'counsel-dash-at-point)
   (set!
     :jump 'c++-mode
     :definition #'rtags-find-symbol-at-point
@@ -129,95 +166,16 @@ compilation database is present in the project.")
 
   (add-hook! 'rtags-jump-hook #'evil-set-jump)
   (add-hook! 'rtags-after-find-file-hook #'recenter)
-  (setq rtags-autostart-diagnostics t)
-
-  (require 'ivy-rtags)
-  (setq rtags-display-result-backend 'ivy)
-
-  ;; (require 'company-rtags)
-  ;; (setq rtags-completions-enabled t)
-  ;; (add-to-list 'company-backends 'company-rtags)
-
-  (require 'flycheck-rtags)
+  (setq rtags-autostart-diagnostics t
+        rtags-use-bookmarks nil
+        rtags-display-result-backend 'ivy)
   (defun my-flycheck-rtags-setup ()
     (flycheck-select-checker 'rtags)
     (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
     (setq-local flycheck-check-syntax-automatically nil)
     (flycheck-mode +1))
-  (add-hook 'c-mode-hook #'my-flycheck-rtags-setup)
-  (add-hook 'c++-mode-hook #'my-flycheck-rtags-setup)
-  (add-hook 'objc-mode-hook #'my-flycheck-rtags-setup))
-
-
-(add-to-list 'load-path "~/git/cquery/emacs")
-(def-package! lsp-cquery
-  :disabled
-  :after cc-mode
-  :config
-  (add-hook 'c-mode-hook #'lsp-cquery-enable))
-
-(def-package! cmake-ide
-  :disabled
-  :after cc-mode
-  :config
-  (setq cmake-ide-header-no-flags t)
-
-  (require 'rtags)
-  (require 'counsel-dash)
-
-  (set!
-    :jump 'c++-mode
-    :definition #'rtags-find-symbol-at-point
-    :references #'rtags-find-references-at-point
-    :documentation #'counsel-dash-at-point)
-
-  (add-hook! 'rtags-jump-hook 'evil-set-jump)
-  (setq rtags-autostart-diagnostics t)
-
-  (require 'ivy-rtags)
-  (setq rtags-display-result-backend 'ivy)
-
-  ;; (require 'company-rtags)
-  ;; (setq rtags-completions-enabled t)
-  ;; (add-to-list 'company-backends 'company-rtags)
-
-  (require 'flycheck-rtags)
-  (defun my-flycheck-rtags-setup ()
-    (flycheck-select-checker 'rtags)
-    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
-    (setq-local flycheck-check-syntax-automatically nil)
-    (flycheck-mode +1))
-  (add-hook 'c-mode-hook #'my-flycheck-rtags-setup)
-  (add-hook 'c++-mode-hook #'my-flycheck-rtags-setup)
-  (add-hook 'objc-mode-hook #'my-flycheck-rtags-setup)
-
-  (require 'irony)
-  (require 'irony-cdb-json)
-  (require 'company-irony)
-  (require 'company-irony-c-headers)
-  (setq company-irony-ignore-case 'smart)
-  (defun company-c-headers-path-user-irony ()
-    "Return the user include paths for the current buffer."
-    (when irony-mode
-      (irony--extract-user-search-paths irony--compile-options
-                                        irony--working-directory)))
-  (setq company-c-headers-path-user #'company-c-headers-path-user-irony)
-  (add-to-list 'company-backends '(company-irony-c-headers company-irony))
-
-  (require 'flycheck-irony)
-  (add-hook 'irony-mode-hook 'flycheck-irony-setup)
-
-  (cmake-ide-setup))
-
-;; (after! irony
-;;   ;; Initialize compilation database, if present. Otherwise, fall back on
-;;   ;; `+cc-compiler-options'.
-;;   (add-hook 'irony-mode-hook #'+cc|irony-init-compile-options))
-
-
-;;
-;; Tools
-;;
+  (add-hook! (c-mode c++-mode) #'my-flycheck-rtags-setup)
+  )
 
 (def-package! disaster :commands disaster)
 
@@ -235,10 +193,6 @@ compilation database is present in the project.")
   :mode "\\.frag$"
   :mode "\\.geom$")
 
-
-;;
-;; Plugins
-;;
 
 (when (featurep! :completion company)
   (def-package! company-glsl

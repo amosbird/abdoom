@@ -64,13 +64,14 @@
        dired             ; making dired pretty [functional]
        electric-indent   ; smarter, keyword-based electric-indent
        ;; eshell            ; a consistent, cross-platform shell (WIP)
-       gist              ; interacting with github gists
+       ;; gist              ; interacting with github gists
        imenu             ; an imenu sidebar and searchable code index
        impatient-mode    ; show off code over HTTP
       ;macos             ; MacOS-specific commands
        make              ; run make tasks from Emacs
        ;; neotree           ; a project drawer, like NERDTree for vim
        password-store    ; password manager for nerds
+       rgb
        rotate-text       ; cycle region at point between text candidates
        ;; term              ; terminals in Emacs
        tmux              ; an API for interacting with tmux
@@ -111,17 +112,6 @@
        typescript        ; javascript, but better
        web               ; the tubes
 
-       :org
-      ;org               ; organize your plain life in plain text
-       org-babel         ; executable code snippets in org-mode
-       org-attach        ; a simpler attachment system
-      ;org-capture       ; a better org-capture, in or outside of Emacs
-      ;org-export        ; a custom, centralized export system
-       org-notebook      ; org-mode as a notebook
-       org-present       ; using org-mode for presentations
-      ;org-sync          ; TODO sync with mobile
-      ;org-publish       ; TODO org + blogs
-
        ;; Applications are complex and opinionated modules that transform Emacs
        ;; toward a specific purpose. They may have additional dependencies and
        ;; should be loaded last.
@@ -130,7 +120,7 @@
       ;irc               ; how neckbeards socialize
       ;rss               ; emacs as an RSS reader
       ;twitter           ; twitter client https://twitter.com/vnought
-       write             ; emacs as a word processor (latex + org + markdown)
+      ;write             ; emacs as a word processor (latex + org + markdown)
 
        ;; Private modules named after your username are loaded automatically.
        ;; Leaving this here is harmless though.
@@ -138,5 +128,7 @@
        amos
        cc
        org
+       org-babel
        org-capture
+       org-export
        email)

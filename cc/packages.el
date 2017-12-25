@@ -1,11 +1,6 @@
 ;; -*- no-byte-compile: t; -*-
 ;;; lang/cc/packages.el
 
-(package! cmake-ide)
-(package! irony)
-(package! flycheck-irony)
-(package! company-irony)
-(package! company-irony-c-headers)
 (package! cmake-mode)
 (package! cuda-mode)
 (package! demangle-mode)
