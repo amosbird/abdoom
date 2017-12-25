@@ -7,6 +7,7 @@
   (define-key minibuffer-local-map "\C-p" #'previous-line-or-history-element)
   (define-key minibuffer-local-map "\C-n" #'next-line-or-history-element))
 
+(remove-hook! 'doom-popup-mode-hook #'doom|hide-modeline-in-popup)
 
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'doom-hide-modeline-mode :override #'ignore)

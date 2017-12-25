@@ -7,6 +7,7 @@ install:
 	@ln -sf $(cdir)cc ../
 	@ln -sf $(cdir)python ../
 	@ln -sf $(cdir)doominit.el ../../../init.el
+	@ln -sf $(cdir)custom.el ../../../.local/etc/
 
 # Local Variables:
 # compile-command: "make install"
