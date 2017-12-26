@@ -66,46 +66,6 @@ the current state and point position."
   (interactive)
   (+tmux/run "detach-client"))
 
-(defmacro +amos-def-finder! (name dir)
-  "Define a pair of find-file and browse functions."
-  `(progn
-     (defun ,(intern (format "+amos/find-in-%s" name)) ()
-       (interactive)
-       (let ((default-directory ,dir)
-             projectile-require-project-root
-             projectile-cached-buffer-file-name
-             projectile-cached-project-root)
-         (call-interactively (command-remapping #'projectile-find-file))))
-     (defun ,(intern (format "+amos/browse-%s" name)) ()
-       (interactive)
-       (let ((default-directory ,dir))
-         (call-interactively (command-remapping #'find-file))))))
-
-;;;###autoload (autoload '+amos/find-in-templates "private/amos/autoload/amos" nil t)
-;;;###autoload (autoload '+amos/browse-templates "private/amos/autoload/amos" nil t)
-(+amos-def-finder! templates +file-templates-dir)
-
-;;;###autoload (autoload '+amos/find-in-snippets "private/amos/autoload/amos" nil t)
-;;;###autoload (autoload '+amos/browse-snippets "private/amos/autoload/amos" nil t)
-(+amos-def-finder! snippets +amos-snippets-dir)
-
-;;;###autoload (autoload '+amos/find-in-dotfiles "private/amos/autoload/amos" nil t)
-;;;###autoload (autoload '+amos/browse-dotfiles "private/amos/autoload/amos" nil t)
-(+amos-def-finder! dotfiles (expand-file-name "dotfiles" "~"))
-
-;;;###autoload (autoload '+amos/find-in-emacsd "private/amos/autoload/amos" nil t)
-;;;###autoload (autoload '+amos/browse-emacsd "private/amos/autoload/amos" nil t)
-(+amos-def-finder! emacsd doom-emacs-dir)
-
-;;;###autoload (autoload '+amos/find-in-notes "private/amos/autoload/amos" nil t)
-;;;###autoload (autoload '+amos/browse-notes "private/amos/autoload/amos" nil t)
-(+amos-def-finder! notes +org-dir)
-
-;;;###autoload
-(defun +amos/open-todo-file ()
-  (interactive)
-  (find-file "~/org/todo.org"))
-
 ;;;###autoload
 (defun +amos/copy-and-comment-lines-inverse (&optional arg)
   (interactive "p")

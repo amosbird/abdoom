@@ -34,6 +34,7 @@
  ;; Simple window navigation/manipulation
  "C-`"              #'doom/popup-toggle
  "C-~"              #'doom/popup-raise
+ [C-return]         #'quickrun
  "M-w"              #'kill-this-buffer
  "M-W"              #'+workspace/close-workspace-or-frame
  "M-n"              #'evil-buffer-new
@@ -227,11 +228,12 @@
      :desc "From snippet"   :nv "s" #'yas-insert-snippet)
 
    (:desc "notes" :prefix "n"
-     :desc "New script"            :n "s" #'+amos/new-script
-     :desc "Open todo file"        :n "t" #'+amos/open-todo-file
-     :desc "Find file in notes"    :n "n" #'+amos/find-in-notes
-     :desc "Browse notes"          :n "N" #'+amos/browse-notes
-     :desc "Org capture"           :n "x" #'+org-capture/open
+     :desc "Rust playground"       :n "r" #'rust-playground
+     :desc "Go playground"         :n "g" #'go-playground
+     :desc "C++ playground"        :n "c" #'cc-playground
+     :desc "Browse script"         :n "s" #'+amos/browse-script
+     :desc "Browse org"            :n "o" #'+amos/browse-org
+     :desc "Browse note"           :n "n" #'+amos/browse-note
      :desc "Browse mode notes"     :n "m" #'+org/browse-notes-for-major-mode
      :desc "Browse project notes"  :n "p" #'+org/browse-notes-for-project)
 
@@ -280,6 +282,7 @@
      :desc "Upload local"           :n "u" #'+upload/local
      :desc "Upload local (force)"   :n "U" (λ! (+upload/local t))
      :desc "Download remote"        :n "d" #'+upload/remote-download
+     :desc "Eval buffer"            :n "b" #'eval-buffer
      :desc "Diff local & remote"    :n "D" #'+upload/diff
      :desc "Browse remote files"    :n "." #'+upload/browse
      :desc "Detect remote changes"  :n ">" #'+upload/check-remote)

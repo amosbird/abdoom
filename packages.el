@@ -58,3 +58,7 @@
 
 (package! adoc-mode)
 (package! page-break-lines)
+
+(package! go-playground)
+(package! rust-playground)
+(package! cc-playground :recipe (:fetcher github :repo "amosbird/cc-playground"))

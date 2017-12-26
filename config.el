@@ -117,6 +117,9 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (defun +amos|init-frame (&optional frame)
   (when (and frame (display-graphic-p frame))
     (with-selected-frame frame
+      ;; (dolist (ft (fontset-list))
+      ;;   (set-fontset-font ft 'unicode (font-spec :name "Ubuntu Mono"))
+      ;;   (set-fontset-font ft 'unicode (font-spec :name "Symbola monospacified for Ubuntu Mono") nil 'append))
       (dolist (charset '(kana han cjk-misc bopomofo))
         (set-fontset-font t charset
                           (font-spec :family "WenQuanYi Micro Hei" :size 13)))
@@ -1203,9 +1206,28 @@ This function should be hooked to `buffer-list-update-hook'."
            `(lambda () (+file-templates--expand ,trigger ',mode ,project-only-p)))
         #'ignore) 'after)))
 
-(add-to-list 'auto-mode-alist '("/home/amos/scripts/.+" . sh-mode) 'append)
-(+file-templates-append '("/home/amos/scripts/.+"   "__"   sh-mode))
+(add-to-list 'auto-mode-alist '("/home/amos/git/serverconfig/scripts/.+" . sh-mode) 'append)
+(+file-templates-append '("/home/amos/git/serverconfig/scripts/.+"   "__"   sh-mode))
 
-(defun +amos/new-script ()
-  (interactive)
-  (counsel-find-file "/home/amos/scripts/"))
+(defmacro +amos--def-browse-in! (name dir)
+  `(defun ,(intern (format "+amos/browse-%s" name)) ()
+     (interactive)
+     (doom-project-browse ,dir)))
+
+(+amos--def-browse-in! script "/home/amos/scripts/")
+(+amos--def-browse-in! note "/home/amos/notes/")
+(+amos--def-browse-in! org "/home/amos/org/")
+
+(def-package! go-playground
+  :commands go-playground
+  :bind (:map go-playground-mode-map
+          ([S-return] . go-playground-rm)))
+
+(def-package! rust-playground
+  :commands rust-playground
+  :bind (:map rust-playground-mode-map
+          ([S-return] . rust-playground-rm)))
+
+(def-package! cc-playground
+  :commands cc-playground)
+

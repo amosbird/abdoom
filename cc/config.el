@@ -88,6 +88,7 @@ compilation database is present in the project.")
   ;; it ourselves.
   (map! :map c++-mode-map
         "<" nil
+        "C-c i" #'+amos/add-include
         :i ">" #'+cc/autoclose->-maybe)
 
   ;; ...and leave it to smartparens
@@ -116,42 +117,42 @@ compilation database is present in the project.")
   (require 'ivy-rtags)
   (require 'flycheck-rtags)
 
-  (defconst cmake-ide-rdm-buffer-name "*rdm*" "The rdm buffer name.")
+  (defconst +amos-rdm-buffer-name "*rdm*" "The rdm buffer name.")
 
-  (defun cmake-ide--system-process-running-p (name)
+  (defun +amos--system-process-running-p (name)
     "If a process called NAME is running on the system."
     (let* ((all-args (mapcar (lambda (x) (cdr (assq 'args (process-attributes x)))) (list-system-processes)))
-           (match-args (cmake-ide--filter (lambda (x) (cmake-ide--string-match (concat "\\b" name "\\b") x)) all-args)))
+           (match-args (+amos--filter (lambda (x) (+amos--string-match (concat "\\b" name "\\b") x)) all-args)))
       (not (null match-args))))
 
-  (defun cmake-ide--string-match (regexp name)
+  (defun +amos--string-match (regexp name)
     "Wrap 'string-match' of REGEXP and NAME to make sure we don't pass it a nil string."
     (when name
       (string-match regexp name)))
 
-  (defun cmake-ide--filter (pred seq)
+  (defun +amos--filter (pred seq)
     "Apply PRED to filter SEQ."
     (delq nil (mapcar (lambda (x) (and (funcall pred x) x)) seq)))
 
-  (defun cmake-ide--process-running-p (name)
+  (defun +amos--process-running-p (name)
     "If a process called NAME is running or not."
-    (or (get-process name) (cmake-ide--system-process-running-p name)))
+    (or (get-process name) (+amos--system-process-running-p name)))
 
-  (defun cmake-ide--message (str &rest vars)
+  (defun +amos--message (str &rest vars)
     "Output a message with STR and formatted by VARS."
-    (message (apply #'format (concat "cmake-ide [%s]: " str) (cons (current-time-string) vars))))
+    (message (apply #'format (concat "+amos [%s]: " str) (cons (current-time-string) vars))))
 
-  (defun cmake-ide-maybe-start-rdm ()
+  (defun +amos-maybe-start-rdm ()
     "Start the rdm (rtags) server."
-    (unless (cmake-ide--process-running-p "rdm")
-      (let ((buf (get-buffer-create cmake-ide-rdm-buffer-name)))
-        (cmake-ide--message "Starting rdm server")
+    (unless (+amos--process-running-p "rdm")
+      (let ((buf (get-buffer-create +amos-rdm-buffer-name)))
+        (+amos--message "Starting rdm server")
         (with-current-buffer buf
           (let ((rdm-process (start-process "rdm" (current-buffer)
                                             "rdm")))
             (set-process-query-on-exit-flag rdm-process nil))))))
 
-  (add-hook! (c-mode c++-mode) #'cmake-ide-maybe-start-rdm)
+  (add-hook! (c-mode c++-mode) #'+amos-maybe-start-rdm)
 
   (set!
     :jump 'c-mode
@@ -204,3 +205,16 @@ compilation database is present in the project.")
 
 (def-package! clang-format
   :commands clang-format-buffer clang-format)
+
+(defun +amos/add-include (header)
+  "Add an #include line for `header' near top of file, avoiding duplicates."
+  (interactive "M#include: ")
+  (let ((incl (format "#include <%s>" header)))
+    (save-excursion
+      (if (search-backward incl nil t)
+          (message "You already have %s." incl)
+        (when (search-backward "#include" nil 'stop-at-top)
+          (forward-line)
+          (beginning-of-line))
+        (insert incl)
+        (newline)))))
