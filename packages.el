@@ -62,3 +62,6 @@
 (package! go-playground)
 (package! rust-playground)
 (package! cc-playground :recipe (:fetcher github :repo "amosbird/cc-playground"))
+
+(package! pdf-tools)
+(package! bind-map)

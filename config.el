@@ -1211,3 +1211,122 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (def-package! cc-playground
   :commands (cc-playground cc-playground-mode))
+
+(def-package! pdf-tools
+  :if (string= (getenv "GUI") "t")
+  :mode (("\\.pdf\\'" . pdf-view-mode))
+  :config
+  (pdf-tools-install)
+  (evil-set-initial-state 'pdf-view-mode 'evilified)
+  (defhydra +amos@pdf-tools (:title "PDF-tools hydra"
+                                    :on-enter (setq which-key-inhibit t)
+                                    :on-exit (setq which-key-inhibit nil)
+                                    :evil-leader-for-mode (pdf-view-mode . "."))
+    "
+ Navigation^^^^                Scale/Fit^^                    Annotations^^       Actions^^           Other^^
+ ----------^^^^--------------- ---------^^------------------  -----------^^------ -------^^---------- -----^^---
+ [_j_/_k_] scroll down/up      [_W_] fit to width             [_al_] list         [_s_] search         [_q_] quit
+ [_h_/_l_] scroll left/right   [_H_] fit to height            [_at_] text         [_O_] outline
+ [_d_/_u_] pg down/up          [_P_] fit to page              [_aD_] delete       [_p_] print
+ [_J_/_K_] next/prev pg        [_m_] slice using mouse        [_am_] markup       [_o_] open link
+ [_0_/_$_] full scroll l/r     [_b_] slice from bounding box  ^^                  [_r_] revert
+ ^^^^                          [_R_] reset slice              ^^                  [_t_] attachments
+ ^^^^                          [_zr_] reset zoom              ^^                  [_n_] night mode
+ "
+    ;; Navigation
+    ("j"  pdf-view-next-line-or-next-page)
+    ("k"  pdf-view-previous-line-or-previous-page)
+    ("l"  image-forward-hscroll)
+    ("h"  image-backward-hscroll)
+    ("J"  pdf-view-next-page)
+    ("K"  pdf-view-previous-page)
+    ("u"  pdf-view-scroll-down-or-previous-page)
+    ("d"  pdf-view-scroll-up-or-next-page)
+    ("0"  image-bol)
+    ("$"  image-eol)
+    ;; Scale/Fit
+    ("W"  pdf-view-fit-width-to-window)
+    ("H"  pdf-view-fit-height-to-window)
+    ("P"  pdf-view-fit-page-to-window)
+    ("m"  pdf-view-set-slice-using-mouse)
+    ("b"  pdf-view-set-slice-from-bounding-box)
+    ("R"  pdf-view-reset-slice)
+    ("zr" pdf-view-scale-reset)
+    ;; Annotations
+    ("aD" pdf-annot-delete)
+    ("at" pdf-annot-attachment-dired :exit t)
+    ("al" pdf-annot-list-annotations :exit t)
+    ("am" pdf-annot-add-markup-annotation)
+    ;; Actions
+    ("s" pdf-occur :exit t)
+    ("O" pdf-outline :exit t)
+    ("p" pdf-misc-print-document :exit t)
+    ("o" pdf-links-action-perform :exit t)
+    ("r" pdf-view-revert-buffer)
+    ("t" pdf-annot-attachment-dired :exit t)
+    ("n" pdf-view-midnight-minor-mode)
+    ;; Other
+    ("q" nil :exit t))
+
+  (evilified-state-evilify-map pdf-view-mode-map
+    :mode pdf-view-mode
+    :bindings
+    ;; Navigation
+    "0"  'image-bol
+    "$"  'image-eol
+    "j"  'pdf-view-next-line-or-next-page
+    "k"  'pdf-view-previous-line-or-previous-page
+    "l"  'image-forward-hscroll
+    "h"  'image-backward-hscroll
+    "J"  'pdf-view-next-page
+    "K"  'pdf-view-previous-page
+    "gg"  'pdf-view-first-page
+    "G"  'pdf-view-last-page
+    "gt"  'pdf-view-goto-page
+    "gl"  'pdf-view-goto-label
+    "u" 'pdf-view-scroll-down-or-previous-page
+    "d" 'pdf-view-scroll-up-or-next-page
+    (kbd "C-u") 'pdf-view-scroll-down-or-previous-page
+    (kbd "C-d") 'pdf-view-scroll-up-or-next-page
+    (kbd "``")  'pdf-history-backward
+    ;; Search
+    "/" 'isearch-forward
+    "?" 'isearch-backward
+    ;; Actions
+    "r"   'pdf-view-revert-buffer
+    "o"   'pdf-links-action-perform
+    "O"   'pdf-outline
+    "zr"  'pdf-view-scale-reset)
+
+  (evilified-state-evilify-map pdf-outline-buffer-mode-map
+    :mode pdf-outline-buffer-mode
+    :bindings
+    "-"                'negative-argument
+    "j"                'next-line
+    "k"                'previous-line
+    "gk"               'outline-backward-same-level
+    "gj"               'outline-forward-same-level
+    (kbd "<backtab>")  'show-all
+    "gh"               'pdf-outline-up-heading
+    "gg"               'beginning-of-buffer
+    "G"                'pdf-outline-end-of-buffer
+    "TAB"              'outline-toggle-children
+    "RET"              'pdf-outline-follow-link
+    (kbd "M-RET")      'pdf-outline-follow-link-and-quit
+    "f"                'pdf-outline-display-link
+    [mouse-1]          'pdf-outline-mouse-display-link
+    "o"                'pdf-outline-select-pdf-window
+    "``"               'pdf-outline-move-to-current-page
+    "''"               'pdf-outline-move-to-current-page
+    "Q"                'pdf-outline-quit-and-kill
+    "q"                'quit-window
+    "F"                'pdf-outline-follow-mode)
+
+  (evilified-state-evilify-map pdf-annot-list-mode-map
+    :mode pdf-annot-list-mode
+    :bindings
+    "f"                'pdf-annot-list-display-annotation-from-id
+    "d"                'tablist-flag-forward
+    "x"                'tablist-do-flagged-delete
+    "u"                'tablist-unmark-forward
+    "q"                'tablist-quit))
