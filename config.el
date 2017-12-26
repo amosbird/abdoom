@@ -452,6 +452,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         ("*Pp Eval Output*" :noselect t :autoclose t)
         ("*Org Export Dispatcher*" :noselect t)
         ("*Stardict Output*" :autoclose t :noselect t :autofit t)
+        ("*Async Shell Command*" :autoclose t :noselect t :autofit t)
         (" *mu4e-verify*" :size 0.1 :autoclose t :noselect t :align below)
         ("*xref*" :noselect t :autoclose t)
         ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
