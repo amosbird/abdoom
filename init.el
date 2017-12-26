@@ -54,6 +54,12 @@
    ;; terminal
    ))
 
+(require 'server)
+(setq server-name (getenv "EMACS_SERVER_NAME"))
+(if (not server-name) (setq server-name "server"))
+(unless (server-running-p server-name)
+  (server-start))
+
 (setq save-interprogram-paste-before-kill t
       split-height-threshold nil
       split-width-threshold 0
