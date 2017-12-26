@@ -108,7 +108,7 @@
      (underline . "<span class=\"underline\">%s</span>")
      (verbatim . "<code>%s</code>"))))
  '(org-hugo-default-section-directory "post")
- '(org-latex-compiler "xelatex" t)
+ '(org-latex-compiler "xelatex")
  '(org-latex-custom-lang-environments nil)
  '(org-latex-default-packages-alist
    (quote
@@ -168,7 +168,12 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((eval progn
+    ((eval add-hook
+           (quote text-mode-hook)
+           (lambda nil
+             (setq-local fill-column 70))
+           :local)
+     (eval progn
            (put
             (quote defendpoint)
             (quote clojure-doc-string-elt)

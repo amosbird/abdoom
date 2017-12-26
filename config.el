@@ -198,12 +198,12 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (require 'fcitx)
   (fcitx-aggressive-setup))
 
-(def-package! pangu-spacing
-  :demand
-  :config
-  (push 'dired-mode pangu-spacing-inhibit-mode-alist)
-  ;; Always insert `real' space in org-mode.
-  (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t) (pangu-spacing-mode +1)))
+;; (def-package! pangu-spacing
+;;   :demand
+;;   :config
+;;   (push 'dired-mode pangu-spacing-inhibit-mode-alist)
+;;   ;; Always insert `real' space in org-mode.
+;;   (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t) (pangu-spacing-mode +1)))
 
 (def-package! git-gutter
   :demand

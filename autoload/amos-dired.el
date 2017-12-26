@@ -257,3 +257,7 @@ If called with `universal-argument' (C-u), ask for username.
 	(dired fname)
         (when file-now
           (dired-goto-file (expand-file-name file-now fname)))))))
+
+(defun +amos*peep-dired-display-file-other-window ()
+  (delete-other-windows))
+(advice-add #'peep-dired-display-file-other-window :before #'+amos*peep-dired-display-file-other-window)
