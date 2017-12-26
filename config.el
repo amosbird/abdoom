@@ -11,10 +11,6 @@
       c-tab-always-indent t
       auth-sources (list (expand-file-name ".authinfo.gpg" +amos-dir)))
 
-(set! :popup "*Org Export Dispatcher*" :noselect t :size 0.5 :align 'right)
-(set! :popup "*Stardict Output*" :size 0.6 :autoclose t :noselect t :autofit t)
-(set! :popup " *mu4e-verify*" :size 0.1 :autoclose t :noselect t)
-
 (defun +amos*no-authinfo-for-tramp (orig-fn &rest args)
   "Don't look into .authinfo for local sudo TRAMP buffers."
   (let ((auth-sources (if (equal tramp-current-method "sudo") nil auth-sources)))
@@ -186,11 +182,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     (while (search-forward "-\n" (ad-get-arg 1) t)
       (replace-match "")
       (ad-set-arg 1 (- (ad-get-arg 1) 2)))))
-
-;; (setq compilation-finish-function
-;;       (lambda (buf str)
-;;         (if (null (string-match ".*exited abnormally.*" str))
-;;             (delete-windows-on (get-buffer-create "*compilation*")))))
 
 (def-package! narrow-reindent
   :demand
@@ -445,7 +436,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                    (apply ,advice ,orig-sym args))))
        ,@body)))
 
-
 (defadvice edebug-pop-to-buffer (around +amos*edebug-pop-to-buffer activate)
   (doom-with-advice (split-window (lambda (orig-fun window) (funcall orig-fun window nil 'right)))
     ad-do-it))
@@ -455,26 +445,19 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     (flet ((insert (str) (eval-when-compile (require 'subr-x)) (funcall old-insert (string-trim-right str))))
       ad-do-it)))
 
-(setq shackle-rules
-      '(
-        ("*Help*" :size 0.3)
-        ("*Messages*"  :noselect t :autoclose t)
+(setq shackle-default-alignment 'right
+      shackle-default-size 0.5
+      shackle-rules
+      '(("*Messages*"  :noselect t :autoclose t)
         ("*Pp Eval Output*" :noselect t :autoclose t)
-        ("*Stardict Output*" :noselect t :autoclose t)
+        ("*Org Export Dispatcher*" :noselect t)
+        ("*Stardict Output*" :autoclose t :noselect t :autofit t)
+        (" *mu4e-verify*" :size 0.1 :autoclose t :noselect t :align below)
         ("*xref*" :noselect t :autoclose t)
-        ;; (dired-mode :popup t :align right)
-        ;; (magit-status-mode :same t :inhibit-window-quit t)
         ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
         ("*compilation*"  :noselect t :autoclose t)
-        ("*Backtrace*" :regexp t :size 0.5 :noselect t :autoclose t :align right)
-        ("^\\*doom:scratch" :regexp t :size 0.5 :select t :modeline t :autoclose t :align right)))
-
-
-;; (set! :popup "^\\*magit" :regexp t :align 'right :size 0.5 :noesc t :autokill t)
-;; (set! :popup 'magit-status-mode :select t :same t)
-;; (set! :popup 'magit-log-mode :select t :inhibit-window-quit t :same t)
-;; (set! :popup "COMMITMSG" :same t)
-;; (set! :popup "\\`\\*magit-diff: .*?\\'" :regexp t :noselect t :align 'left :size 0.5)
+        ("*Backtrace*" :regexp t :noselect t :autoclose t)
+        ("^\\*doom:scratch" :regexp t :select t :modeline t :autoclose t)))
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
@@ -652,8 +635,6 @@ Skip buffers that match `ivy-ignore-buffers'."
   :after ivy
   :config
   (setq helm-make-completion-method 'ivy))
-
-
 
 ;; from spacemacs
 (defun +amos/rename-current-buffer-file (&optional arg)
@@ -1196,7 +1177,6 @@ This function should be hooked to `buffer-list-update-hook'."
     ;; looks better.
     (message (concat "Wrote " (buffer-file-name)))))
 
-
 (defun +file-templates-append (args)
   (cl-destructuring-bind (regexp trigger &optional mode project-only-p) args
     (define-auto-insert
@@ -1219,15 +1199,14 @@ This function should be hooked to `buffer-list-update-hook'."
 (+amos--def-browse-in! org "/home/amos/org/")
 
 (def-package! go-playground
-  :commands go-playground
+  :commands (go-playground go-playground-mode)
   :bind (:map go-playground-mode-map
           ([S-return] . go-playground-rm)))
 
 (def-package! rust-playground
-  :commands rust-playground
+  :commands (rust-playground rust-playground-mode)
   :bind (:map rust-playground-mode-map
           ([S-return] . rust-playground-rm)))
 
 (def-package! cc-playground
-  :commands cc-playground)
-
+  :commands (cc-playground cc-playground-mode))

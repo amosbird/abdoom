@@ -12,6 +12,8 @@
  '(browse-url-firefox-arguments (quote ("new")))
  '(browse-url-firefox-program (expand-file-name "~/scripts/vivaldi"))
  '(browse-url-mailto-function (quote mu4e~compose-browse-url-mail))
+ '(cc-compile-command
+   "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out")
  '(company-dabbrev-code-everywhere t)
  '(company-dabbrev-code-ignore-case t)
  '(counsel-org-goto-display-style (quote path))

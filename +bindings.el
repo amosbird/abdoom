@@ -837,6 +837,7 @@
         [S-iso-lefttab] [backtab]
         "\e[1;5B" [(control shift j)]
         "\e[1;5A" [(control shift d)]
+        "\e[1;5C" [S-return]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
 
       (:after cus-edit
@@ -850,6 +851,7 @@
       (:map key-translation-map
         "M-`" (kbd "C-S-s")
         "C-@" (kbd "C-SPC")
+        "C-RET" [C-return]
         "C-^" (kbd "C-,")
         "C-_" (kbd "C-."))
 

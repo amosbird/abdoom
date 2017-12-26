@@ -46,10 +46,17 @@
     (warn "rust-mode: racer binary can't be found; auto-completion is disabled"))
   nil)
 
+(pcase (getenv "GUI")
+  ("t"
+   ;; gui
+   (setq helm-dash-browser-func 'browse-url-firefox))
+  (_
+   ;; terminal
+   ))
+
 (setq save-interprogram-paste-before-kill t
       split-height-threshold nil
       split-width-threshold 0
       doom-font (font-spec :family "Ubuntu Mono" :size 14)
-      helm-dash-browser-func 'browse-url-firefox
       ;; fix start-process xdg-open
       process-connection-type nil)
