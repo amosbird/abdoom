@@ -119,6 +119,7 @@
    :desc "Switch buffer"           :en "."   #'projectile-find-file
    :desc "Toggle last popup"       :en ","   #'doom/open-project-scratch-buffer
    :desc "Toggle last popup"       :en "m"   #'doom/popup-toggle
+   :desc "Toggle last popup"       :en "e"   #'shell-command
    :desc "Blink cursor line"       :en "DEL" #'doom/open-scratch-buffer
    :desc "Jump to bookmark"        :en "RET" #'eval-expression
 
