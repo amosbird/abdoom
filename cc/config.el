@@ -120,7 +120,7 @@ compilation database is present in the project.")
   (defun +amos/rc-index-current-file ()
     (interactive)
     (let ((path (file-name-directory buffer-file-name)))
-      (async-shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" path buffer-file-name))))
+      (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" path buffer-file-name))))
   (map! (:map c++-mode-map
          "C-c C-r"     #'+amos/rc-index-current-file))
 
