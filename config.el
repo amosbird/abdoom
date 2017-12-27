@@ -84,19 +84,19 @@
   :after magit
   :config
   (def-hydra! +amos@paste (:hint nil)
-  "Paste"
-  ("C-j" evil-paste-pop "Next Paste")
-  ("C-k" evil-paste-pop-next "Prev Paste")
-  ("p" evil-paste-after "Paste After")
-  ("P" evil-paste-before "Paste Before"))
+    "Paste"
+    ("C-j" evil-paste-pop "Next Paste")
+    ("C-k" evil-paste-pop-next "Prev Paste")
+    ("p" evil-paste-after "Paste After")
+    ("P" evil-paste-before "Paste Before"))
 
   (def-hydra! +amos@git-blame (:title "Git Blame Transient State"
-                                      :doc "
+                               :doc "
 Press [_b_] again to blame further in the history, [_q_] to go up or quit."
-                                      :on-enter (let (golden-ratio-mode)
-                                                  (unless (bound-and-true-p magit-blame-mode)
-                                                    (call-interactively 'magit-blame)))
-                                      :foreign-keys run)
+                               :on-enter (let (golden-ratio-mode)
+                                           (unless (bound-and-true-p magit-blame-mode)
+                                             (call-interactively 'magit-blame)))
+                               :foreign-keys run)
     ("b" magit-blame)
     ;; here we use the :exit keyword because we should exit the
     ;; micro-state only if the magit-blame-quit effectively disable
@@ -242,7 +242,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (unless window-system
   (require 'evil-terminal-cursor-changer)
   (xterm-mouse-mode +1)
-    ;; enable terminal scroll
+  ;; enable terminal scroll
   (global-set-key (kbd "<mouse-6>")
                   (lambda ()
                     (interactive)
@@ -438,7 +438,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 
 (defadvice edebug-pop-to-buffer (around +amos*edebug-pop-to-buffer activate)
   (doom-with-advice (split-window (lambda (orig-fun window) (funcall orig-fun window nil 'right)))
-    ad-do-it))
+      ad-do-it))
 
 (defadvice message-insert-signature (around +amos*message-insert-signature activate)
   (let ((old-insert (symbol-function 'insert)))
@@ -462,7 +462,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         ("*Backtrace*" :noselect t)
         ("*Warnings*"  :noselect t :autofit t)
         ("*Messages*"  :noselect t)
-        ("^\\*.*Shell Command.*\\*$" :regexp t :noselect t :autokill t)
+        ("^\\*.*Shell Command.*\\*$" :regexp t :noselect t :autokill t :autoclose t)
         (apropos-mode :autokill t :autoclose t)
         (Buffer-menu-mode :autokill t)
         (comint-mode :noesc t)
@@ -574,7 +574,7 @@ Version 2017-01-27"
           (and (get-buffer buf)
                (with-current-buffer buf
                  (memq major-mode '(dired-mode wdired-mode)))))
-          ivy-ignore-buffers)
+        ivy-ignore-buffers)
   (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
 
 (defun +amos*switch-buffer-matcher (regexp candidates)
@@ -863,7 +863,7 @@ A non-nil argument sorts in REVERSE order."
     (error "Sorting by column requires a block/rect selection on 2 or more lines.")))
 
 (defun +amos/sort-lines-by-column-reverse ()
-"Sort lines by the selected column in reverse order,
+  "Sort lines by the selected column in reverse order,
 using a visual block/rectangle selection."
   (interactive)
   (+amos/sort-lines-by-column -1))
@@ -922,11 +922,11 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
     (advice-add
      fun
      :around
-     (lambda (x &rest args)
-       "Swap the meaning the universal prefix argument"
-       (if (called-interactively-p 'any)
-           (apply x (cons (not (car args)) (cdr args)))
-         (apply x args))))))
+      (lambda (x &rest args)
+        "Swap the meaning the universal prefix argument"
+        (if (called-interactively-p 'any)
+            (apply x (cons (not (car args)) (cdr args)))
+          (apply x args))))))
 
 (def-package! evil-ediff
   :after ediff)
@@ -938,46 +938,29 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
   (doom-with-advice (y-or-n-p (lambda (&rest _) t))
       ad-do-it))
 
-(after! projectile
-  (setq projectile-require-project-root t
-        projectile-find-dir-includes-top-level t))
-
 (after! counsel-projectile
-  (defun +amos--counsel-projectile-dired ()
-    "Run an dired open in the project."
-    (interactive)
-    (if (projectile-project-p)
-        (+amos/find-file (projectile-project-root))))
-
-  (defun +amos--counsel-projectile-switch-project-action-dired (project)
-  "Action for `counsel-projectile-switch-project' to open
-PROJECT with `dired'."
-  (let ((projectile-switch-project-action '+amos--counsel-projectile-dired))
-    (counsel-projectile-switch-project-action project)))
-
   (defun +amos/counsel-projectile-switch-project ()
     (interactive)
-    (let ((ivy-inhibit-action t))
-      (+amos--counsel-projectile-switch-project-action-dired (counsel-projectile-switch-project))))
-
-  (ivy-add-actions
-   'counsel-projectile-switch-project
-   '(("o" +amos--counsel-projectile-switch-project-action-dired "dired open"))))
+    (ivy-read (projectile-prepend-project-name "Switch to project: ")
+              projectile-known-projects
+              :preselect (and (projectile-project-p)
+                              (abbreviate-file-name (projectile-project-root)))
+              :action #'+amos/find-file
+              :require-match t
+              :caller #'+amos/counsel-projectile-switch-project)))
 
 (def-package! git-timemachine
-  :defer t
   :commands +amos@time-machine/body
   :config
-    (def-hydra! +amos@time-machine (
-                                      :title "Git Timemachine Transient State"
-                                      :doc "
+  (defhydra +amos@time-machine (:hint nil
+                                :pre (let (golden-ratio-mode)
+                                       (unless (bound-and-true-p git-timemachine-mode)
+                                         (call-interactively 'git-timemachine)))
+                                :post (when (bound-and-true-p git-timemachine-mode)
+                                        (git-timemachine-quit))
+                                :foreign-keys run)
+    "
 [_p_/_N_] previous [_n_] next [_c_] current [_g_] goto nth rev [_Y_] copy hash [_q_] quit"
-        :on-enter (let (golden-ratio-mode)
-                    (unless (bound-and-true-p git-timemachine-mode)
-                      (call-interactively 'git-timemachine)))
-        :on-exit (when (bound-and-true-p git-timemachine-mode)
-                   (git-timemachine-quit))
-        :foreign-keys run)
         ("c" git-timemachine-show-current-revision)
         ("g" git-timemachine-show-nth-revision)
         ("p" git-timemachine-show-previous-revision)
@@ -1164,8 +1147,6 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (define-key emacs-lisp-mode-map "#" #'endless/sharp)
 
-
-
 (setq my-shebang-patterns
       (list "^#!/usr/.*/perl\\(\\( \\)\\|\\( .+ \\)\\)-w *.*"
             "^#!/usr/.*/sh"
@@ -1173,8 +1154,8 @@ This function should be hooked to `buffer-list-update-hook'."
             "^#!/usr/.*/fish"
             "^#!/usr/bin/env"
             "^#!/bin/sh"
-	        "^#!/bin/bash"
-	        "^#!/bin/fish"))
+            "^#!/bin/bash"
+            "^#!/bin/fish"))
 
 (add-hook! 'after-save-hook
   (if (not (= (shell-command (concat "test -x " (buffer-file-name))) 0))
@@ -1222,26 +1203,110 @@ This function should be hooked to `buffer-list-update-hook'."
 (def-package! go-playground
   :commands (go-playground go-playground-mode)
   :bind (:map go-playground-mode-map
-          ([S-return] . go-playground-rm)))
+         ([S-return] . go-playground-rm)))
 
 (def-package! rust-playground
   :commands (rust-playground rust-playground-mode)
   :bind (:map rust-playground-mode-map
-          ([S-return] . rust-playground-rm)))
+         ([S-return] . rust-playground-rm)))
 
 (def-package! cc-playground
-  :commands (cc-playground cc-playground-mode))
+  :commands (cc-playground cc-playground-mode)
+  :config
+  (add-hook! 'cc-playground-hook (async-shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)))
+  (add-hook! 'cc-playground-rm-hook (async-shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
+
+(eval-after-load "lisp-mode"
+  '(defun lisp-indent-function (indent-point state)
+     "This function is the normal value of the variable `lisp-indent-function'.
+The function `calculate-lisp-indent' calls this to determine
+if the arguments of a Lisp function call should be indented specially.
+INDENT-POINT is the position at which the line being indented begins.
+Point is located at the point to indent under (for default indentation);
+STATE is the `parse-partial-sexp' state for that position.
+If the current line is in a call to a Lisp function that has a non-nil
+property `lisp-indent-function' (or the deprecated `lisp-indent-hook'),
+it specifies how to indent.  The property value can be:
+* `defun', meaning indent `defun'-style
+  \(this is also the case if there is no property and the function
+  has a name that begins with \"def\", and three or more arguments);
+* an integer N, meaning indent the first N arguments specially
+  (like ordinary function arguments), and then indent any further
+  arguments like a body;
+* a function to call that returns the indentation (or nil).
+  `lisp-indent-function' calls this function with the same two arguments
+  that it itself received.
+This function returns either the indentation to use, or nil if the
+Lisp function does not specify a special indentation."
+     (let ((normal-indent (current-column))
+           (orig-point (point)))
+       (goto-char (1+ (elt state 1)))
+       (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+       (cond
+        ;; car of form doesn't seem to be a symbol, or is a keyword
+        ((and (elt state 2)
+              (or (not (looking-at "\\sw\\|\\s_"))
+                  (looking-at ":")))
+         (if (not (> (save-excursion (forward-line 1) (point))
+                     calculate-lisp-indent-last-sexp))
+             (progn (goto-char calculate-lisp-indent-last-sexp)
+                    (beginning-of-line)
+                    (parse-partial-sexp (point)
+                                        calculate-lisp-indent-last-sexp 0 t)))
+         ;; Indent under the list or under the first sexp on the same
+         ;; line as calculate-lisp-indent-last-sexp.  Note that first
+         ;; thing on that line has to be complete sexp since we are
+         ;; inside the innermost containing sexp.
+         (backward-prefix-chars)
+         (current-column))
+        ((and (save-excursion
+                (goto-char indent-point)
+                (skip-syntax-forward " ")
+                (not (looking-at ":")))
+              (save-excursion
+                (goto-char orig-point)
+                (looking-at ":")))
+         (save-excursion
+           (goto-char (+ 2 (elt state 1)))
+           (current-column)))
+        (t
+         (let ((function (buffer-substring (point)
+                                           (progn (forward-sexp 1) (point))))
+               method)
+           (setq method (or (function-get (intern-soft function)
+                                          'lisp-indent-function)
+                            (get (intern-soft function) 'lisp-indent-hook)))
+           (cond ((or (eq method 'defun)
+                      (and (null method)
+                           (> (length function) 3)
+                           (string-match "\\`def" function)))
+                  (lisp-indent-defform state indent-point))
+                 ((integerp method)
+                  (lisp-indent-specform method state
+                                        indent-point normal-indent))
+                 (method
+                  (funcall method indent-point state)))))))))
 
 (def-package! pdf-tools
   :if (string= (getenv "GUI") "t")
   :mode (("\\.pdf\\'" . pdf-view-mode))
+  :init (load "pdf-tools-autoloads" nil t)
   :config
   (pdf-tools-install)
   (evil-set-initial-state 'pdf-view-mode 'evilified)
-  (defhydra +amos@pdf-tools (:title "PDF-tools hydra"
-                                    :on-enter (setq which-key-inhibit t)
-                                    :on-exit (setq which-key-inhibit nil)
-                                    :evil-leader-for-mode (pdf-view-mode . "."))
+
+
+  ;; | color    | toggle                     | meaning      |
+  ;; |----------+----------------------------+--------------|
+  ;; | red      |                            | persist      |
+  ;; | blue     | :exit t                    | transient    |
+  ;; | amaranth | :foreign-keys warn         | persist w    |
+  ;; | teal     | :foreign-keys warn :exit t | transient w  |
+  ;; | pink     | :foreign-keys run          | nested       |
+  (defhydra +amos@pdf-tools (:hint nil
+                             :color amaranth
+                             :pre (setq which-key-inhibit t)
+                             :post (setq which-key-inhibit nil))
     "
  Navigation^^^^                Scale/Fit^^                    Annotations^^       Actions^^           Other^^
  ----------^^^^--------------- ---------^^------------------  -----------^^------ -------^^---------- -----^^---

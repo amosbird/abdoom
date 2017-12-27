@@ -162,6 +162,8 @@
  '(password-cache-expiry nil)
  '(powerline-default-separator (quote alternate))
  '(process-environment initial-environment t)
+ '(projectile-require-project-root t)
+ '(projectile-find-dir-includes-top-level t)
  '(query-replace-skip-read-only t)
  '(recentf-max-saved-items 10000)
  '(reftex-default-bibliography (quote ("~/zotero.bib")) t)

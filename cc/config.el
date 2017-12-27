@@ -87,9 +87,9 @@ compilation database is present in the project.")
   ;; The result isn't very intelligent (causes redundant characters), so just do
   ;; it ourselves.
   (map! :map c++-mode-map
-        "<" nil
-        "C-c i" #'+amos/add-include
-        :i ">" #'+cc/autoclose->-maybe)
+    "<" nil
+    "C-c i" #'+amos/add-include
+    :i ">" #'+cc/autoclose->-maybe)
 
   ;; ...and leave it to smartparens
   (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
@@ -116,6 +116,13 @@ compilation database is present in the project.")
   (require 'counsel-dash)
   (require 'ivy-rtags)
   (require 'flycheck-rtags)
+
+  (defun +amos/rc-index-current-file ()
+    (interactive)
+    (let ((path (file-name-directory buffer-file-name)))
+      (async-shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" path buffer-file-name))))
+  (map! (:map c++-mode-map
+         "C-c C-r"     #'+amos/rc-index-current-file))
 
   (defconst +amos-rdm-buffer-name "*rdm*" "The rdm buffer name.")
 
@@ -175,8 +182,7 @@ compilation database is present in the project.")
     (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
     (setq-local flycheck-check-syntax-automatically nil)
     (flycheck-mode +1))
-  (add-hook! (c-mode c++-mode) #'my-flycheck-rtags-setup)
-  )
+  (add-hook! (c-mode c++-mode) #'my-flycheck-rtags-setup))
 
 (def-package! disaster :commands disaster)
 

@@ -60,7 +60,7 @@
  "M-w"              #'kill-this-buffer
  "C-x e"            #'pp-eval-last-sexp
  "C-l"              #'+amos:redisplay-and-recenter
- :nv "C-s"              #'swiper
+ :env "C-s"          #'swiper
  "C-S-s"            #'counsel-projectile-rg
  "C-S-d"            #'+amos/counsel-rg-cur-dir
  :m "C-f"           #'evilem--motion-evil-find-char
@@ -76,7 +76,6 @@
  :i "C-p"           #'previous-line
  :i "C-k"           #'previous-line
  :i "C-d"           #'delete-char
- :i "C-n"           #'company-dabbrev-code
  :i "C-S-j"         #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
@@ -111,200 +110,200 @@
 
  ;; --- <leader> -------------------------------------
  (:leader
-   :desc "Rg current directory" :nv "\\"  #'+amos/counsel-rg-cur-dir
-   :desc "Rg current directory" :nv "|"  #'+amos/counsel-rg-cur-dir
-   :desc "M-x"         :nv ":"   #'execute-extended-command
+   :desc "Rg current directory" :env "\\"  #'+amos/counsel-rg-cur-dir
+   :desc "Rg current directory" :env "|"   #'+amos/counsel-rg-cur-dir
+   :desc "M-x"                  :env ":"   #'execute-extended-command
 
    ;; Most commonly used
-   :desc "Find file in project"    :n "SPC" #'switch-to-buffer
-   :desc "Switch buffer"           :n "."   #'projectile-find-file
-   :desc "Toggle last popup"       :n ","   #'doom/open-project-scratch-buffer
-   :desc "Toggle last popup"       :n "m"   #'doom/popup-toggle
-   :desc "Blink cursor line"       :n "DEL" #'doom/open-scratch-buffer
-   :desc "Jump to bookmark"        :n "RET" #'eval-expression
+   :desc "Find file in project"    :en "SPC" #'switch-to-buffer
+   :desc "Switch buffer"           :en "."   #'projectile-find-file
+   :desc "Toggle last popup"       :en ","   #'doom/open-project-scratch-buffer
+   :desc "Toggle last popup"       :en "m"   #'doom/popup-toggle
+   :desc "Blink cursor line"       :en "DEL" #'doom/open-scratch-buffer
+   :desc "Jump to bookmark"        :en "RET" #'eval-expression
 
    ;; C-u is used by evil
-   :desc "Universal argument"    :n "u"  #'universal-argument
-   :desc "Save current file"     :n "w"  #'save-buffer
-   :desc "Next diff hunk"        :nv "j" #'git-gutter:next-hunk
-   :desc "Previous diff hunk"    :nv "k" #'git-gutter:previous-hunk
+   :desc "Universal argument"    :en "u"  #'universal-argument
+   :desc "Save current file"     :en "w"  #'save-buffer
+   :desc "Next diff hunk"        :env "j" #'git-gutter:next-hunk
+   :desc "Previous diff hunk"    :env "k" #'git-gutter:previous-hunk
    (:desc "previous..." :prefix "["
-     :desc "Text size"           :nv "[" #'text-scale-decrease
-     :desc "Buffer"              :nv "b" #'doom/previous-buffer
-     :desc "Diff Hunk"           :nv "d" #'git-gutter:previous-hunk
-     :desc "Todo"                :nv "t" #'hl-todo-previous
-     :desc "Error"               :nv "e" #'previous-error
-     :desc "Workspace"           :nv "w" #'+workspace/switch-left
-     :desc "Smart jump"          :nv "h" #'smart-backward
-     :desc "Spelling error"      :nv "s" #'evil-prev-flyspell-error
-     :desc "Spelling correction" :n  "S" #'flyspell-correct-previous-word-generic)
+     :desc "Text size"           :env "[" #'text-scale-decrease
+     :desc "Buffer"              :env "b" #'doom/previous-buffer
+     :desc "Diff Hunk"           :env "d" #'git-gutter:previous-hunk
+     :desc "Todo"                :env "t" #'hl-todo-previous
+     :desc "Error"               :env "e" #'previous-error
+     :desc "Workspace"           :env "w" #'+workspace/switch-left
+     :desc "Smart jump"          :env "h" #'smart-backward
+     :desc "Spelling error"      :env "s" #'evil-prev-flyspell-error
+     :desc "Spelling correction" :en  "S" #'flyspell-correct-previous-word-generic)
 
    (:desc "next..." :prefix "]"
-     :desc "Text size"           :nv "]" #'text-scale-increase
-     :desc "Buffer"              :nv "b" #'doom/next-buffer
-     :desc "Diff Hunk"           :nv "d" #'git-gutter:next-hunk
-     :desc "Todo"                :nv "t" #'hl-todo-next
-     :desc "Error"               :nv "e" #'next-error
-     :desc "Workspace"           :nv "w" #'+workspace/switch-right
-     :desc "Smart jump"          :nv "l" #'smart-forward
-     :desc "Spelling error"      :nv "s" #'evil-next-flyspell-error
-     :desc "Spelling correction" :n  "S" #'flyspell-correct-word-generic)
+     :desc "Text size"           :env "]" #'text-scale-increase
+     :desc "Buffer"              :env "b" #'doom/next-buffer
+     :desc "Diff Hunk"           :env "d" #'git-gutter:next-hunk
+     :desc "Todo"                :env "t" #'hl-todo-next
+     :desc "Error"               :env "e" #'next-error
+     :desc "Workspace"           :env "w" #'+workspace/switch-right
+     :desc "Smart jump"          :env "l" #'smart-forward
+     :desc "Spelling error"      :env "s" #'evil-next-flyspell-error
+     :desc "Spelling correction" :en  "S" #'flyspell-correct-word-generic)
 
    (:desc "buffer" :prefix "b"
-     :desc "New empty buffer"        :n "n" #'evil-buffer-new
-     :desc "Switch workspace buffer" :n "b" #'persp-switch-to-buffer
-     :desc "Switch buffer"           :n "B" #'switch-to-buffer
-     :desc "Kill buffer"             :n "k" #'doom/kill-this-buffer
-     :desc "Kill other buffers"      :n "o" #'doom/kill-other-buffers
-     :desc "Save buffer"             :n "s" #'+amos/switch-to-scratch-buffer
-     :desc "Pop scratch buffer"      :n "x" #'doom/open-scratch-buffer
-     :desc "Bury buffer"             :n "z" #'bury-buffer
-     :desc "Next buffer"             :n "]" #'doom/next-buffer
-     :desc "Previous buffer"         :n "[" #'doom/previous-buffer
-     :desc "Sudo edit this file"     :n "S" #'doom/sudo-this-file)
+     :desc "New empty buffer"        :en "n" #'evil-buffer-new
+     :desc "Switch workspace buffer" :en "b" #'persp-switch-to-buffer
+     :desc "Switch buffer"           :en "B" #'switch-to-buffer
+     :desc "Kill buffer"             :en "k" #'doom/kill-this-buffer
+     :desc "Kill other buffers"      :en "o" #'doom/kill-other-buffers
+     :desc "Save buffer"             :en "s" #'+amos/switch-to-scratch-buffer
+     :desc "Pop scratch buffer"      :en "x" #'doom/open-scratch-buffer
+     :desc "Bury buffer"             :en "z" #'bury-buffer
+     :desc "Next buffer"             :en "]" #'doom/next-buffer
+     :desc "Previous buffer"         :en "[" #'doom/previous-buffer
+     :desc "Sudo edit this file"     :en "S" #'doom/sudo-this-file)
 
    (:desc "code" :prefix "c"
-     :desc "List errors"               :n  "x" #'flycheck-list-errors
-     :desc "Evaluate buffer/region"    :n  "e" #'+eval/buffer
-                                       :v  "e" #'+eval/region
-     :desc "Evaluate & replace region" :nv "E" #'+eval:replace-region
-     :desc "Build tasks"               :nv "b" #'+eval/build
-     :desc "Jump to definition"        :n  "d" #'+jump/definition
-     :desc "Jump to references"        :n  "D" #'+jump/references
-     :desc "Open REPL"                 :n  "r" #'+eval/open-repl
+     :desc "List errors"               :en  "x" #'flycheck-list-errors
+     :desc "Evaluate buffer/region"    :en  "e" #'+eval/buffer
+                                       :ev  "e" #'+eval/region
+     :desc "Evaluate & replace region" :env "E" #'+eval:replace-region
+     :desc "Build tasks"               :env "b" #'+eval/build
+     :desc "Jump to definition"        :en  "d" #'+jump/definition
+     :desc "Jump to references"        :en  "D" #'+jump/references
+     :desc "Open REPL"                 :en  "r" #'+eval/open-repl
                                        :v  "r" #'+eval:repl)
 
    (:desc "file" :prefix "f"
-     :desc "File file"                 :n "f" #'find-file
-     :desc "Sudo find file"            :n "F" #'doom/sudo-find-file
-     :desc "Find file in project"      :n "/" #'projectile-find-file
-     :desc "Find file from here"       :n "?" #'counsel-file-jump
-     :desc "Find other file"           :n "a" #'projectile-find-other-file
-     :desc "Open project editorconfig" :n "c" #'editorconfig-find-current-editorconfig
-     :desc "Find file in dotfiles"     :n "d" #'+amos/find-in-dotfiles
-     :desc "Delete current file"       :n "D" #'+evil:delete-this-file
-     :desc "Find file in emacs.d"      :n "e" #'+amos/find-in-emacsd
-     :desc "Browse emacs.d"            :n "E" #'+amos/browse-emacsd
-     :desc "Recent files"              :n "r" #'recentf-open-files
-     :desc "Recent project files"      :n "R" #'+amos/rename-current-buffer-file
-     :desc "Yank filename"             :n "y" #'+amos/yank-buffer-filename
-     :desc "Yank filename"             :n "Y" #'+amos/yank-buffer-filename-nondir)
+     :desc "File file"                 :en "f" #'find-file
+     :desc "Sudo find file"            :en "F" #'doom/sudo-find-file
+     :desc "Find file in project"      :en "/" #'projectile-find-file
+     :desc "Find file from here"       :en "?" #'counsel-file-jump
+     :desc "Find other file"           :en "a" #'projectile-find-other-file
+     :desc "Open project editorconfig" :en "c" #'editorconfig-find-current-editorconfig
+     :desc "Find file in dotfiles"     :en "d" #'+amos/find-in-dotfiles
+     :desc "Delete current file"       :en "D" #'+evil:delete-this-file
+     :desc "Find file in emacs.d"      :en "e" #'+amos/find-in-emacsd
+     :desc "Browse emacs.d"            :en "E" #'+amos/browse-emacsd
+     :desc "Recent files"              :en "r" #'recentf-open-files
+     :desc "Recent project files"      :en "R" #'+amos/rename-current-buffer-file
+     :desc "Yank filename"             :en "y" #'+amos/yank-buffer-filename
+     :desc "Yank filename"             :en "Y" #'+amos/yank-buffer-filename-nondir)
 
    (:desc "git" :prefix "g"
-     :desc "Git status"        :n  "s" #'magit-status
-     :desc "Git blame"         :n  "b" #'magit-blame
-     :desc "Git time machine"  :n  "t" #'git-timemachine-toggle
-     :desc "Git revert hunk"   :n  "r" #'git-gutter:revert-hunk
-     :desc "Git revert buffer" :n  "R" #'vc-revert
-     :desc "List gists"        :n  "g" #'+gist:list
-     :desc "Next hunk"         :nv "]" #'git-gutter:next-hunk
-     :desc "Previous hunk"     :nv "[" #'git-gutter:previous-hunk)
+     :desc "Git status"        :en  "s" #'magit-status
+     :desc "Git blame"         :en  "b" #'magit-blame
+     :desc "Git time machine"  :en  "t" #'git-timemachine-toggle
+     :desc "Git revert hunk"   :en  "r" #'git-gutter:revert-hunk
+     :desc "Git revert buffer" :en  "R" #'vc-revert
+     :desc "List gists"        :en  "g" #'+gist:list
+     :desc "Next hunk"         :env "]" #'git-gutter:next-hunk
+     :desc "Previous hunk"     :env "[" #'git-gutter:previous-hunk)
 
    (:desc "help" :prefix "h"
      :n "h" help-map
-     :desc "Apropos"               :n "a" #'apropos
-     :desc "Reload theme"          :n "R" #'doom/reload-theme
-     :desc "Find library"          :n "l" #'find-library
-     :desc "Toggle Emacs log"      :n "m" #'doom/popup-toggle-messages
-     :desc "Command log"           :n "L" #'global-command-log-mode
-     :desc "Describe function"     :n "f" #'describe-function
-     :desc "Describe key"          :n "k" #'describe-key
-     :desc "Describe char"         :n "c" #'describe-char
-     :desc "Describe mode"         :n "M" #'describe-mode
-     :desc "Describe variable"     :n "v" #'describe-variable
-     :desc "Describe face"         :n "F" #'describe-face
-     :desc "Describe DOOM setting" :n "s" #'doom/describe-setting
-     :desc "Describe DOOM module"  :n "d" #'doom/describe-module
-     :desc "Find definition"       :n "." #'+jump/definition
-     :desc "Find references"       :n "/" #'+jump/references
-     :desc "Find documentation"    :n "h" #'+jump/documentation
-     :desc "What face"             :n "'" #'doom/what-face
-     :desc "What minor modes"      :n ";" #'doom/what-minor-mode
-     :desc "Info"                  :n "i" #'info
-     :desc "Toggle profiler"       :n "p" #'doom/toggle-profiler)
+     :desc "Apropos"               :en "a" #'apropos
+     :desc "Reload theme"          :en "R" #'doom/reload-theme
+     :desc "Find library"          :en "l" #'find-library
+     :desc "Toggle Emacs log"      :en "m" #'doom/popup-toggle-messages
+     :desc "Command log"           :en "L" #'global-command-log-mode
+     :desc "Describe function"     :en "f" #'describe-function
+     :desc "Describe key"          :en "k" #'describe-key
+     :desc "Describe char"         :en "c" #'describe-char
+     :desc "Describe mode"         :en "M" #'describe-mode
+     :desc "Describe variable"     :en "v" #'describe-variable
+     :desc "Describe face"         :en "F" #'describe-face
+     :desc "Describe DOOM setting" :en "s" #'doom/describe-setting
+     :desc "Describe DOOM module"  :en "d" #'doom/describe-module
+     :desc "Find definition"       :en "." #'+jump/definition
+     :desc "Find references"       :en "/" #'+jump/references
+     :desc "Find documentation"    :en "h" #'+jump/documentation
+     :desc "What face"             :en "'" #'doom/what-face
+     :desc "What minor modes"      :en ";" #'doom/what-minor-mode
+     :desc "Info"                  :en "i" #'info
+     :desc "Toggle profiler"       :en "p" #'doom/toggle-profiler)
 
    (:desc "insert" :prefix "i"
-     :desc "From kill-ring" :nv "y" #'counsel-yank-pop
-     :desc "From snippet"   :nv "s" #'yas-insert-snippet)
+     :desc "From kill-ring" :env "y" #'counsel-yank-pop
+     :desc "From snippet"   :env "s" #'yas-insert-snippet)
 
    (:desc "notes" :prefix "n"
-     :desc "Rust playground"       :n "r" #'rust-playground
-     :desc "Go playground"         :n "g" #'go-playground
-     :desc "C++ playground"        :n "c" #'cc-playground
-     :desc "Browse script"         :n "s" #'+amos/browse-script
-     :desc "Browse org"            :n "o" #'+amos/browse-org
-     :desc "Browse note"           :n "n" #'+amos/browse-note
-     :desc "Browse mode notes"     :n "m" #'+org/browse-notes-for-major-mode
-     :desc "Browse project notes"  :n "p" #'+org/browse-notes-for-project)
+     :desc "Rust playground"       :en "r" #'rust-playground
+     :desc "Go playground"         :en "g" #'go-playground
+     :desc "C++ playground"        :en "c" #'cc-playground
+     :desc "Browse script"         :en "s" #'+amos/browse-script
+     :desc "Browse org"            :en "o" #'+amos/browse-org
+     :desc "Browse note"           :en "n" #'+amos/browse-note
+     :desc "Browse mode notes"     :en "m" #'+org/browse-notes-for-major-mode
+     :desc "Browse project notes"  :en "p" #'+org/browse-notes-for-project)
 
    (:desc "open" :prefix "o"
-     :desc "Default browser"     :n  "b" #'browse-url-of-file
-     :desc "Dired"               :n  "d" #'+amos/dired-jump
-     :desc "REPL"                :n  "r" #'+eval/open-repl
+     :desc "Default browser"     :en  "b" #'browse-url-of-file
+     :desc "Dired"               :en  "d" #'+amos/dired-jump
+     :desc "REPL"                :en  "r" #'+eval/open-repl
                                  :v  "r" #'+eval:repl
-     :desc "Neotree"             :n  "n" #'+neotree/toggle
-     :desc "Terminal"            :n  "t" #'+term/open-popup
-     :desc "Terminal in project" :n  "T" #'+term/open-popup-in-project
+     :desc "Neotree"             :en  "n" #'+neotree/toggle
+     :desc "Terminal"            :en  "t" #'+term/open-popup
+     :desc "Terminal in project" :en  "T" #'+term/open-popup-in-project
 
      ;; applications
-     :desc "APP: elfeed"  :n "E" #'=rss
-     :desc "APP: email"   :n "m" #'=email
-     :desc "APP: twitter" :n "T" #'=twitter
-     :desc "APP: regex"   :n "X" #'=regex
+     :desc "APP: elfeed"  :en "E" #'=rss
+     :desc "APP: email"   :en "m" #'=email
+     :desc "APP: twitter" :en "T" #'=twitter
+     :desc "APP: regex"   :en "X" #'=regex
 
      ;; macos
      (:when IS-MAC
-       :desc "Reveal in Finder"          :n "o" #'+macos/reveal-in-finder
-       :desc "Reveal project in Finder"  :n "O" #'+macos/reveal-project-in-finder
-       :desc "Send to Transmit"          :n "u" #'+macos/send-to-transmit
-       :desc "Send project to Transmit"  :n "U" #'+macos/send-project-to-transmit
-       :desc "Send to Launchbar"         :n "l" #'+macos/send-to-launchbar
-       :desc "Send project to Launchbar" :n "L" #'+macos/send-project-to-launchbar))
+       :desc "Reveal in Finder"          :en "o" #'+macos/reveal-in-finder
+       :desc "Reveal project in Finder"  :en "O" #'+macos/reveal-project-in-finder
+       :desc "Send to Transmit"          :en "u" #'+macos/send-to-transmit
+       :desc "Send project to Transmit"  :en "U" #'+macos/send-project-to-transmit
+       :desc "Send to Launchbar"         :en "l" #'+macos/send-to-launchbar
+       :desc "Send project to Launchbar" :en "L" #'+macos/send-project-to-launchbar))
 
-   :desc "Browse project"                :n "p" #'+amos/counsel-projectile-switch-project
+   :desc "Browse project"                :en "p" #'+amos/counsel-projectile-switch-project
 
    (:desc "project" :prefix "P"
-     :desc "Browse project"          :n  "." (find-file-in! (doom-project-root))
-     :desc "Find file in project"    :n  "/" #'projectile-find-file
-     :desc "Run cmd in project root" :nv "!" #'projectile-run-shell-command-in-root
-     :desc "Switch project"          :n  "p" #'projectile-switch-project
-     :desc "Recent project files"    :n  "r" #'projectile-recentf
-     :desc "List project tasks"      :n  "t" #'+ivy/tasks
-     :desc "Pop scratch in project"  :n  "o" #'doom/open-project-scratch-buffer
-     :desc "Invalidate cache"        :n  "x" #'projectile-invalidate-cache)
+     :desc "Browse project"          :en  "." (find-file-in! (doom-project-root))
+     :desc "Find file in project"    :en  "/" #'projectile-find-file
+     :desc "Run cmd in project root" :env "!" #'projectile-run-shell-command-in-root
+     :desc "Switch project"          :en  "p" #'projectile-switch-project
+     :desc "Recent project files"    :en  "r" #'projectile-recentf
+     :desc "List project tasks"      :en  "t" #'+ivy/tasks
+     :desc "Pop scratch in project"  :en  "o" #'doom/open-project-scratch-buffer
+     :desc "Invalidate cache"        :en  "x" #'projectile-invalidate-cache)
 
    (:desc "quit" :prefix "q"
-     :desc "Quit"                    :n "q" #'+amos/prompt-kill-emacs
-     :desc "Quit (forget session)"   :n "Q" #'+workspace/kill-session-and-quit)
+     :desc "Quit"                    :en "q" #'+amos/prompt-kill-emacs
+     :desc "Quit (forget session)"   :en "Q" #'+workspace/kill-session-and-quit)
 
    (:desc "remote" :prefix "r"
-     :desc "Ivy resume"             :n "l" #'ivy-resume
-     :desc "Upload local"           :n "u" #'+upload/local
-     :desc "Upload local (force)"   :n "U" (λ! (+upload/local t))
-     :desc "Download remote"        :n "d" #'+upload/remote-download
-     :desc "Eval buffer"            :n "b" #'eval-buffer
-     :desc "Diff local & remote"    :n "D" #'+upload/diff
-     :desc "Browse remote files"    :n "." #'+upload/browse
-     :desc "Detect remote changes"  :n ">" #'+upload/check-remote)
+     :desc "Ivy resume"             :en "l" #'ivy-resume
+     :desc "Upload local"           :en "u" #'+upload/local
+     :desc "Upload local (force)"   :en "U" (λ! (+upload/local t))
+     :desc "Download remote"        :en "d" #'+upload/remote-download
+     :desc "Eval buffer"            :en "b" #'eval-buffer
+     :desc "Diff local & remote"    :en "D" #'+upload/diff
+     :desc "Browse remote files"    :en "." #'+upload/browse
+     :desc "Detect remote changes"  :en ">" #'+upload/check-remote)
 
    (:desc "snippets" :prefix "s"
-     :desc "New snippet"           :n  "n" #'yas-new-snippet
-     :desc "Insert snippet"        :nv "i" #'yas-insert-snippet
-     :desc "Find snippet for mode" :n  "s" #'yas-visit-snippet-file
-     :desc "Find snippet"          :n  "S" #'+amos/find-in-snippets)
+     :desc "New snippet"           :en  "n" #'yas-new-snippet
+     :desc "Insert snippet"        :env "i" #'yas-insert-snippet
+     :desc "Find snippet for mode" :en  "s" #'yas-visit-snippet-file
+     :desc "Find snippet"          :en  "S" #'+amos/find-in-snippets)
 
    (:desc "toggle" :prefix "t"
-     :desc "Flyspell"               :n "s" #'flyspell-mode
-     :desc "Flycheck"               :n "f" #'flycheck-mode
-     :desc "Rainbow"                :n "r" #'rainbow-mode
-     :desc "Truncate lines"         :n "l" #'toggle-truncate-lines
-     :desc "Fullscreen"             :n "w" #'whitespace-mode
-     :desc "Fullscreen"             :n "f" #'doom/toggle-fullscreen
-     :desc "Indent guides"          :n "i" #'highlight-indentation-mode
-     :desc "Indent guides (column)" :n "I" #'highlight-indentation-current-column-mode
-     :desc "Impatient mode"         :n "h" #'+impatient-mode/toggle
-     :desc "Big mode"               :n "b" #'doom-big-font-mode
-     :desc "Evil goggles"           :n "g" #'+evil-goggles/toggle))
+     :desc "Flyspell"               :en "s" #'flyspell-mode
+     :desc "Flycheck"               :en "f" #'flycheck-mode
+     :desc "Rainbow"                :en "r" #'rainbow-mode
+     :desc "Truncate lines"         :en "l" #'toggle-truncate-lines
+     :desc "Fullscreen"             :en "w" #'whitespace-mode
+     :desc "Fullscreen"             :en "f" #'doom/toggle-fullscreen
+     :desc "Indent guides"          :en "i" #'highlight-indentation-mode
+     :desc "Indent guides (column)" :en "I" #'highlight-indentation-current-column-mode
+     :desc "Impatient mode"         :en "h" #'+impatient-mode/toggle
+     :desc "Big mode"               :en "b" #'doom-big-font-mode
+     :desc "Evil goggles"           :en "g" #'+evil-goggles/toggle))
 
 
  ;; --- Personal vim-esque bindings ------------------

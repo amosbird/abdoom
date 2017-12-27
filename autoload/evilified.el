@@ -186,7 +186,7 @@ Each pair KEYn FUNCTIONn is defined in MAP after the evilification of it."
               (setq evil-evilified-state-map (copy-keymap ,evilified-map))
               (let* ((sorted-map (evilified-state--sort-keymap
                                   evil-evilified-state-map))
-                    processed)
+                     processed)
                 (mapc (lambda (map-entry)
                         (unless (member (car map-entry) processed)
                           (setq processed (evilified-state--evilify-event
