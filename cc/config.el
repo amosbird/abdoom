@@ -53,6 +53,16 @@ compilation database is present in the project.")
   ;;       '(c-mode c++-mode objc-mode)
   ;;       '(company-irony-c-headers company-irony))
 
+
+  ;; Smartparens and cc-mode both try to autoclose angle-brackets intelligently.
+  ;; The result isn't very intelligent (causes redundant characters), so just do
+  ;; it ourselves.
+  (map! (:map c++-mode-map
+         "<" nil
+         :i ">"        #'+cc/autoclose->-maybe
+         "C-c C-r"     #'+amos/rc-index-current-file
+         "C-c i"       #'+amos/ivy-add-include))
+
   ;;; Style/formatting
   ;; C/C++ style settings
   (c-toggle-electric-state -1)
@@ -83,13 +93,6 @@ compilation database is present in the project.")
         c-electric-flag nil)
   (dolist (key '("#" "{" "}" "/" "*" ";" "," ":" "(" ")"))
     (define-key c-mode-base-map key nil))
-  ;; Smartparens and cc-mode both try to autoclose angle-brackets intelligently.
-  ;; The result isn't very intelligent (causes redundant characters), so just do
-  ;; it ourselves.
-  (map! :map c++-mode-map
-    "<" nil
-    "C-c i" #'+amos/add-include
-    :i ">" #'+cc/autoclose->-maybe)
 
   ;; ...and leave it to smartparens
   (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
@@ -121,8 +124,6 @@ compilation database is present in the project.")
     (interactive)
     (let ((path (file-name-directory buffer-file-name)))
       (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" path buffer-file-name))))
-  (map! (:map c++-mode-map
-         "C-c C-r"     #'+amos/rc-index-current-file))
 
   (defconst +amos-rdm-buffer-name "*rdm*" "The rdm buffer name.")
 
@@ -212,6 +213,11 @@ compilation database is present in the project.")
 (def-package! clang-format
   :commands clang-format-buffer clang-format)
 
+(defvar +amos/default-include-headers
+  '("algorithm" "any" "array" "atomic" "bitset" "cassert" "ccomplex" "cctype" "cerrno" "cfenv" "cfloat" "chrono" "cinttypes" "ciso646" "climits" "clocale" "cmath" "codecvt" "complex" "complex.h" "condition_variable" "csetjmp" "csignal" "cstdalign" "cstdarg" "cstdbool" "cstddef" "cstdint" "cstdio" "cstdlib" "cstring" "ctgmath" "ctime" "cuchar" "cwchar" "cwctype" "cxxabi.h" "deque" "exception" "fenv.h" "forward_list" "fstream" "functional" "future" "initializer_list" "iomanip" "ios" "iosfwd" "iostream" "istream" "iterator" "limits" "list" "locale" "map" "math.h" "memory" "mutex" "new" "numeric" "optional" "ostream" "queue" "random" "ratio" "regex" "scoped_allocator" "set" "shared_mutex" "sstream" "stack" "stdexcept" "stdlib.h" "streambuf" "string" "string_view" "system_error" "tgmath.h" "thread" "tuple" "type_traits" "typeindex" "typeinfo" "unordered_map" "unordered_set" "utility" "valarray" "variant" "vector" "auto_ptr.h" "backward_warning.h" "binders.h" "hash_fun.h" "hash_map" "hash_set" "hashtable.h" "strstream" "adxintrin.h" "altivec.h" "ammintrin.h" "arm_acle.h" "arm_neon.h" "armintr.h" "avx2intrin.h" "avx512bwintrin.h" "avx512cdintrin.h" "avx512dqintrin.h" "avx512erintrin.h" "avx512fintrin.h" "avx512ifmaintrin.h" "avx512ifmavlintrin.h" "avx512pfintrin.h" "avx512vbmiintrin.h" "avx512vbmivlintrin.h" "avx512vlbwintrin.h" "avx512vlcdintrin.h" "avx512vldqintrin.h" "avx512vlintrin.h" "avx512vpopcntdqintrin.h" "avxintrin.h" "bmi2intrin.h" "bmiintrin.h" "clflushoptintrin.h" "clzerointrin.h" "cpuid.h" "cuda_wrappers" "emmintrin.h" "f16cintrin.h" "float.h" "fma4intrin.h" "fmaintrin.h" "fxsrintrin.h" "htmintrin.h" "htmxlintrin.h" "ia32intrin.h" "immintrin.h" "intrin.h" "inttypes.h" "iso646.h" "limits.h" "lwpintrin.h" "lzcntintrin.h" "mm3dnow.h" "mm_malloc.h" "mmintrin.h" "module.modulemap" "msa.h" "mwaitxintrin.h" "nmmintrin.h" "opencl-c.h" "pkuintrin.h" "pmmintrin.h" "popcntintrin.h" "prfchwintrin.h" "rdseedintrin.h" "rtmintrin.h" "s390intrin.h" "sanitizer" "shaintrin.h" "smmintrin.h" "stdalign.h" "stdarg.h" "stdatomic.h" "stdbool.h" "stddef.h" "stdint.h" "stdnoreturn.h" "tbmintrin.h" "tgmath.h" "tmmintrin.h" "unwind.h" "vadefs.h" "varargs.h" "vecintrin.h" "wmmintrin.h" "x86intrin.h" "xmmintrin.h" "xopintrin.h" "xray" "xsavecintrin.h" "xsaveintrin.h" "xsaveoptintrin.h" "xsavesintrin.h" "xtestintrin.h" "unistd.h" "libaio.h"))
+
+(nconc +amos/default-include-headers (split-string (shell-command-to-string "cd /usr/local/include ; find . -type f | sed 's=^./=='")))
+
 (defun +amos/add-include (header)
   "Add an #include line for `header' near top of file, avoiding duplicates."
   (interactive "M#include: ")
@@ -224,3 +230,9 @@ compilation database is present in the project.")
           (beginning-of-line))
         (insert incl)
         (newline)))))
+
+(defun +amos/ivy-add-include ()
+  (interactive)
+  (ivy-read "Include: " +amos/default-include-headers
+            :require-match t
+            :action #'+amos/add-include))
