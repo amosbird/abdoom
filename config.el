@@ -231,8 +231,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                    ))
            (ovstring (propertize gutter-sep 'face face)))
       ;; (propertize " " 'display `((margin left-margin) ,gutter-sep)))
-      (propertize " " 'display `((margin left-margin) ,ovstring)))
-    )
+      (propertize " " 'display `((margin left-margin) ,ovstring))))
   (advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
   (add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows))
 
