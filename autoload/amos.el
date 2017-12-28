@@ -1,14 +1,6 @@
 ;;; private/amos/autoload/amos.el -*- lexical-binding: t; -*-
 
 ;;;###autoload
-(defun +amos/install-snippets ()
-  "Install my snippets from https://github.com/amosbird/emacs-snippets into
-private/amos/snippets."
-  (interactive)
-  (doom-fetch :github "amosbird/emacs-snippets"
-              (expand-file-name "snippets" (doom-module-path :private 'amos))))
-
-;;;###autoload
 (defun +amos/yank-buffer-filename ()
   "Copy the current buffer's path to the kill ring."
   (interactive)

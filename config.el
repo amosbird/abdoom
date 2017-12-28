@@ -70,6 +70,9 @@
   (add-hook! 'evil-mc-after-cursors-deleted
     (remove-hook 'evil-insert-state-entry-hook #'evil-mc-resume-cursors t)))
 
+(after! warning
+  (add-to-list 'warning-suppress-types '(yasnippet backquote-change)))
+
 ;; Don't use default snippets, use mine.
 (after! yasnippet
   (add-hook! 'yas-minor-mode-hook (yas-activate-extra-mode 'fundamental-mode))
@@ -1212,7 +1215,7 @@ This function should be hooked to `buffer-list-update-hook'."
 (def-package! cc-playground
   :commands (cc-playground cc-playground-mode)
   :config
-  (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)))
+  (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)) (evil-open-below 1))
   (add-hook! 'cc-playground-rm-hook (shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
 
 (eval-after-load "lisp-mode"
@@ -1418,29 +1421,33 @@ Lisp function does not specify a special indentation."
 (defvar +amos--ivy-regex-hash
   (make-hash-table :test #'equal)
   "Store pre-computed regex.")
-(defvar +amos--ivy-regex-half-quote
-  (lambda (str &optional greedy)
-    "Re-build regex pattern from STR in case it has a space.
-When GREEDY is non-nil, join words in a greedy way."
-    (let ((hashed (unless greedy
-                    (gethash str +amos--ivy-regex-hash))))
-      (if hashed
-          (prog1 (cdr hashed)
-            (setq ivy--subexps (car hashed)))
-        (when (string-match "\\([^\\]\\|^\\)\\\\$" str)
-          (setq str (substring str 0 -1)))
-        (cdr (puthash str
-                      (let ((subs (ivy--split str)))
-                        (if (= (length subs) 1)
-                        (cons (setq ivy--subexps 0) (regexp-quote (car subs)))
-                          (cons (setq ivy--subexps (length subs))
-                                (mapconcat (lambda (s) (format "\\(%s\\)" (regexp-quote s))) subs (if greedy ".*" ".*?")))))
-                      +amos--ivy-regex-hash))))))
 
+(defun +amos--ivy-regex-half-quote (str &optional greedy)
+  "Re-build regex pattern from STR in case it has a space.
+When GREEDY is non-nil, join words in a greedy way."
+  (let ((hashed (unless greedy
+                  (gethash str +amos--ivy-regex-hash))))
+    (if hashed
+        (prog1 (cdr hashed)
+          (setq ivy--subexps (car hashed)))
+      (when (string-match "\\([^\\]\\|^\\)\\\\$" str)
+        (setq str (substring str 0 -1)))
+      (cdr (puthash str
+                    (let ((subs (ivy--split str)))
+                      (if (= (length subs) 1)
+                          (cons (setq ivy--subexps 0) (regexp-quote (car subs)))
+                        (cons (setq ivy--subexps (length subs))
+                              (mapconcat (lambda (s) (format "\\(%s\\)" (regexp-quote s))) subs (if greedy ".*" ".*?")))))
+                    +amos--ivy-regex-hash)))))
+
+(defvar +amos--ivy-regex-half-quote-function 'ivy--regex)
+(setq ivy--regex-function '+amos--ivy-regex-half-quote)
 (defun +amos*ivy-toggle-regexp-quote ()
   "Toggle the regexp quoting."
   (interactive)
   (setq ivy--old-re nil)
-  (cl-rotatef ivy--regex-function +amos--ivy-regex-half-quote ivy--regexp-quote))
+  (cl-rotatef ivy--regex-function +amos--ivy-regex-half-quote-function ivy--regexp-quote))
+
+;; (add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t) (ivy-toggle-regexp-quote))
 
 (advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)

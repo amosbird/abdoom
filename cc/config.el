@@ -223,7 +223,7 @@ compilation database is present in the project.")
   (let ((incl (format "#include <%s>" header)))
     (save-excursion
       (if (search-backward incl nil t)
-          (message "You already have %s." incl)
+          nil
         (when (search-backward "#include" nil 'stop-at-top)
           (forward-line)
           (beginning-of-line))
@@ -244,7 +244,7 @@ compilation database is present in the project.")
   (let ((lib (format "%s \\" library)))
     (save-excursion
       (if (search-forward lib nil t)
-          (message "You already have %s." lib)
+          nil
         (when (re-search-forward "^-l.*\\\\$" nil 'stop-at-the-end 1)
           (forward-line)
           (beginning-of-line))

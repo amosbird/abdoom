@@ -2,8 +2,7 @@
 
 (add-hook! '(doom-post-init-hook minibuffer-setup-hook) (setq-local show-trailing-whitespace nil))
 (add-hook! 'edebug-mode-hook #'evil-normalize-keymaps)
-(add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t) (ivy-toggle-regexp-quote))
-;; (add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t))
+(add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t))
 (add-hook! 'eval-expression-minibuffer-setup-hook
   (define-key minibuffer-local-map "\C-p" #'previous-line-or-history-element)
   (define-key minibuffer-local-map "\C-n" #'next-line-or-history-element))
