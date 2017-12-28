@@ -236,3 +236,22 @@ compilation database is present in the project.")
                                  (shell-command-to-string "cd /usr/local/include ; find . -type f | sed 's=^./=='")))
             :require-match t
             :action #'+amos/add-include))
+
+(defun +amos/add-library-link (library)
+  "Add an -llibrary line for `library' near top of file, avoiding duplicates."
+  (interactive "M#include: ")
+  (let ((lib (format "-l%s" library)))
+    (save-excursion
+      (if (search-forward lib nil t)
+          (message "You already have %s." lib)
+        (when (search-forward "^-l" nil 'stop-at-bottom)
+          (forward-line)
+          (beginning-of-line))
+        (insert lib)
+        (newline)))))
+
+(defun +amos/ivy-add-library-link ()
+  (interactive)
+  (ivy-read "Include: " (split-string (shell-command-to-string "ldconfig -p | awk '{print $1}' | rg 'so$'"))
+            :require-match t
+            :action #'+amos/add-library-link))

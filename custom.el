@@ -54,7 +54,6 @@
  '(helm-bibtex-notes-path "~/bibnotes.org")
  '(helm-bibtex-pdf-field "file")
  '(intent-tabs-mode t)
- '(ivy-re-builders-alist (quote ((t . ivy--regex-ignore-order))) t)
  '(ivy-rich-abbreviate-paths t)
  '(ivy-rich-switch-buffer-align-virtual-buffer t)
  '(ivy-rich-switch-buffer-delimiter "|")

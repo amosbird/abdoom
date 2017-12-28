@@ -283,7 +283,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (add-hook! cmake-mode (setq-local helm-dash-docsets '("CMake")))
   (add-hook! java-mode (setq-local helm-dash-docsets '("Java")))
   (add-hook! rust-mode (setq-local helm-dash-docsets '("Rust")))
-  (add-hook! lua-mode (setq-local helm-dash-docsets '("Lua_5.3")))
+  (add-hook! lua-mode (setq-local helm-dash-docsets '("Lua_5.1")))
   (add-hook! c-mode (setq-local helm-dash-docsets '("C")))
   (add-hook! c++-mode (setq-local helm-dash-docsets '("C++" "Boost")))
   (add-hook! python-mode (setq-local helm-dash-docsets '("Python_3" "Python_2")))
@@ -1415,3 +1415,33 @@ Lisp function does not specify a special indentation."
     "x"                'tablist-do-flagged-delete
     "u"                'tablist-unmark-forward
     "q"                'tablist-quit))
+
+(defvar +amos--ivy-regex-hash
+  (make-hash-table :test #'equal)
+  "Store pre-computed regex.")
+(defvar +amos--ivy-regex-half-quote
+  (lambda (str &optional greedy)
+    "Re-build regex pattern from STR in case it has a space.
+When GREEDY is non-nil, join words in a greedy way."
+    (let ((hashed (unless greedy
+                    (gethash str +amos--ivy-regex-hash))))
+      (if hashed
+          (prog1 (cdr hashed)
+            (setq ivy--subexps (car hashed)))
+        (when (string-match "\\([^\\]\\|^\\)\\\\$" str)
+          (setq str (substring str 0 -1)))
+        (cdr (puthash str
+                      (let ((subs (ivy--split str)))
+                        (if (= (length subs) 1)
+                            (cons (setq ivy--subexps 0) (regexp-quote (car subs)))
+                          (cons (setq ivy--subexps (length subs))
+                                (mapconcat #'regexp-quote subs (if greedy ".*" ".*?")))))
+                      +amos--ivy-regex-hash))))))
+
+(defun +amos*ivy-toggle-regexp-quote ()
+  "Toggle the regexp quoting."
+  (interactive)
+  (setq ivy--old-re nil)
+  (cl-rotatef ivy--regex-function +amos--ivy-regex-half-quote ivy--regexp-quote))
+
+(advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)
