@@ -245,6 +245,7 @@
  '(user-full-name "Amos Bird")
  '(user-mail-address "amosbird@gmail.com")
  '(visible-cursor nil)
+ '(warning-suppress-types '((yasnippet backquote-change)))
  '(ws-butler-keep-whitespace-before-point nil)
  '(yas-triggers-in-field nil)
  '(yas-wrap-around-region 121)

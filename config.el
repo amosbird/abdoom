@@ -70,9 +70,6 @@
   (add-hook! 'evil-mc-after-cursors-deleted
     (remove-hook 'evil-insert-state-entry-hook #'evil-mc-resume-cursors t)))
 
-(after! warning
-  (add-to-list 'warning-suppress-types '(yasnippet backquote-change)))
-
 ;; Don't use default snippets, use mine.
 (after! yasnippet
   (add-hook! 'yas-minor-mode-hook (yas-activate-extra-mode 'fundamental-mode))
