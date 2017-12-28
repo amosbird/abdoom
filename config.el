@@ -1419,7 +1419,7 @@ Lisp function does not specify a special indentation."
   (make-hash-table :test #'equal)
   "Store pre-computed regex.")
 
-(defun +amos--ivy-regex-half-quote (str &optional greedy)
+(defun +amos*ivy-regex-half-quote (str &optional greedy)
   "Re-build regex pattern from STR in case it has a space.
 When GREEDY is non-nil, join words in a greedy way."
   (let ((hashed (unless greedy
@@ -1437,14 +1437,44 @@ When GREEDY is non-nil, join words in a greedy way."
                               (mapconcat (lambda (s) (format "\\(%s\\)" (regexp-quote s))) subs (if greedy ".*" ".*?")))))
                     +amos--ivy-regex-hash)))))
 
-(defvar +amos--ivy-regex-half-quote-function 'ivy--regex)
-(setq ivy--regex-function '+amos--ivy-regex-half-quote)
+(defun +amos--old-ivy-regex (str &optional greedy)
+  "Re-build regex pattern from STR in case it has a space.
+When GREEDY is non-nil, join words in a greedy way."
+  (let ((hashed (unless greedy
+                  (gethash str ivy--regex-hash))))
+    (if hashed
+        (prog1 (cdr hashed)
+          (setq ivy--subexps (car hashed)))
+      (when (string-match "\\([^\\]\\|^\\)\\\\$" str)
+        (setq str (substring str 0 -1)))
+      (cdr (puthash str
+                    (let ((subs (ivy--split str)))
+                      (if (= (length subs) 1)
+                          (cons
+                           (setq ivy--subexps 0)
+                           (car subs))
+                        (cons
+                         (setq ivy--subexps (length subs))
+                         (mapconcat
+                          (lambda (x)
+                            (if (string-match "\\`\\\\([^?].*\\\\)\\'" x)
+                                x
+                              (format "\\(%s\\)" x)))
+                          subs
+                          (if greedy
+                              ".*"
+                            ".*?")))))
+                    ivy--regex-hash)))))
+
+(defvar +amos--old-ivy-regex-function '+amos--old-ivy-regex)
+
 (defun +amos*ivy-toggle-regexp-quote ()
   "Toggle the regexp quoting."
   (interactive)
   (setq ivy--old-re nil)
-  (cl-rotatef ivy--regex-function +amos--ivy-regex-half-quote-function ivy--regexp-quote))
+  (cl-rotatef ivy--regex-function +amos--old-ivy-regex-function ivy--regexp-quote))
 
 ;; (add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t) (ivy-toggle-regexp-quote))
 
 (advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)
+(advice-add #'ivy--regex :override #'+amos*ivy-regex-half-quote)
