@@ -1432,9 +1432,9 @@ When GREEDY is non-nil, join words in a greedy way."
         (cdr (puthash str
                       (let ((subs (ivy--split str)))
                         (if (= (length subs) 1)
-                            (cons (setq ivy--subexps 0) (regexp-quote (car subs)))
+                        (cons (setq ivy--subexps 0) (regexp-quote (car subs)))
                           (cons (setq ivy--subexps (length subs))
-                                (mapconcat #'regexp-quote subs (if greedy ".*" ".*?")))))
+                                (mapconcat (lambda (s) (format "\\(%s\\)" (regexp-quote s))) subs (if greedy ".*" ".*?")))))
                       +amos--ivy-regex-hash))))))
 
 (defun +amos*ivy-toggle-regexp-quote ()
