@@ -1212,7 +1212,6 @@ This function should be hooked to `buffer-list-update-hook'."
 (def-package! cc-playground
   :commands (cc-playground cc-playground-mode)
   :config
-  (setq cc-playground-confirm-deletion nil)
   (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)))
   (add-hook! 'cc-playground-rm-hook (shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
 

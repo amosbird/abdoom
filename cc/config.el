@@ -48,7 +48,7 @@ compilation database is present in the project.")
 
   :config
   (set! :electric '(c-mode c++-mode objc-mode java-mode)
-    :chars '(?\n ?\}))
+    :chars '(?{ ?\n ?}))
   ;; (set! :company-backend
   ;;       '(c-mode c++-mode objc-mode)
   ;;       '(company-irony-c-headers company-irony))
@@ -61,6 +61,7 @@ compilation database is present in the project.")
          "<" nil
          :i ">"        #'+cc/autoclose->-maybe
          "C-c C-r"     #'+amos/rc-index-current-file
+         "C-c l"       #'+amos/ivy-add-library-link
          "C-c i"       #'+amos/ivy-add-include))
 
   ;;; Style/formatting
@@ -89,10 +90,10 @@ compilation database is present in the project.")
   ;;; Keybindings
   ;; Completely disable electric keys because it interferes with smartparens and
   ;; custom bindings. We'll do this ourselves.
-  (setq c-tab-always-indent t
-        c-electric-flag nil)
-  (dolist (key '("#" "{" "}" "/" "*" ";" "," ":" "(" ")"))
-    (define-key c-mode-base-map key nil))
+  ;; (setq c-tab-always-indent t
+  ;;       c-electric-flag nil)
+  ;; (dolist (key '("#" "{" "}" "/" "*" ";" "," ":" "(" ")"))
+  ;;   (define-key c-mode-base-map key nil))
 
   ;; ...and leave it to smartparens
   (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
@@ -240,11 +241,11 @@ compilation database is present in the project.")
 (defun +amos/add-library-link (library)
   "Add an -llibrary line for `library' near top of file, avoiding duplicates."
   (interactive "M#include: ")
-  (let ((lib (format "-l%s" library)))
+  (let ((lib (format "%s \\" library)))
     (save-excursion
       (if (search-forward lib nil t)
           (message "You already have %s." lib)
-        (when (search-forward "^-l" nil 'stop-at-bottom)
+        (when (re-search-forward "^-l.*\\\\$" nil 'stop-at-the-end 1)
           (forward-line)
           (beginning-of-line))
         (insert lib)
@@ -252,6 +253,6 @@ compilation database is present in the project.")
 
 (defun +amos/ivy-add-library-link ()
   (interactive)
-  (ivy-read "Include: " (split-string (shell-command-to-string "ldconfig -p | awk '{print $1}' | rg 'so$'"))
+  (ivy-read "Library: " (split-string (shell-command-to-string "ldconfig -p | awk ' $1 ~ /^lib.*so$/ { print gensub(/^lib(.*).so$/, \"-l\\\\1\", 1, $1)}'"))
             :require-match t
             :action #'+amos/add-library-link))
