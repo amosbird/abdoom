@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: pfor
+# key: pfor
+# --
+`(+amos/add-include "async++.h")`async::parallel_for(async::irange(${1:0}, ${2:N}), [${3:&}](int i) {
+    $0
+});

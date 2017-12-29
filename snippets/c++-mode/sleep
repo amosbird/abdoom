@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: sleep
+# key: sleep
+# --
+`(+amos/add-include "chrono" "thread")`using namespace std::chrono_literals;
+std::this_thread::sleep_for($0);

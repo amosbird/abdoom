@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: measure
+# key: ms
+# --
+`(+amos/add-include "chrono")`{
+    Measure<${$$(yas/choose-value '("std::chrono::seconds" "std::chrono::milliseconds" "std::chrono::microseconds" "std::chrono::nanoseconds"))}> _measure_;
+    $0
+}

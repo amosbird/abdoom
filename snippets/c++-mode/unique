@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: unique
+# key: unique
+# --
+`(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
+--cpp-ns`unique_ptr<$1>$0`(progn (makunbound '--cpp-ns) "")`
