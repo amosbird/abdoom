@@ -1478,3 +1478,26 @@ When GREEDY is non-nil, join words in a greedy way."
 
 (advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)
 (advice-add #'ivy--regex :override #'+amos*ivy-regex-half-quote)
+
+(defun +amos*yas--modes-to-activate (&optional mode)
+  "Compute list of mode symbols that are active for `yas-expand' and friends."
+  (defvar yas--dfs)        ;We rely on dynbind.  We could use `letrec' instead!
+  (let* ((explored (if mode (list mode) ; Building up list in reverse.
+                     (reverse (cons major-mode yas--extra-modes))))
+         (yas--dfs
+          (lambda (mode)
+            (cl-loop for neighbour
+                     in (cl-list* (get mode 'derived-mode-parent)
+                                  ;; NOTE: `fboundp' check is redundant
+                                  ;; since Emacs 24.4.
+                                  (and (fboundp mode) (symbol-function mode))
+                                  (gethash mode yas--parents))
+                     when (and neighbour
+                               (not (memq neighbour explored))
+                               (symbolp neighbour))
+                     do (push neighbour explored)
+                     (funcall yas--dfs neighbour)))))
+    (mapc yas--dfs explored)
+    (nreverse explored)))
+
+(advice-add #'yas--modes-to-activate :override #'+amos*yas--modes-to-activate)
