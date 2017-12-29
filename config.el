@@ -1498,3 +1498,38 @@ When GREEDY is non-nil, join words in a greedy way."
     (nreverse explored)))
 
 (advice-add #'yas--modes-to-activate :override #'+amos*yas--modes-to-activate)
+
+(def-package! dired-ranger
+  :after dired)
+
+(defun +amos*dired-ranger-copy (arg)
+  "Place the marked items in the copy ring.
+
+With non-nil prefix argument, add the marked items to the current
+selection.  This allows you to gather files from multiple dired
+buffers for a single paste."
+  (interactive "P")
+  ;; TODO: add dired+ `dired-get-marked-files' support?
+  (let ((marked (dired-get-marked-files)))
+    (if (or (not arg)
+            (ring-empty-p dired-ranger-copy-ring))
+        (progn
+          (ring-insert
+           dired-ranger-copy-ring
+           (cons (list (current-buffer)) marked))
+          ;; TODO: abstract the message/plural detection somewhere
+          ;; (e.g. give it a verb and number to produce the correct
+          ;; string.)
+          (message (format "Copied %d item%s into copy ring."
+                           (length marked)
+                           (if (> (length marked) 1) "s" ""))))
+      (let ((current (ring-remove dired-ranger-copy-ring 0)))
+        (ring-insert
+         dired-ranger-copy-ring
+         (cons (-distinct (cons (current-buffer) (car current)))
+               (-distinct (-concat (dired-get-marked-files) (cdr current)))))
+        (message (format "Added %d item%s into copy ring."
+                         (length marked)
+                         (if (> (length marked) 1) "s" "")))))))
+
+(advice-add #'dired-ranger-copy :override #'+amos*dired-ranger-copy)

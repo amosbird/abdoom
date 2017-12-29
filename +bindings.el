@@ -427,12 +427,19 @@
      "N"       nil
      "C-o"     nil
      "C-i"     nil
+     :nm "d"   #'dired-flag-file-deletion
+     :nm "c"   (lambda () (interactive) (dired-ranger-copy t))
+     :nm "p"   #'dired-ranger-paste
+     :nm "r"   #'dired-ranger-move
      "f"       #'counsel-find-file
      "S"       #'hydra-dired-quick-sort/body
+     :nm "I"   #'dired-kill-subdir
      "j"       #'dired-next-line
      "k"       #'dired-previous-line
      "W"       (lambda () (interactive) (dired-copy-filename-as-kill 0))
      :nm "C-p" #'peep-dired-toggle
+     :nm "C-v" #'peep-dired-scroll-page-down
+     "M-v"     #'peep-dired-scroll-page-up
      :nm "Y"   #'+amos/dired-rsync
      :nm "S"   #'hydra-dired-quick-sort/body
      :n  "j"   #'+amos/evil-undefine
@@ -442,12 +449,6 @@
      :n  "M-i" #'+amos/next-history
      :n  "h"   #'+amos/up-directory
      :n  "l"   #'dired-open-file))
-
- (:after peep-dired
-   (:map peep-dired-mode-map
-     :n "C-v"      #'peep-dired-scroll-page-down
-     "M-v"         #'peep-dired-scroll-page-up
-     "C-p"         #'peep-dired-toggle))
 
  ;; evil-nerd-commenter
  :n  "gc"  #'evilnc-comment-or-uncomment-lines

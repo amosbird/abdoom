@@ -61,7 +61,7 @@
       ;vi-tilde-fringe   ; fringe tildes to mark beyond EOB
 
        :tools
-       dired             ; making dired pretty [functional]
+       ;; dired             ; making dired pretty [functional]
        electric-indent   ; smarter, keyword-based electric-indent
        ;; eshell            ; a consistent, cross-platform shell (WIP)
        ;; gist              ; interacting with github gists
