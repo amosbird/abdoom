@@ -650,6 +650,7 @@
    (:map yas-minor-mode-map
      :i "C-t" yas-maybe-expand
      :i "C-s" yas-maybe-expand
+     :i "C-l" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
 
 
