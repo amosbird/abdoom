@@ -13,7 +13,7 @@
  '(browse-url-firefox-program (expand-file-name "~/scripts/vivaldi"))
  '(browse-url-mailto-function (quote mu4e~compose-browse-url-mail))
  '(cc-compile-command
-   "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out")
+   "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out" t)
  '(company-dabbrev-code-everywhere t)
  '(company-dabbrev-code-ignore-case t)
  '(counsel-org-goto-display-style (quote path))
@@ -169,7 +169,18 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((eval add-hook
+    ((eval font-lock-add-keywords nil
+           (\`
+            (((\,
+               (concat "("
+                       (regexp-opt
+                        (quote
+                         ("sp-do-move-op" "sp-do-move-cl" "sp-do-put-op" "sp-do-put-cl" "sp-do-del-op" "sp-do-del-cl"))
+                        t)
+                       "\\_>"))
+              1
+              (quote font-lock-variable-name-face)))))
+     (eval add-hook
            (quote text-mode-hook)
            (lambda nil
              (setq-local fill-column 70))
@@ -245,7 +256,7 @@
  '(user-full-name "Amos Bird")
  '(user-mail-address "amosbird@gmail.com")
  '(visible-cursor nil)
- '(warning-suppress-types '((yasnippet backquote-change)))
+ '(warning-suppress-types (quote ((yasnippet backquote-change))))
  '(ws-butler-keep-whitespace-before-point nil)
  '(yas-triggers-in-field nil)
  '(yas-wrap-around-region 121)

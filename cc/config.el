@@ -97,7 +97,7 @@ compilation database is present in the project.")
 
   ;; ...and leave it to smartparens
   (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
-    (sp-local-pair "<" ">" :when '(+cc-sp-point-is-template-p +cc-sp-point-after-include-p))
+    ;; (sp-local-pair "<" ">" :when '(+cc-sp-point-is-template-p +cc-sp-point-after-include-p))
     (sp-local-pair "/*" "*/" :post-handlers '(("||\n[i]" "RET") ("| " "SPC")))
     ;; Doxygen blocks
     (sp-local-pair "/**" "*/" :post-handlers '(("||\n[i]" "RET") ("||\n[i]" "SPC")))
