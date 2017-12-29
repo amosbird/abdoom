@@ -538,9 +538,6 @@ but do not execute them."
   (run-at-time nil nil #'ivy-wgrep-change-to-wgrep-mode)
   (ivy-occur))
 
-(def-package! peep-dired
-  :after dired)
-
 (defun xah-display-minor-mode-key-priority  ()
   "Print out minor mode's key priority.
 URL `http://ergoemacs.org/emacs/minor_mode_key_priority.html'

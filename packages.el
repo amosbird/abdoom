@@ -6,7 +6,6 @@
 (package! stripe-buffer :ignore t)
 (package! git-gutter-fringe :ignore t)
 (package! visual-fill-column :ignore t)
-(package! peep-dired :recipe (:fetcher github :repo "amosbird/peep-dired"))
 (package! centered-window-mode :recipe (:fetcher github :repo "amosbird/centered-window-mode"))
 (package! rainbow-mode :recipe (:fetcher github :repo "amosbird/rainbow-mode"))
 (package! evil-terminal-cursor-changer :recipe (:fetcher github :repo "amosbird/evil-terminal-cursor-changer"))

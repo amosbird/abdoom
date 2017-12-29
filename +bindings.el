@@ -432,7 +432,7 @@
      "j"       #'dired-next-line
      "k"       #'dired-previous-line
      "W"       (lambda () (interactive) (dired-copy-filename-as-kill 0))
-     :nm "C-p" #'peep-dired
+     :nm "C-p" #'peep-dired-toggle
      :nm "Y"   #'+amos/dired-rsync
      :nm "S"   #'hydra-dired-quick-sort/body
      :n  "j"   #'+amos/evil-undefine
@@ -445,12 +445,9 @@
 
  (:after peep-dired
    (:map peep-dired-mode-map
-     "j"           #'peep-dired-next-file
-     "k"           #'peep-dired-prev-file
-     "<SPC>"       #'peep-dired-scroll-page-down
-     "C-<SPC>"     #'peep-dired-scroll-page-up
-     "<backspace>" #'peep-dired-scroll-page-up
-     "C-p"         #'peep-dired))
+     :n "C-v"      #'peep-dired-scroll-page-down
+     "M-v"         #'peep-dired-scroll-page-up
+     "C-p"         #'peep-dired-toggle))
 
  ;; evil-nerd-commenter
  :n  "gc"  #'evilnc-comment-or-uncomment-lines
