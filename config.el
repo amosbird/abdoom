@@ -502,7 +502,7 @@ but do not execute them."
 
 (def-package! eyebrowse
   :diminish eyebrowse-mode
-  :disable
+  :disabled
   :demand
   :config
   (define-key eyebrowse-mode-map (kbd "M-1") 'eyebrowse-switch-to-window-config-1)
