@@ -64,3 +64,6 @@
 
 (package! pdf-tools)
 (package! bind-map)
+
+(package! rainbow-mode)
+(package! kurecolor)

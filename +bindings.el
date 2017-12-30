@@ -35,7 +35,7 @@
  "C-`"              #'doom/popup-toggle
  "C-~"              #'doom/popup-raise
  [C-return]         #'quickrun
- "M-w"              #'kill-this-buffer
+ "M-w"              #'doom/kill-this-buffer
  "M-W"              #'+workspace/close-workspace-or-frame
  "M-n"              #'evil-buffer-new
  "M-N"              #'make-frame
@@ -52,15 +52,15 @@
  ;; Other sensible, textmate-esque global bindings
  "M-r"              #'+eval/buffer
  "M-R"              #'+eval/region-and-replace
- "M-b"              #'+eval/build
  :nvmei "M-a"       #'mark-whole-buffer
- "M-e"              #'counsel-dash-at-point
  "M-m"              #'evil-switch-to-windows-last-buffer
  :ne "M-g"          #'+amos/counsel-jumpdir-function
- "M-w"              #'kill-this-buffer
+ "M-w"              #'doom/kill-this-buffer
  "C-x e"            #'pp-eval-last-sexp
- "C-l"              #'+amos:redisplay-and-recenter
- :env "C-s"          #'swiper
+ "C-l"              nil
+ :nvm "C-l"         #'+amos:redisplay-and-recenter
+ "C-s"              #'swiper
+ :env "C-s"         #'swiper
  "C-S-s"            #'counsel-projectile-rg
  "C-S-d"            #'+amos/counsel-rg-cur-dir
  :m "C-f"           #'evilem--motion-evil-find-char
@@ -73,12 +73,14 @@
  :i "M-d"           #'kill-word
  :i "C-o"           #'kill-line
  :i "C-j"           #'next-line
+ :i "C-n"           nil
  :i "C-p"           #'previous-line
  :i "C-k"           #'previous-line
  :i "C-d"           #'delete-char
  :i "C-S-j"         #'company-dabbrev-code
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
+ :n "M-e"              #'counsel-dash-at-point
  :n "M-i"           #'yasdcv-translate-at-point
  :v "M-i"           #'+amos/evil-visual-insert-snippet
  :n "C-t" nil
@@ -115,13 +117,12 @@
    :desc "M-x"                  :env ":"   #'execute-extended-command
 
    ;; Most commonly used
-   :desc "Find file in project"    :en "SPC" #'switch-to-buffer
-   :desc "Switch buffer"           :en "."   #'projectile-find-file
-   :desc "Toggle last popup"       :en ","   #'doom/open-project-scratch-buffer
-   :desc "Toggle last popup"       :en "m"   #'doom/popup-toggle
-   :desc "Toggle last popup"       :en "e"   #'shell-command
-   :desc "Blink cursor line"       :en "DEL" #'doom/open-scratch-buffer
-   :desc "Jump to bookmark"        :en "RET" #'eval-expression
+   :desc "Find file in project"     :en "SPC" #'+ivy/switch-workspace-buffer
+   :desc "Switch buffer"            :en "."   #'projectile-find-file
+   :desc "Toggle last popup"        :en ","   #'counsel-recentf
+   :desc "Toggle last popup"        :en "e"   #'shell-command
+   :desc "Blink cursor line"        :en "DEL" #'doom/open-scratch-buffer
+   :desc "Jump to bookmark"         :en "RET" #'eval-expression
 
    ;; C-u is used by evil
    :desc "Universal argument"    :en "u"  #'universal-argument
@@ -150,18 +151,7 @@
      :desc "Spelling error"      :env "s" #'evil-next-flyspell-error
      :desc "Spelling correction" :en  "S" #'flyspell-correct-word-generic)
 
-   (:desc "buffer" :prefix "b"
-     :desc "New empty buffer"        :en "n" #'evil-buffer-new
-     :desc "Switch workspace buffer" :en "b" #'persp-switch-to-buffer
-     :desc "Switch buffer"           :en "B" #'switch-to-buffer
-     :desc "Kill buffer"             :en "k" #'doom/kill-this-buffer
-     :desc "Kill other buffers"      :en "o" #'doom/kill-other-buffers
-     :desc "Save buffer"             :en "s" #'+amos/switch-to-scratch-buffer
-     :desc "Pop scratch buffer"      :en "x" #'doom/open-scratch-buffer
-     :desc "Bury buffer"             :en "z" #'bury-buffer
-     :desc "Next buffer"             :en "]" #'doom/next-buffer
-     :desc "Previous buffer"         :en "[" #'doom/previous-buffer
-     :desc "Sudo edit this file"     :en "S" #'doom/sudo-this-file)
+   :desc "Switch workspace buffer" :en "b" #'switch-to-buffer
 
    (:desc "code" :prefix "c"
      :desc "List errors"               :en  "x" #'flycheck-list-errors
@@ -184,7 +174,7 @@
      :desc "Find file in dotfiles"     :en "d" #'+amos/find-in-dotfiles
      :desc "Delete current file"       :en "D" #'+evil:delete-this-file
      :desc "Find file in emacs.d"      :en "e" #'+amos/find-in-emacsd
-     :desc "Browse emacs.d"            :en "E" #'+amos/browse-emacsd
+     :desc "Browse emacs.d"            :en "E" #'doom/sudo-this-file
      :desc "Recent files"              :en "r" #'recentf-open-files
      :desc "Recent project files"      :en "R" #'+amos/rename-current-buffer-file
      :desc "Yank filename"             :en "y" #'+amos/yank-buffer-filename

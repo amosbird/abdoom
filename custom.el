@@ -57,7 +57,7 @@
  '(ivy-rich-abbreviate-paths t)
  '(ivy-rich-switch-buffer-align-virtual-buffer t)
  '(ivy-rich-switch-buffer-delimiter "|")
- '(ivy-use-virtual-buffers t)
+ '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate (quote full))
  '(mode-line-format nil)
  '(nav-flash-delay 0.3)
@@ -164,12 +164,19 @@
  '(projectile-find-dir-includes-top-level t)
  '(projectile-require-project-root t)
  '(query-replace-skip-read-only t)
+ '(recentf-exclude
+   (quote
+    ("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/")))
  '(recentf-max-saved-items 10000)
  '(reftex-default-bibliography (quote ("~/zotero.bib")) t)
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((eval font-lock-add-keywords nil
+    ((eval when
+           (fboundp
+            (quote rainbow-mode))
+           (rainbow-mode 1))
+     (eval font-lock-add-keywords nil
            (\`
             (((\,
                (concat "("

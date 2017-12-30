@@ -502,6 +502,7 @@ but do not execute them."
 
 (def-package! eyebrowse
   :diminish eyebrowse-mode
+  :disable
   :demand
   :config
   (define-key eyebrowse-mode-map (kbd "M-1") 'eyebrowse-switch-to-window-config-1)
@@ -519,13 +520,13 @@ but do not execute them."
   ;; (setq eyebrowse-new-workspace t) ;; scratch
   )
 
-(def-modeline-segment! eyebrowse
-  (when eyebrowse-mode
-    (eyebrowse-mode-line-indicator)))
+;; (def-modeline-segment! eyebrowse
+;;   (when eyebrowse-mode
+;;     (eyebrowse-mode-line-indicator)))
 
-(def-modeline! main
-  (bar matches " " buffer-info "  %l:%c %p  " selection-info)
-  (eyebrowse " " buffer-encoding major-mode vcs flycheck))
+;; (def-modeline! main
+;;   (bar matches " " buffer-info "  %l:%c %p  " selection-info)
+;;   (eyebrowse " " buffer-encoding major-mode vcs flycheck))
 
 ;; (def-package! highlight-parentheses
 ;;   :demand
@@ -1501,3 +1502,26 @@ When GREEDY is non-nil, join words in a greedy way."
 
 (def-package! dired-ranger
   :after dired)
+
+(def-package! rainbow-mode)
+
+(def-package! kurecolor
+  :after rainbow-mode
+  :config
+  ;; | color    | toggle                     | meaning      |
+  ;; |----------+----------------------------+--------------|
+  ;; | red      |                            | persist      |
+  ;; | blue     | :exit t                    | transient    |
+  ;; | amaranth | :foreign-keys warn         | persist w    |
+  ;; | teal     | :foreign-keys warn :exit t | transient w  |
+  ;; | pink     | :foreign-keys run          | nested       |
+  (def-hydra! +rgb@kurecolor (:color red :hint nil)
+    "
+Inc/Dec      _w_/_W_ brightness      _d_/_D_ saturation      _e_/_E_ hue    "
+    ("w" kurecolor-decrease-brightness-by-step)
+    ("W" kurecolor-increase-brightness-by-step)
+    ("d" kurecolor-decrease-saturation-by-step)
+    ("D" kurecolor-increase-saturation-by-step)
+    ("e" kurecolor-decrease-hue-by-step)
+    ("E" kurecolor-increase-hue-by-step)
+    ("q" nil "cancel" :color blue)))

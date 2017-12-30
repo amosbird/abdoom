@@ -113,6 +113,10 @@ compilation database is present in the project.")
   (("/CMakeLists\\.txt\\'" . cmake-mode)
    ("\\.cmake\\'" . cmake-mode)))
 
+(set! :rotate 'c++-mode
+  :symbols '(("public" "protected" "private")
+             ("class" "struct")))
+
 (def-package! rtags
   :after cc-mode
   :config
