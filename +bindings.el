@@ -837,6 +837,16 @@
           :n "q"    #'View-quit))
 
       (:map key-translation-map
+        "C-1" (kbd "1")
+        "C-2" (kbd "2")
+        "C-3" (kbd "3")
+        "C-4" (kbd "4")
+        "C-5" (kbd "5")
+        "C-6" (kbd "6")
+        "C-7" (kbd "7")
+        "C-8" (kbd "8")
+        "C-9" (kbd "9")
+        "C-0" (kbd "0")
         "M-`" (kbd "C-S-s")
         "C-@" (kbd "C-SPC")
         "C-RET" [C-return]
