@@ -49,6 +49,9 @@
       (recenter)
     (error nil)))
 
+(after! evil-multiedit
+  (setq evil-multiedit-follow-matches t))
+
 (after! smartparens
   ;; Auto-close more conservatively
   (let ((unless-list '(sp-point-before-word-p
@@ -63,7 +66,55 @@
   (sp-pair "[" nil :post-handlers '(("| " " "))
            :unless '(sp-point-before-word-p sp-point-before-same-p)))
 
+(defun col-at-point (point)
+  (save-excursion (goto-char point) (current-column)))
+
+(defun evil--mc-make-cursor-at-col-append (_startcol endcol orig-line)
+  (end-of-line)
+  (when (> endcol (current-column))
+    (insert-char ?\s (- endcol (current-column))))
+  (move-to-column endcol)
+  (unless (= (line-number-at-pos) orig-line)
+    (evil-mc-make-cursor-here)))
+
+(defun evil--mc-make-cursor-at-col-insert (startcol _endcol orig-line)
+  (end-of-line)
+  (move-to-column startcol)
+  (unless (or (= (line-number-at-pos) orig-line) (> startcol (current-column)))
+    (evil-mc-make-cursor-here)))
+
+(defun evil--mc-make-vertical-cursors (beg end func)
+  (evil-mc-pause-cursors)
+  (apply-on-rectangle func
+                      beg end (line-number-at-pos (point)))
+  (evil-mc-resume-cursors)
+  (evil-insert-state))
+
+(defun evil-mc-insert-vertical-cursors (beg end)
+  (interactive (list (region-beginning) (region-end)))
+  (evil--mc-make-vertical-cursors beg end 'evil--mc-make-cursor-at-col-insert)
+  (move-to-column (min (col-at-point beg) (col-at-point end))))
+
+(defun evil-mc-append-vertical-cursors (beg end)
+  (interactive (list (region-beginning) (region-end)))
+  (when (and (evil-visual-state-p)
+             (eq (evil-visual-type) 'line))
+    (message "good")
+    (let ((column (max (evil-column evil-visual-beginning)
+                       (evil-column evil-visual-end))))
+      (evil-visual-rotate 'upper-left)
+      (move-to-column column t))
+    )
+  (evil--mc-make-vertical-cursors beg end 'evil--mc-make-cursor-at-col-append)
+  (move-to-column (max (col-at-point beg) (col-at-point end))))
+
 (after! evil-mc
+  (nconc evil-mc-known-commands
+  '((+amos:evil-delete-backward-symbol . ((:default . evil-mc-execute-default-call)))
+    (+amos:evil-delete-word . ((:default . evil-mc-execute-default-call)))
+    (+amos/replace-last-sexp . ((:default . evil-mc-execute-default-call)))
+    (+amos:evil-backward-symbol-begin . ((:default . evil-mc-execute-default-call-with-count) (visual . evil-mc-execute-visual-text-object)))))
+
   ;; if I'm in insert mode, chances are I want cursors to resume
   (add-hook! 'evil-mc-before-cursors-created
     (add-hook 'evil-insert-state-entry-hook #'evil-mc-resume-cursors nil t))
@@ -314,7 +365,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 
 
 (def-package! link-hint
-  :commands link-hint-open-link
+  :commands link-hint-open-link link-hint-open-all-links
   :config
   (after! mu4e
     (defun +amos/mu4e-open-all-attachments ()
@@ -327,16 +378,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 
 (def-package! lispyville
   :commands lispyville-mode)
-
-(after! ivy
-  ;; (defun +amos-ivy-switch-buffer-transformer (str)
-  ;;   (let* ((b (get-buffer str))
-  ;;          (name (buffer-file-name b)))
-  ;;     (if name
-  ;;         (if (buffer-modified-p b) (ivy-append-face name 'ivy-modified-buffer) name)
-  ;;       str)))
-  ;; (ivy-set-display-transformer 'ivy-switch-buffer '+amos-ivy-switch-buffer-transformer)
-  )
 
 (def-package! move-text
   :commands move-text-up move-text-down)
@@ -474,6 +515,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         ("*Org Export Dispatcher*" :noselect t)
         ("*Stardict Output*" :autoclose t :noselect t :autofit t)
         (" *mu4e-verify*" :size 0.1 :autoclose t :noselect t :align below)
+        (" *mu4e-update*" :size 0.1 :autoclose t :noselect t :align below)
         ("*Help*" :noselect t :autoclose t)
         ("*xref*" :noselect t :autoclose t)
         ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
@@ -1525,3 +1567,9 @@ Inc/Dec      _w_/_W_ brightness      _d_/_D_ saturation      _e_/_E_ hue    "
     ("e" kurecolor-decrease-hue-by-step)
     ("E" kurecolor-increase-hue-by-step)
     ("q" nil "cancel" :color blue)))
+
+ (defun +amos/replace-last-sexp ()
+    (interactive)
+    (let ((value (eval (preceding-sexp))))
+      (kill-sexp -1)
+      (insert (format "%S" value))))

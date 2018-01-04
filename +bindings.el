@@ -57,6 +57,7 @@
  :ne "M-g"          #'+amos/counsel-jumpdir-function
  "M-w"              #'doom/kill-this-buffer
  "C-x e"            #'pp-eval-last-sexp
+ "C-x C-r"          #'+amos/replace-last-sexp
  "C-l"              nil
  :nvm "C-l"         #'+amos:redisplay-and-recenter
  "C-s"              #'swiper
@@ -70,8 +71,8 @@
  :m "M-j"           #'+amos:multi-next-line
  :m "M-k"           #'+amos:multi-previous-line
  :i "M-i"           #'yas-insert-snippet
- :i "M-d"           #'kill-word
- :i "C-o"           #'kill-line
+ :i "M-d"           #'+amos:evil-delete-word
+ :i "C-o"           #'evil-delete-line
  :i "C-j"           #'next-line
  :i "C-n"           nil
  :i "C-p"           #'previous-line
