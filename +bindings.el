@@ -33,9 +33,11 @@
  :m "M-k"           #'+amos:multi-previous-line
  :i "M-i"           #'yas-insert-snippet
  :i "M-b"           #'backward-word
+ :i "M-D"           #'subword-backward
  :i "M-f"           #'forward-word
+ :i "M-F"           #'subword-forward
  :i "M-d"           #'+amos/delete-word
- :i "M-S-d"         #'+amos/delete-subword
+ :i "M-D"           #'+amos/delete-subword
  :i "M-r"           #'sp-slurp-hybrid-sexp
  :i "M-R"           #'sp-forward-barf-sexp
  :n "M-e"           #'counsel-dash-at-point
@@ -503,7 +505,7 @@
         "\e[1;5B" [(control shift j)]
         "\e[1;5A" [(control shift d)]
         "\e[1;5C" [S-return]
-        "\e[1;5D" [S-backspace]
+        "\e[1;5D" [M-S-backspace]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
 
       (:after cus-edit

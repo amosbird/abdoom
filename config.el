@@ -1664,40 +1664,46 @@ The selected history element will be inserted into the minibuffer."
 (after! evil-snipe
   (evil-snipe-def 2 'inclusive "f" "t"))
 
-;;;###autoload (autoload 'evil-textobj-anyparen-inner-block "evil-textobj-anyblock" nil t)
-(evil-define-text-object evil-textobj-anyparen-inner-block
-  (count &optional beg end type)
-  "Select the closest inner anyparen block."
-  (let ((evil-textobj-anyblock-blocks '(("(" . ")")
-                                       ("{" . "}")
-                                       ("\\[" . "\\]")
-                                       ("<" . ">")
-                                       ("“" . "”"))))
-  (evil-textobj-anyblock--make-textobj beg end type count nil)))
+(def-package! evil-textobj-anyblock
+  :commands
+  evil-textobj-anyparen-inner-block
+  evil-textobj-anyparen-a-block
+  evil-textobj-anyquote-inner-block
+  evil-textobj-anyquote-a-block
+  :config
+  (evil-define-text-object evil-textobj-anyparen-inner-block
+    (count &optional beg end type)
+    "Select the closest inner anyparen block."
+    (let ((evil-textobj-anyblock-blocks '(("(" . ")")
+                                          ("{" . "}")
+                                          ("\\[" . "\\]")
+                                          ("<" . ">")
+                                          ("“" . "”"))))
+      (evil-textobj-anyblock--make-textobj beg end type count nil)))
 
-;;;###autoload (autoload 'evil-textobj-anyparen-inner-block "evil-textobj-anyblock" nil t)
-(evil-define-text-object evil-textobj-anyparen-a-block (count &optional beg end type)
-  "Select the closest outer anyparen block."
-  (let ((evil-textobj-anyblock-blocks '(("(" . ")")
-                                       ("{" . "}")
-                                       ("\\[" . "\\]")
-                                       ("<" . ">")
-                                       ("“" . "”"))))
-  (evil-textobj-anyblock--make-textobj beg end type count t)))
+  (evil-define-text-object evil-textobj-anyparen-a-block (count &optional beg end type)
+    "Select the closest outer anyparen block."
+    (let ((evil-textobj-anyblock-blocks '(("(" . ")")
+                                          ("{" . "}")
+                                          ("\\[" . "\\]")
+                                          ("<" . ">")
+                                          ("“" . "”"))))
+      (evil-textobj-anyblock--make-textobj beg end type count t)))
 
-;;;###autoload (autoload 'evil-textobj-anyquote-inner-block "evil-textobj-anyblock" nil t)
-(evil-define-text-object evil-textobj-anyquote-inner-block
-  (count &optional beg end type)
-  "Select the closest inner anyquote block."
-  (let ((evil-textobj-anyblock-blocks '(("'" . "'")
-                                       ("\"" . "\"")
-                                       ("`" . "`"))))
-    (evil-textobj-anyblock--make-textobj beg end type count nil)))
+  (evil-define-text-object evil-textobj-anyquote-inner-block
+    (count &optional beg end type)
+    "Select the closest inner anyquote block."
+    (let ((evil-textobj-anyblock-blocks '(("'" . "'")
+                                          ("\"" . "\"")
+                                          ("`" . "`"))))
+      (evil-textobj-anyblock--make-textobj beg end type count nil)))
 
-;;;###autoload (autoload 'evil-textobj-anyquote-inner-block "evil-textobj-anyblock" nil t)
-(evil-define-text-object evil-textobj-anyquote-a-block (count &optional beg end type)
-  "Select the closest outer anyquote block."
-  (let ((evil-textobj-anyblock-blocks '(("'" . "'")
-                                       ("\"" . "\"")
-                                       ("`" . "`"))))
-    (evil-textobj-anyblock--make-textobj beg end type count t)))
+  (evil-define-text-object evil-textobj-anyquote-a-block (count &optional beg end type)
+    "Select the closest outer anyquote block."
+    (let ((evil-textobj-anyblock-blocks '(("'" . "'")
+                                          ("\"" . "\"")
+                                          ("`" . "`"))))
+      (evil-textobj-anyblock--make-textobj beg end type count t))))
+
+(def-package! subword
+  :commands subword-forward subword-backward)
