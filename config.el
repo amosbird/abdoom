@@ -1069,6 +1069,7 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
                            (concat (make-string (- len real-len) ? ) str)
                          (concat str (make-string (- len real-len) ? ))))
      ((= len real-len) str)
+     ((< len 1) str)
      (t (concat (substring str 0 (- len 1)) "…")))))
 
 ;; Override the original function using advice
@@ -1255,76 +1256,81 @@ This function should be hooked to `buffer-list-update-hook'."
   (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)) (evil-open-below 1))
   (add-hook! 'cc-playground-rm-hook (shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
 
-(eval-after-load "lisp-mode"
-  '(defun lisp-indent-function (indent-point state)
-     "This function is the normal value of the variable `lisp-indent-function'.
-The function `calculate-lisp-indent' calls this to determine
-if the arguments of a Lisp function call should be indented specially.
-INDENT-POINT is the position at which the line being indented begins.
-Point is located at the point to indent under (for default indentation);
-STATE is the `parse-partial-sexp' state for that position.
-If the current line is in a call to a Lisp function that has a non-nil
-property `lisp-indent-function' (or the deprecated `lisp-indent-hook'),
-it specifies how to indent.  The property value can be:
-* `defun', meaning indent `defun'-style
-  \(this is also the case if there is no property and the function
-  has a name that begins with \"def\", and three or more arguments);
-* an integer N, meaning indent the first N arguments specially
-  (like ordinary function arguments), and then indent any further
-  arguments like a body;
-* a function to call that returns the indentation (or nil).
-  `lisp-indent-function' calls this function with the same two arguments
-  that it itself received.
-This function returns either the indentation to use, or nil if the
-Lisp function does not specify a special indentation."
-     (let ((normal-indent (current-column))
-           (orig-point (point)))
-       (goto-char (1+ (elt state 1)))
-       (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
-       (cond
-        ;; car of form doesn't seem to be a symbol, or is a keyword
-        ((and (elt state 2)
-              (or (not (looking-at "\\sw\\|\\s_"))
-                  (looking-at ":")))
-         (if (not (> (save-excursion (forward-line 1) (point))
-                     calculate-lisp-indent-last-sexp))
-             (progn (goto-char calculate-lisp-indent-last-sexp)
-                    (beginning-of-line)
-                    (parse-partial-sexp (point)
-                                        calculate-lisp-indent-last-sexp 0 t)))
-         ;; Indent under the list or under the first sexp on the same
-         ;; line as calculate-lisp-indent-last-sexp.  Note that first
-         ;; thing on that line has to be complete sexp since we are
-         ;; inside the innermost containing sexp.
-         (backward-prefix-chars)
-         (current-column))
-        ((and (save-excursion
-                (goto-char indent-point)
-                (skip-syntax-forward " ")
-                (not (looking-at ":")))
-              (save-excursion
-                (goto-char orig-point)
-                (looking-at ":")))
-         (save-excursion
-           (goto-char (+ 2 (elt state 1)))
-           (current-column)))
-        (t
-         (let ((function (buffer-substring (point)
-                                           (progn (forward-sexp 1) (point))))
-               method)
-           (setq method (or (function-get (intern-soft function)
-                                          'lisp-indent-function)
-                            (get (intern-soft function) 'lisp-indent-hook)))
-           (cond ((or (eq method 'defun)
-                      (and (null method)
-                           (> (length function) 3)
-                           (string-match "\\`def" function)))
-                  (lisp-indent-defform state indent-point))
-                 ((integerp method)
-                  (lisp-indent-specform method state
-                                        indent-point normal-indent))
-                 (method
-                  (funcall method indent-point state)))))))))
+;; (eval-after-load "lisp-mode"
+;;   '(defun lisp-indent-function (indent-point state)
+;;      "This function is the normal value of the variable `lisp-indent-function'.
+;; The function `calculate-lisp-indent' calls this to determine
+;; if the arguments of a Lisp function call should be indented specially.
+;; INDENT-POINT is the position at which the line being indented begins.
+;; Point is located at the point to indent under (for default indentation);
+;; STATE is the `parse-partial-sexp' state for that position.
+;; If the current line is in a call to a Lisp function that has a non-nil
+;; property `lisp-indent-function' (or the deprecated `lisp-indent-hook'),
+;; it specifies how to indent.  The property value can be:
+;; * `defun', meaning indent `defun'-style
+;;   \(this is also the case if there is no property and the function
+;;   has a name that begins with \"def\", and three or more arguments);
+;; * an integer N, meaning indent the first N arguments specially
+;;   (like ordinary function arguments), and then indent any further
+;;   arguments like a body;
+;; * a function to call that returns the indentation (or nil).
+;;   `lisp-indent-function' calls this function with the same two arguments
+;;   that it itself received.
+;; This function returns either the indentation to use, or nil if the
+;; Lisp function does not specify a special indentation."
+;;      (let ((normal-indent (current-column))
+;;            (orig-point (point)))
+;;        (goto-char (1+ (elt state 1)))
+;;        (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+;;        (cond
+;;         ;; car of form doesn't seem to be a symbol, or is a keyword
+;;         ((and (elt state 2)
+;;               (or (not (looking-at "\\sw\\|\\s_"))
+;;                   (looking-at ":")))
+;;          (if (not (> (save-excursion (forward-line 1) (point))
+;;                      calculate-lisp-indent-last-sexp))
+;;              (progn (goto-char calculate-lisp-indent-last-sexp)
+;;                     (beginning-of-line)
+;;                     (parse-partial-sexp (point)
+;;                                         calculate-lisp-indent-last-sexp 0 t)))
+;;          ;; Indent under the list or under the first sexp on the same
+;;          ;; line as calculate-lisp-indent-last-sexp.  Note that first
+;;          ;; thing on that line has to be complete sexp since we are
+;;          ;; inside the innermost containing sexp.
+;;          (backward-prefix-chars)
+;;          (current-column))
+;;         ((and (save-excursion
+;;                 (goto-char indent-point)
+;;                 (skip-syntax-forward " ")
+;;                 (not (looking-at ":")))
+;;               (save-excursion
+;;                 (goto-char orig-point)
+;;                 (looking-at ":")))
+;;          (save-excursion
+;;            (goto-char (+ 2 (elt state 1)))
+;;            (current-column)))
+;;         (t
+;;          (let ((function (buffer-substring (point)
+;;                                            (progn (forward-sexp 1) (point))))
+;;                method)
+;;            (setq method (or (function-get (intern-soft function)
+;;                                           'lisp-indent-function)
+;;                             (get (intern-soft function) 'lisp-indent-hook)))
+;;            (cond ((or (eq method 'defun)
+;;                       (and (null method)
+;;                            (> (length function) 3)
+;;                            (string-match "\\`def" function)))
+;;                   (lisp-indent-defform state indent-point))
+;;                  ((integerp method)
+;;                   (lisp-indent-specform method state
+;;                                         indent-point normal-indent))
+;;                  (method
+;;                   (funcall method indent-point state)))))))))
+
+(put :hint  'lisp-indent-function 1)
+(put :color 'lisp-indent-function 'defun)
+(put :pre   'lisp-indent-function 'defun)
+(put :post  'lisp-indent-function 'defun)
 
 (def-package! pdf-tools
   :if (string= (getenv "GUI") "t")
@@ -1547,6 +1553,9 @@ When GREEDY is non-nil, join words in a greedy way."
 
 (def-package! rainbow-mode)
 
+(def-package! google-translate
+  :commands google-translate-at-point google-translate-query-translate)
+
 (def-package! kurecolor
   :after rainbow-mode
   :config
@@ -1573,3 +1582,81 @@ Inc/Dec      _w_/_W_ brightness      _d_/_D_ saturation      _e_/_E_ hue    "
     (let ((value (eval (preceding-sexp))))
       (kill-sexp -1)
       (insert (format "%S" value))))
+
+(defun +amos/new-empty-elisp-buffer ()
+  "Create a new empty buffer.
+New buffer will be named “untitled” or “untitled<2>”, “untitled<3>”, etc.
+
+It returns the buffer (for elisp programing).
+
+URL `http://ergoemacs.org/emacs/emacs_new_empty_buffer.html'
+Version 2017-11-01"
+  (interactive)
+  (let ((buf (generate-new-buffer "untitled")))
+    (switch-to-buffer buf)
+    (emacs-lisp-mode)
+    (setq buffer-offer-save t)
+    buf))
+
+
+(defun +amos/ivy-complete-dir ()
+  "Enter a recursive `ivy-read' session using the current history.
+The selected history element will be inserted into the minibuffer."
+  (interactive)
+  (let ((enable-recursive-minibuffers t)
+        (history (+amos--get-all-jump-dirs))
+        (old-last ivy-last)
+        (ivy-recursive-restore nil))
+    (ivy-read "Choose-directory: "
+              history
+              :action (lambda (x)
+                        (setq x (concat x "/"))
+                        (ivy--reset-state
+                         (setq ivy-last old-last))
+                        (delete-minibuffer-contents)
+                        (insert (substring-no-properties x))
+                        (ivy--cd-maybe)))))
+
+(defun +amos/delete-word ()
+  (interactive)
+  (if (and (eolp) (not (eobp)))
+      (delete-char 1)
+    (delete-region (point)
+                   (min
+                    (save-excursion
+                      (forward-word)
+                      (point))
+                    (line-end-position)))))
+
+(defun +amos/backward-delete-word ()
+  (interactive)
+  (if (and (bolp) (not (bobp)))
+      (delete-char 1)
+    (delete-region (point)
+                   (min
+                    (save-excursion
+                      (backward-word)
+                      (point))
+                    (line-end-position)))))
+
+(defun +amos/delete-subword ()
+  (interactive)
+  (if (and (eolp) (not (eobp)))
+      (delete-char 1)
+    (delete-region (point)
+                   (min
+                    (save-excursion
+                      (subword-forward)
+                      (point))
+                    (line-end-position)))))
+
+(defun +amos/backward-delete-subword ()
+  (interactive)
+  (if (and (bolp) (not (bobp)))
+      (backward-delete-char 1)
+    (delete-region (point)
+                   (min
+                    (save-excursion
+                      (subword-backward)
+                      (point))
+                    (line-end-position)))))

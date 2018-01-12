@@ -66,3 +66,5 @@
 
 (package! rainbow-mode)
 (package! kurecolor)
+
+(package! google-translate :recipe (:fetcher github :repo "atykhonov/google-translate"))

@@ -105,7 +105,7 @@
        :app
       ;email             ; emacs as an email client
       ;irc               ; how neckbeards socialize
-      ;rss               ; emacs as an RSS reader
+      rss               ; emacs as an RSS reader
       ;twitter           ; twitter client https://twitter.com/vnought
       ;write             ; emacs as a word processor (latex + org + markdown)
 

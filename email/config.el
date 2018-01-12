@@ -344,6 +344,70 @@ or message-at-point."
         (setq buffer-read-only t)))))
 (advice-add #'mu4e-view-verify-msg-popup :override #'+amos*mu4e-view-verify-msg-popup)
 
+;;;###autoload
+(defun +amos/dired-add-attachments (arg)
+  "Attach the items from copy ring to one mu4e-compose buffer.
+
+With raw prefix argument \\[universal-argument], do not remove
+the selection from the stack so it can be copied again.
+
+With numeric prefix argument, attach the n-th selection from the
+copy ring."
+  (interactive "P")
+  (catch 'loop
+    (dolist (buf (buffer-list) ret)
+      (when (eq 'mu4e-compose-mode (buffer-local-value 'major-mode buf))
+        (switch-to-buffer buf)
+        (throw 'loop buf))))
+  (save-excursion
+    (end-of-buffer)
+    (let* ((index (if (numberp arg) arg 0))
+           (data (ring-ref dired-ranger-copy-ring index))
+           (files (cdr data))
+           (attached-files 0))
+      (--each files (when (and (file-exists-p it)
+                               (not (file-directory-p it)))
+                      (mail-add-attachment it)
+                      (cl-incf attached-files)))
+      (unless arg (ring-remove dired-ranger-copy-ring 0))
+      (message (format "Attached %d/%d item%s from copy ring."
+                       attached-files
+                       (length files)
+                       (if (> (length files) 1) "s" ""))))))
+
+(defun +amos/dired-save-attachments (&optional msg)
+  "Offer to save multiple email attachments from the current message.
+Default is to save all messages, [1..n], where n is the number of
+attachments.  You can type multiple values separated by space, e.g.
+  1 3-6 8
+will save attachments 1,3,4,5,6 and 8.
+
+Furthermore, there is a shortcut \"a\" which so means all
+attachments, but as this is the default, you may not need it."
+  (interactive)
+  (let* ((msg (or msg (mu4e-message-at-point)))
+         (attachstr (mu4e~view-get-attach-num
+                     "Attachment number range (or 'a' for 'all')" msg t))
+         (count (hash-table-count mu4e~view-attach-map))
+         (attachnums (mu4e-split-ranges-to-numbers attachstr count)))
+    (let* ((path (concat (mu4e~get-attachment-dir) "/"))
+           (attachdir (mu4e~view-request-attachments-dir path)))
+      (dolist (num attachnums)
+        (let* ((att (mu4e~view-get-attach msg num))
+               (fname  (plist-get att :name))
+               (index (plist-get att :index))
+               (retry t)
+               fpath)
+          (while retry
+            (setq fpath (expand-file-name (concat attachdir fname) path))
+            (setq retry
+                  (and (file-exists-p fpath)
+                       (not (y-or-n-p
+                             (mu4e-format "Overwrite '%s'?" fpath))))))
+          (mu4e~proc-extract
+           'save (mu4e-message-field msg :docid)
+           index mu4e-decryption-policy fpath))))))
+
 ;; maybe useful
 
 ;; (require 'subr-x)

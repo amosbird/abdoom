@@ -21,6 +21,9 @@
  '(counsel-org-goto-separator " ➜ ")
  '(counsel-org-headline-display-style (quote path))
  '(counsel-org-headline-path-separator " ➜ ")
+ '(custom-safe-themes
+   (quote
+    ("554b7f0439155d6eb648d4837ef03902f51124cacee021217e76f39e9dd314c2" "d0404bd38534a00ee72a4f887a987d6bff87f4cf8d8f85149e32849b262465a5" "73e35ffa5ca98b57a9923954f296c3854ce6d8736b31fdbdda3d27502d4b4d69" "0a3a41085c19d8121ed0ad3eb658a475ccb948a70a83604641ee7d4c3575a4d5" "a7e7804313dbf827a441c86a8109ef5b64b03011383322cbdbf646eb02692f76" "77bddca0879cb3b0ecdf071d9635c818827c57d69164291cb27268ae324efa84" "2e1d19424153d41462ad31144549efa41f55dacda9b76571f73904612b15fd0a" default)))
  '(dired-omit-verbose nil)
  '(dired-open-extensions
    (quote
@@ -57,6 +60,7 @@
  '(ivy-rich-abbreviate-paths t)
  '(ivy-rich-switch-buffer-align-virtual-buffer t)
  '(ivy-rich-switch-buffer-delimiter "|")
+ '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate (quote full))
  '(mode-line-format nil)
@@ -107,7 +111,7 @@
      (underline . "<span class=\"underline\">%s</span>")
      (verbatim . "<code>%s</code>"))))
  '(org-hugo-default-section-directory "post")
- '(org-latex-compiler "xelatex")
+ '(org-latex-compiler "xelatex" t)
  '(org-latex-custom-lang-environments nil)
  '(org-latex-default-packages-alist
    (quote
@@ -172,7 +176,22 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((eval when
+    ((eval c-set-offset
+           (quote arglist-close)
+           0)
+     (eval c-set-offset
+           (quote arglist-intro)
+           (quote ++))
+     (eval c-set-offset
+           (quote case-label)
+           0)
+     (eval c-set-offset
+           (quote statement-case-open)
+           0)
+     (eval c-set-offset
+           (quote substatement-open)
+           0)
+     (eval when
            (fboundp
             (quote rainbow-mode))
            (rainbow-mode 1))
