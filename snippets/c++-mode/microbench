@@ -3,5 +3,7 @@
 # key: mb
 # --
 `(+amos/add-include "abmb.h")`ab::mb<`(yas/choose-value '("std::chrono::seconds" "std::chrono::milliseconds" "std::chrono::microseconds" "std::chrono::nanoseconds"))`, ${1:1}, ${2:100}>(
-    $0
+    [&]() {
+        $0
+    }
 );
