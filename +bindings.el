@@ -24,6 +24,7 @@
  "M-r"              #'+eval/buffer
  "M-R"              #'+eval/region-and-replace
  "M-m"              #'evil-switch-to-windows-last-buffer
+ :nvmei "M-m"       #'evil-switch-to-windows-last-buffer
  "M-w"              #'doom/kill-this-buffer
  "M-n"              #'downcase-word
  :nvmei "M-a"       #'mark-whole-buffer
@@ -44,9 +45,13 @@
  :env "M-j"         #'evil-window-down
  :env "M-k"         #'evil-window-up
  :env "M-l"         #'evil-window-right
+ :n  "M-d"          #'evil-multiedit-match-symbol-and-next
+ :n  "M-D"          #'evil-multiedit-match-symbol-and-prev
+ :v  "M-d"          #'evil-multiedit-match-and-next
+ :v  "M-D"          #'evil-multiedit-match-and-prev
  "C-x e"            #'pp-eval-last-sexp
  "C-x C-r"          #'+amos/replace-last-sexp
- "C-p"              #'+amos/counsel-projectile-switch-project
+ :env "C-p"         #'+amos/counsel-projectile-switch-project
  "C-l"              nil
  :nvm "C-l"         #'+amos:redisplay-and-recenter
  "C-s"              #'swiper
@@ -74,11 +79,6 @@
  :nv "C-SPC"        #'+amos/other-window
  :i "C-SPC"         #'+company/complete
  :v  "R"            #'evil-multiedit-match-all
- :n  "M-d"          #'evil-multiedit-match-symbol-and-next
- :n  "M-D"          #'evil-multiedit-match-symbol-and-prev
- :v  "M-d"          #'evil-multiedit-match-and-next
- :v  "M-D"          #'evil-multiedit-match-and-prev
- :nv "C-M-d"        #'evil-multiedit-restore
  :n  "!"            #'rotate-text
  :v "u"             #'undo-tree-undo
  :v "C-r"           #'undo-tree-redo
@@ -90,6 +90,8 @@
  :v  "V"            #'er/contract-region
  :nm  "C-."         #'next-error
  :nm  "C-,"         #'previous-error
+ :n "E"             #'subword-forward
+ :n "B"             #'subword-backward
  :n "p"             #'+amos@paste/evil-paste-after
  :n "P"             #'+amos@paste/evil-paste-before
  :m "("             #'+amos:previous-open-delim
@@ -245,7 +247,6 @@
    :i "C-l"   #'+company/whole-lines
    :i "C-k"   #'+company/dict-or-keywords
    :i "C-f"   #'company-files
-   :i "C-]"   #'company-etags
    :i "s"     #'company-ispell
    :i "C-s"   #'company-yasnippet
    :i "C-o"   #'company-capf
@@ -356,20 +357,6 @@
      "C-n" #'evil-multiedit-next
      "C-p" #'evil-multiedit-prev))
 
- ;; evil-snipe
- (:after evil-snipe
-   :map evil-snipe-local-mode-map
-   :nm "S" nil
-   :nm "s" nil
-   ;; Binding to switch to evil-easymotion/avy after a snipe
-   :map evil-snipe-parent-transient-map
-   "C-f" (λ! (require 'evil-easymotion)
-              (call-interactively
-               (evilem-create #'evil-snipe-repeat
-                              :bind ((evil-snipe-scope 'whole-visible-buffer)
-                                     (evil-snipe-enable-highlight)
-                                     (evil-snipe-enable-incremental-highlight))))))
-
  (:after flycheck
    :map flycheck-error-list-mode-map
    :n "C-j" #'flycheck-error-list-next-error
@@ -416,7 +403,8 @@
 
  ;; --- Custom evil text-objects ---------------------
  :textobj "a" #'evil-inner-arg                    #'evil-outer-arg
- :textobj "j" #'evil-textobj-anyblock-inner-block #'evil-textobj-anyblock-a-block
+ :textobj "j" #'evil-textobj-anyparen-inner-block #'evil-textobj-anyparen-a-block
+ :textobj "u" #'evil-textobj-anyquote-inner-block #'evil-textobj-anyquote-a-block
  :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
  :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
  :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down
@@ -510,34 +498,12 @@
    (:map profiler-report-mode-map
      :nm "RET" #'profiler-report-expand-entry)))
 
-(after! evil-easymotion
-  (let ((prefix "C-t"))
-    ;; NOTE `evilem-default-keybinds' unsets all other keys on the prefix (in
-    ;; motion state)
-    (evilem-default-keybindings prefix)
-    (evilem-define (kbd (concat prefix " n")) #'evil-ex-search-next)
-    (evilem-define (kbd (concat prefix " N")) #'evil-ex-search-previous)
-    (evilem-define (kbd (concat prefix " f")) #'evil-snipe-repeat
-                   :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
-                   :bind ((evil-snipe-scope 'buffer)
-                          (evil-snipe-enable-highlight)
-                          (evil-snipe-enable-incremental-highlight)))
-    (evilem-define (kbd (concat prefix " ,")) #'evil-snipe-repeat-reverse
-                   :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
-                   :bind ((evil-snipe-scope 'buffer)
-                          (evil-snipe-enable-highlight)
-                          (evil-snipe-enable-incremental-highlight)))
-    (evilem-define (kbd (concat prefix " F")) #'evil-snipe-repeat-reverse
-                   :pre-hook (save-excursion (call-interactively #'evil-snipe-s))
-                   :bind ((evil-snipe-scope 'buffer)
-                          (evil-snipe-enable-highlight)
-                          (evil-snipe-enable-incremental-highlight)))))
-
 (map! (:map input-decode-map
         [S-iso-lefttab] [backtab]
         "\e[1;5B" [(control shift j)]
         "\e[1;5A" [(control shift d)]
         "\e[1;5C" [S-return]
+        "\e[1;5D" [S-backspace]
         (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
 
       (:after cus-edit
