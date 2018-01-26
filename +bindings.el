@@ -91,6 +91,7 @@
         +amos:next-close-delim
         +evil/visual-dedent
         +evil/visual-indent
+        lsp-ui-mode
         +evil:macro-on-all-lines
         +evil:macro-on-all-lines
         +amos:evil-find-file-at-point-with-line
@@ -99,8 +100,8 @@
         +amos/copy-and-comment-lines
         +amos/forward-word
         +amos/backward-word
-        +amos/subword-backward
-        +amos/subword-forward
+        +amos/backward-subword
+        +amos/forward-subword
         +jump/documentation
         evil-backward-word-begin
         evil-forward-word-end
@@ -150,9 +151,9 @@
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
  :ni "M-b"           #'+amos/backward-word
- :ni "M-B"           #'+amos/subword-backward
+ :ni "M-B"           #'+amos/backward-subword
  :ni "M-f"           #'+amos/forward-word
- :ni "M-F"           #'+amos/subword-forward
+ :ni "M-F"           #'+amos/forward-subword
  :ni "M-d"           #'+amos/delete-word
  :ni "M-D"           #'+amos/delete-subword
  :n  "M-n"           #'evil-multiedit-match-symbol-and-next
@@ -161,6 +162,7 @@
  :v  "M-N"           #'evil-multiedit-match-and-prev
  :i  "M-n"           #'next-line
  :i  "M-p"           #'previous-line
+ :n  "M-o"           #'lsp-ui-mode
  :ni [M-backspace]   #'+amos/backward-delete-word
  :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
  :ni [M-S-backspace] #'+amos/backward-delete-subword

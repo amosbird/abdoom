@@ -1107,40 +1107,40 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
 (advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
 
-;; (after! xref
-;;   (defun ivy-xref-make-collection (xrefs)
-;;     "Transform XREFS into a collection for display via `ivy-read'."
-;;     (let ((collection nil))
-;;       (dolist (xref xrefs)
-;;         (with-slots (summary location) xref
-;;           (let ((line (xref-location-line location))
-;;                 (file (xref-location-group location))
-;;                 (candidate nil))
-;;             (setq candidate (concat
-;;                              ;; use file name only
-;;                              (car (reverse (split-string file "\\/")))
-;;                              (when (string= "integer" (type-of line))
-;;                                (concat ":" (int-to-string line) ": "))
-;;                              ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
-;;                              summary))
-;;             (push `(,candidate . ,location) collection))))
-;;       collection))
+(after! xref
+  (defun ivy-xref-make-collection (xrefs)
+    "Transform XREFS into a collection for display via `ivy-read'."
+    (let ((collection nil))
+      (dolist (xref xrefs)
+        (with-slots (summary location) xref
+          (let ((line (xref-location-line location))
+                (file (xref-location-group location))
+                (candidate nil))
+            (setq candidate (concat
+                             ;; use file name only
+                             (car (reverse (split-string file "\\/")))
+                             (when (string= "integer" (type-of line))
+                               (concat ":" (int-to-string line) ": "))
+                             ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
+                             summary))
+            (push `(,candidate . ,location) collection))))
+      collection))
 
-;;   (defun ivy-xref-select (candidate)
-;;     "Select CANDIDATE."
-;;     (let* ((marker (xref-location-marker (cdr candidate)))
-;;            (buf (marker-buffer marker))
-;;            (offset (marker-position marker)))
-;;       (with-current-buffer buf
-;;         (goto-char offset)
-;;         (switch-to-buffer buf))))
+  (defun ivy-xref-select (candidate)
+    "Select CANDIDATE."
+    (let* ((marker (xref-location-marker (cdr candidate)))
+           (buf (marker-buffer marker))
+           (offset (marker-position marker)))
+      (with-current-buffer buf
+        (goto-char offset)
+        (switch-to-buffer buf))))
 
-;;   (defun ivy-xref-show-xrefs (xrefs _alist)
-;;     "Show the list of XREFS via ivy."
-;;     (ivy-read "xref: " (ivy-xref-make-collection xrefs)
-;;               :require-match t
-;;               :action #'ivy-xref-select))
-;;   (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+  (defun ivy-xref-show-xrefs (xrefs _alist)
+    "Show the list of XREFS via ivy."
+    (ivy-read "xref: " (ivy-xref-make-collection xrefs)
+              :require-match t
+              :action #'ivy-xref-select))
+  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
 
 (defvar switch-buffer-functions
   nil
@@ -1617,6 +1617,23 @@ The selected history element will be inserted into the minibuffer."
     (subword-mode +1)
     (+amos/backward-word)
     (subword-mode -1)))
+
+(defun +amos*subword-backward-internal ()
+  (if superword-mode
+      (forward-symbol -1)
+    (if (save-excursion
+          (let ((case-fold-search nil))
+            (re-search-backward "\\(\\(\\W\\|[[:lower:][:digit:]]\\)\\([[:upper:]_]+\\W*\\)\\|\\W\\w+\\)" nil t)))
+        (goto-char
+         (cond
+          ((and (match-end 3)
+                (< 1 (- (match-end 3) (match-beginning 3)))
+                (not (eq (point) (match-end 3))))
+           (1- (match-end 3)))
+          (t
+           (1+ (match-beginning 0)))))
+      (backward-word 1))))
+(advice-add #'subword-backward-internal :override #'+amos*subword-backward-internal)
 
 (defun +amos/finish-line ()
   (interactive)
