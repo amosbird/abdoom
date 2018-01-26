@@ -1107,40 +1107,40 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
 (advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
 
-(after! xref
-  (defun ivy-xref-make-collection (xrefs)
-    "Transform XREFS into a collection for display via `ivy-read'."
-    (let ((collection nil))
-      (dolist (xref xrefs)
-        (with-slots (summary location) xref
-          (let ((line (xref-location-line location))
-                (file (xref-location-group location))
-                (candidate nil))
-            (setq candidate (concat
-                             ;; use file name only
-                             (car (reverse (split-string file "\\/")))
-                             (when (string= "integer" (type-of line))
-                               (concat ":" (int-to-string line) ": "))
-                             ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
-                             summary))
-            (push `(,candidate . ,location) collection))))
-      collection))
+;; (after! xref
+;;   (defun ivy-xref-make-collection (xrefs)
+;;     "Transform XREFS into a collection for display via `ivy-read'."
+;;     (let ((collection nil))
+;;       (dolist (xref xrefs)
+;;         (with-slots (summary location) xref
+;;           (let ((line (xref-location-line location))
+;;                 (file (xref-location-group location))
+;;                 (candidate nil))
+;;             (setq candidate (concat
+;;                              ;; use file name only
+;;                              (car (reverse (split-string file "\\/")))
+;;                              (when (string= "integer" (type-of line))
+;;                                (concat ":" (int-to-string line) ": "))
+;;                              ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
+;;                              summary))
+;;             (push `(,candidate . ,location) collection))))
+;;       collection))
 
-  (defun ivy-xref-select (candidate)
-    "Select CANDIDATE."
-    (let* ((marker (xref-location-marker (cdr candidate)))
-           (buf (marker-buffer marker))
-           (offset (marker-position marker)))
-      (with-current-buffer buf
-        (goto-char offset)
-        (switch-to-buffer buf))))
+;;   (defun ivy-xref-select (candidate)
+;;     "Select CANDIDATE."
+;;     (let* ((marker (xref-location-marker (cdr candidate)))
+;;            (buf (marker-buffer marker))
+;;            (offset (marker-position marker)))
+;;       (with-current-buffer buf
+;;         (goto-char offset)
+;;         (switch-to-buffer buf))))
 
-  (defun ivy-xref-show-xrefs (xrefs _alist)
-    "Show the list of XREFS via ivy."
-    (ivy-read "xref: " (ivy-xref-make-collection xrefs)
-              :require-match t
-              :action #'ivy-xref-select))
-  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+;;   (defun ivy-xref-show-xrefs (xrefs _alist)
+;;     "Show the list of XREFS via ivy."
+;;     (ivy-read "xref: " (ivy-xref-make-collection xrefs)
+;;               :require-match t
+;;               :action #'ivy-xref-select))
+;;   (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
 
 (defvar switch-buffer-functions
   nil
@@ -1255,77 +1255,6 @@ This function should be hooked to `buffer-list-update-hook'."
   :config
   (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)) (evil-open-below 1))
   (add-hook! 'cc-playground-rm-hook (shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
-
-;; (eval-after-load "lisp-mode"
-;;   '(defun lisp-indent-function (indent-point state)
-;;      "This function is the normal value of the variable `lisp-indent-function'.
-;; The function `calculate-lisp-indent' calls this to determine
-;; if the arguments of a Lisp function call should be indented specially.
-;; INDENT-POINT is the position at which the line being indented begins.
-;; Point is located at the point to indent under (for default indentation);
-;; STATE is the `parse-partial-sexp' state for that position.
-;; If the current line is in a call to a Lisp function that has a non-nil
-;; property `lisp-indent-function' (or the deprecated `lisp-indent-hook'),
-;; it specifies how to indent.  The property value can be:
-;; * `defun', meaning indent `defun'-style
-;;   \(this is also the case if there is no property and the function
-;;   has a name that begins with \"def\", and three or more arguments);
-;; * an integer N, meaning indent the first N arguments specially
-;;   (like ordinary function arguments), and then indent any further
-;;   arguments like a body;
-;; * a function to call that returns the indentation (or nil).
-;;   `lisp-indent-function' calls this function with the same two arguments
-;;   that it itself received.
-;; This function returns either the indentation to use, or nil if the
-;; Lisp function does not specify a special indentation."
-;;      (let ((normal-indent (current-column))
-;;            (orig-point (point)))
-;;        (goto-char (1+ (elt state 1)))
-;;        (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
-;;        (cond
-;;         ;; car of form doesn't seem to be a symbol, or is a keyword
-;;         ((and (elt state 2)
-;;               (or (not (looking-at "\\sw\\|\\s_"))
-;;                   (looking-at ":")))
-;;          (if (not (> (save-excursion (forward-line 1) (point))
-;;                      calculate-lisp-indent-last-sexp))
-;;              (progn (goto-char calculate-lisp-indent-last-sexp)
-;;                     (beginning-of-line)
-;;                     (parse-partial-sexp (point)
-;;                                         calculate-lisp-indent-last-sexp 0 t)))
-;;          ;; Indent under the list or under the first sexp on the same
-;;          ;; line as calculate-lisp-indent-last-sexp.  Note that first
-;;          ;; thing on that line has to be complete sexp since we are
-;;          ;; inside the innermost containing sexp.
-;;          (backward-prefix-chars)
-;;          (current-column))
-;;         ((and (save-excursion
-;;                 (goto-char indent-point)
-;;                 (skip-syntax-forward " ")
-;;                 (not (looking-at ":")))
-;;               (save-excursion
-;;                 (goto-char orig-point)
-;;                 (looking-at ":")))
-;;          (save-excursion
-;;            (goto-char (+ 2 (elt state 1)))
-;;            (current-column)))
-;;         (t
-;;          (let ((function (buffer-substring (point)
-;;                                            (progn (forward-sexp 1) (point))))
-;;                method)
-;;            (setq method (or (function-get (intern-soft function)
-;;                                           'lisp-indent-function)
-;;                             (get (intern-soft function) 'lisp-indent-hook)))
-;;            (cond ((or (eq method 'defun)
-;;                       (and (null method)
-;;                            (> (length function) 3)
-;;                            (string-match "\\`def" function)))
-;;                   (lisp-indent-defform state indent-point))
-;;                  ((integerp method)
-;;                   (lisp-indent-specform method state
-;;                                         indent-point normal-indent))
-;;                  (method
-;;                   (funcall method indent-point state)))))))))
 
 (put :hint  'lisp-indent-function 1)
 (put :color 'lisp-indent-function 'defun)
@@ -1619,47 +1548,84 @@ The selected history element will be inserted into the minibuffer."
 
 (defun +amos/delete-word ()
   (interactive)
-  (if (and (eolp) (not (eobp)))
-      (delete-char 1)
-    (delete-region (point)
-                   (min
-                    (save-excursion
-                      (forward-word)
-                      (point))
-                    (line-end-position)))))
+  (if (eq evil-state 'normal) (evil-insert 1))
+  (delete-region (point)
+                 (max
+                  (save-excursion
+                    (if (and (eolp) (not (eobp)))
+                        (evil-forward-word-begin)
+                      (+amos/forward-word))
+                    (point))
+                  (line-beginning-position))))
 
 (defun +amos/backward-delete-word ()
   (interactive)
-  (if (and (bolp) (not (bobp)))
-      (delete-char 1)
+  (if (eq evil-state 'normal) (evil-append 1))
+  (let ((ci (current-indentation))
+        (cc (current-column)))
     (delete-region (point)
                    (min
                     (save-excursion
-                      (backward-word)
+                      (if (<= cc ci)
+                          (progn
+                            (evil-backward-word-end)
+                            (forward-char))
+                        (evil-backward-word-begin))
                       (point))
                     (line-end-position)))))
 
 (defun +amos/delete-subword ()
   (interactive)
-  (if (and (eolp) (not (eobp)))
-      (delete-char 1)
-    (delete-region (point)
-                   (min
-                    (save-excursion
-                      (subword-forward)
-                      (point))
-                    (line-end-position)))))
+  (if subword-mode
+      (+amos/delete-word)
+    (subword-mode +1)
+    (+amos/delete-word)
+    (subword-mode -1)))
 
 (defun +amos/backward-delete-subword ()
   (interactive)
-  (if (and (bolp) (not (bobp)))
-      (backward-delete-char 1)
-    (delete-region (point)
-                   (min
-                    (save-excursion
-                      (subword-backward)
-                      (point))
-                    (line-end-position)))))
+  (if subword-mode
+      (+amos/backward-delete-word)
+    (subword-mode +1)
+    (+amos/backward-delete-word)
+    (subword-mode -1)))
+
+(defun +amos/forward-word ()
+  (interactive)
+  (if (eq evil-state 'normal) (evil-append 1))
+  (backward-char)
+  (evil-forward-word-end)
+  (forward-char))
+
+(defun +amos/forward-subword ()
+  (interactive)
+  (if subword-mode
+      (+amos/forward-word)
+    (subword-mode +1)
+    (+amos/forward-word)
+    (subword-mode -1)))
+
+(defun +amos/backward-word ()
+  (interactive)
+  (if (eq evil-state 'normal) (evil-insert 1))
+  (evil-backward-word-begin))
+
+(defun +amos/backward-subword ()
+  (interactive)
+  (if subword-mode
+      (+amos/backward-word)
+    (subword-mode +1)
+    (+amos/backward-word)
+    (subword-mode -1)))
+
+(defun +amos/finish-line ()
+  (interactive)
+  (end-of-line)
+  (if (looking-back "[[:space:]]")
+      (c-hungry-backspace))
+  (if (not (looking-back ";"))
+      (insert ";"))
+  (doom/newline-and-indent))
 
 (after! evil-snipe
   (evil-snipe-def 2 'inclusive "f" "t"))
@@ -1707,3 +1673,135 @@ The selected history element will be inserted into the minibuffer."
 
 (def-package! subword
   :commands subword-forward subword-backward)
+
+
+
+(def-package! company-lsp
+  :after company
+  :init
+  ;; Language servers have better idea filtering and sorting,
+  ;; don't filter results on the client side.
+  (setq company-transformers nil
+        company-lsp-async t
+        company-lsp-cache-candidates nil)
+  (push 'company-lsp company-backends))
+
+(after! xref
+  (add-to-list 'xref-prompt-for-identifier '+jump/definition :append)
+  (add-to-list 'xref-prompt-for-identifier '+jump/references :append)
+  (add-to-list 'xref-prompt-for-identifier 'xref-find-references :append))
+
+(def-package! lsp-mode
+  :config
+  (require 'lsp-imenu)
+  (add-hook 'lsp-after-open-hook #'lsp-enable-imenu)
+  ;; Disable lsp-flycheck.el in favor of lsp-ui-flycheck.el
+  ;; (setq lsp-enable-flycheck nil)
+  )
+
+(add-hook! (c-mode c++-mode) (flycheck-mode +1))
+
+(def-package! lsp-ui
+  :after lsp-mode)
+
+(require 'cl-lib)
+(require 'subr-x)
+
+(defvar my-cquery-blacklist nil
+  "List of paths that should not enable lsp-cquery")
+
+(defvar my-cquery-whitelist '("Dev/llvm")
+  "List of paths that should enable lsp-cquery. Takes priority over my-cquery-blacklist")
+
+(def-package! cquery
+  :after lsp-mode
+  :config
+  ;; overlay is slow
+  ;; Use https://github.com/emacs-mirror/emacs/commits/feature/noverlay
+  ;; (setq cquery-sem-highlight-method 'overlay)
+  ;; or WAIT for https://lists.gnu.org/archive/html/emacs-devel/2017-05/msg00084.html
+  ;; (setq cquery-enable-sem-highlight t)
+  ;; (cquery-use-default-rainbow-sem-highlight)
+
+  ;; (setq cquery-extra-args '("--log-stdin-stdout-to-stderr" "--log-file=/tmp/cq.log"))
+  (setq cquery-extra-init-params '(:cacheFormat "msgpack" :index (:builtin_types t :comments 0)))
+  (add-hook 'c-mode-common-hook #'my-cquery//enable))
+
+
+(defun my-cquery//enable ()
+  (when
+      (and buffer-file-name
+           (not (and (boundp 'lsp-mode) lsp-mode))
+           (or
+            (cl-some (lambda (x) (string-match-p x buffer-file-name)) my-cquery-whitelist)
+            (cl-notany (lambda (x) (string-match-p x buffer-file-name)) my-cquery-blacklist))
+           (or (locate-dominating-file default-directory "compile_commands.json")
+               (locate-dominating-file default-directory ".cquery")))
+    (setq eldoc-idle-delay 0.2)
+    (lsp-cquery-enable)))
+
+
+;; xref-find-apropos (workspace/symbol)
+
+(defun my/highlight-pattern-in-text (pattern line)
+  (when (> (length pattern) 0)
+    (let ((i 0))
+     (while (string-match pattern line i)
+       (setq i (match-end 0))
+       (add-face-text-property (match-beginning 0) (match-end 0) 'highlight t line)
+       )
+     line)))
+
+(with-eval-after-load 'lsp-methods
+  ;;; Override
+  ;; This deviated from the original in that it highlights pattern appeared in symbol
+  (defun lsp--symbol-information-to-xref (pattern symbol)
+   "Return a `xref-item' from SYMBOL information."
+   (let* ((location (gethash "location" symbol))
+          (uri (gethash "uri" location))
+          (range (gethash "range" location))
+          (start (gethash "start" range))
+          (name (gethash "name" symbol)))
+     (xref-make (format "[%s] %s"
+                        (alist-get (gethash "kind" symbol) lsp--symbol-kind)
+                        (my/highlight-pattern-in-text (regexp-quote pattern) name))
+                (xref-make-file-location (string-remove-prefix "file://" uri)
+                                         (1+ (gethash "line" start))
+                                         (gethash "character" start)))))
+
+  (cl-defmethod xref-backend-apropos ((_backend (eql xref-lsp)) pattern)
+    (let ((symbols (lsp--send-request (lsp--make-request
+                                       "workspace/symbol"
+                                       `(:query ,pattern)))))
+      (mapcar (lambda (x) (lsp--symbol-information-to-xref pattern x)) symbols))))
+
+(set!
+  :jump 'c-mode
+  :definition #'xref-find-definitions
+  :references #'xref-find-references
+  :documentation #'counsel-dash-at-point)
+(set!
+  :jump 'c++-mode
+  :definition #'xref-find-definitions
+  :references #'xref-find-references
+  :documentation #'counsel-dash-at-point)
+
+;; (add-hook! 'rtags-jump-hook #'evil-set-jump)
+;; (add-hook! 'rtags-after-find-file-hook #'recenter)
+
+;; lsp-ui-peek-find-{definitions,references}
+;; (lsp-ui-peek-jump-backward)
+;; (lsp-ui-peek-jump-forward)
+;; (cquery-xref-find-custom "$cquery/base")
+;; (cquery-xref-find-custom "$cquery/callers")
+;; (cquery-xref-find-custom "$cquery/derived")
+;; (cquery-xref-find-custom "$cquery/vars")
+
+;; (defun cquery/base () (interactive) (lsp-ui-peek-find-custom 'base "$cquery/base"))
+;; (defun cquery/callers () (interactive) (lsp-ui-peek-find-custom 'callers "$cquery/callers"))
+;; (defun cquery/derived () (interactive) (lsp-ui-peek-find-custom 'derived "$cquery/derived"))
+;; (defun cquery/vars () (interactive) (lsp-ui-peek-find-custom 'vars "$cquery/vars"))
+(defun cquery/base () (interactive) (cquery-xref-find-custom "$cquery/base"))
+(defun cquery/callers () (interactive) (cquery-xref-find-custom "$cquery/callers"))
+(defun cquery/derived () (interactive) (cquery-xref-find-custom "$cquery/derived"))
+(defun cquery/vars () (interactive) (cquery-xref-find-custom "$cquery/vars"))

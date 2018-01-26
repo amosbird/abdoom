@@ -57,9 +57,10 @@ compilation database is present in the project.")
   ;; Smartparens and cc-mode both try to autoclose angle-brackets intelligently.
   ;; The result isn't very intelligent (causes redundant characters), so just do
   ;; it ourselves.
-  (map! (:map c++-mode-map
+  (map! (:map (c-mode-map c++-mode-map)
          "<" nil
          :i ">"        #'+cc/autoclose->-maybe
+         :i "M-j"      #'+amos/finish-line
          "C-c C-r"     #'+amos/rc-index-current-file
          "C-c l"       #'+amos/ivy-add-library-link
          "C-c i"       #'+amos/ivy-add-include))
@@ -79,8 +80,10 @@ compilation database is present in the project.")
   ;; Indent privacy keywords at same level as class properties
   ;; (c-set-offset 'inclass #'+cc-c-lineup-inclass)
 
+  (add-hook 'c-mode-common-hook #'(lambda () (modify-syntax-entry ?_ "w")))
+
   ;;; Better fontification (also see `modern-cpp-font-lock')
-  (add-hook 'c-mode-common-hook #'rainbow-delimiters-mode)
+  ;; (add-hook 'c-mode-common-hook #'rainbow-delimiters-mode)
   (add-hook! (c-mode c++-mode) #'highlight-numbers-mode)
   (add-hook! (c-mode c++-mode) #'+cc|fontify-constants)
 
@@ -96,12 +99,13 @@ compilation database is present in the project.")
   ;;   (define-key c-mode-base-map key nil))
 
   ;; ...and leave it to smartparens
-  (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
-    ;; (sp-local-pair "<" ">" :when '(+cc-sp-point-is-template-p +cc-sp-point-after-include-p))
-    (sp-local-pair "/*" "*/" :post-handlers '(("||\n[i]" "RET") ("| " "SPC")))
-    ;; Doxygen blocks
-    (sp-local-pair "/**" "*/" :post-handlers '(("||\n[i]" "RET") ("||\n[i]" "SPC")))
-    (sp-local-pair "/*!" "*/" :post-handlers '(("||\n[i]" "RET") ("[d-1]< | " "SPC")))))
+  (after! smartparen
+    (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
+      ;; (sp-local-pair "<" ">" :when '(+cc-sp-point-is-template-p +cc-sp-point-after-include-p))
+      (sp-local-pair "/*" "*/" :post-handlers '(("||\n[i]" "RET") ("| " "SPC")))
+      ;; Doxygen blocks
+      (sp-local-pair "/**" "*/" :post-handlers '(("||\n[i]" "RET") ("||\n[i]" "SPC")))
+      (sp-local-pair "/*!" "*/" :post-handlers '(("||\n[i]" "RET") ("[d-1]< | " "SPC"))))))
 
 
 (def-package! modern-cpp-font-lock
@@ -119,6 +123,7 @@ compilation database is present in the project.")
 
 (def-package! rtags
   :after cc-mode
+  :disabled
   :config
   (require 'rtags)
   (require 'counsel-dash)

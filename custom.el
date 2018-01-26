@@ -63,6 +63,7 @@
  '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate (quote full))
+ '(lsp-ui-peek-force-fontify t)
  '(mode-line-format nil)
  '(nav-flash-delay 0.3)
  '(org-M-RET-may-split-line (quote ((default))))
