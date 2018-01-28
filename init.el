@@ -28,7 +28,7 @@
 
 ;; (advice-add #'solaire-mode :override #'ignore)
 ;; (def-package-hook! solaire-mode :pre-init nil)
-(def-package-hook! flycheck-pos-tip :disable)
+;; (def-package-hook! flycheck-pos-tip :disable)
 (def-package-hook! stripe-buffer :disable)
 (def-package-hook! visual-fill-column :disable)
 ;; (def-package-hook! magit :pre-config nil)
