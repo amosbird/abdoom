@@ -1,5 +1,9 @@
 ;;; private/amos/init.el -*- lexical-binding: t; -*-
 
+(setq gnutls-verify-error nil
+      doom-line-numbers-style 'relative
+      tls-checktrust nil)
+
 (add-hook! '(doom-post-init-hook minibuffer-setup-hook) (setq-local show-trailing-whitespace nil))
 (add-hook! 'edebug-mode-hook #'evil-normalize-keymaps)
 (add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t))

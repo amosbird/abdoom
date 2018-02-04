@@ -5,7 +5,14 @@
  :nmvo doom-localleader-key nil)
 
 (mapc #'evil-declare-change-repeat
-      '(company-dabbrev-code
+      '(
+        ;; +amos/forward-word
+        ;; +amos/backward-word
+        ;; +amos/backward-subword
+        ;; +amos/forward-subword
+        ;; +amos/delete-word
+        ;; +amos/delete-subword
+        company-dabbrev-code
         +company/complete))
 
 (mapc #'evil-declare-ignore-repeat
@@ -28,20 +35,11 @@
         +eval/buffer
         +eval/region-and-replace
         evil-switch-to-windows-last-buffer
-        downcase-word
         mark-whole-buffer
         +amos/counsel-jumpdir-function
         +amos:multi-next-line
         +amos:multi-previous-line
         yas-insert-snippet
-        backward-word
-        subword-backward
-        forward-word
-        subword-forward
-        +amos/delete-word
-        +amos/delete-subword
-        sp-slurp-hybrid-sexp
-        sp-forward-barf-sexp
         counsel-dash-at-point
         yasdcv-translate-at-point
         +amos/evil-visual-insert-snippet
@@ -53,8 +51,6 @@
         evil-multiedit-match-symbol-and-prev
         evil-multiedit-match-and-next
         evil-multiedit-match-and-prev
-        pp-eval-last-sexp
-        +amos/replace-last-sexp
         +amos/counsel-projectile-switch-project
         +amos:redisplay-and-recenter
         swiper
@@ -64,15 +60,7 @@
         evilem--motion-evil-find-char-backward
         +amos/yank-buffer-filename-with-line-position
         bury-buffer
-        doom/backward-to-bol-or-indent
-        doom/forward-to-last-non-comment-or-eol
-        doom/backward-kill-to-bol-and-indent
-        doom/newline-and-indent
-        +amos/backward-delete-word
-        +amos/backward-delete-subword
         evil-delete-line
-        next-line
-        previous-line
         delete-char
         move-text-down
         move-text-up
@@ -93,23 +81,15 @@
         +evil/visual-indent
         lsp-ui-mode
         +evil:macro-on-all-lines
-        +evil:macro-on-all-lines
         +amos:evil-find-file-at-point-with-line
         +jump/definition
         +amos/copy-and-comment-lines-inverse
         +amos/copy-and-comment-lines
-        +amos/forward-word
-        +amos/backward-word
-        +amos/backward-subword
-        +amos/forward-subword
         +jump/documentation
-        evil-backward-word-begin
-        evil-forward-word-end
         +evil/reselect-paste
         +jump/references
         counsel-imenu
         +eval/buffer
-        +eval:replace-region
         projectile-find-other-file))
 
 (defun text-scale-reset ()
@@ -129,7 +109,7 @@
 (map!
  :nvime "M-x"        #'execute-extended-command
  "M-+"               #'text-scale-increase
- "M-="               #'test-scale-reset
+ "M-="               #'text-scale-reset
  "M-*"               #'text-scale-decrease
  "M-w"               #'doom/kill-this-buffer
  "M-W"               #'+workspace/close-workspace-or-frame
@@ -147,15 +127,11 @@
  "M-R"               #'+eval/region-and-replace
  "M-m"               #'evil-switch-to-windows-last-buffer
  :nvmei "M-m"        #'evil-switch-to-windows-last-buffer
- :nvmei "M-a"        #'mark-whole-buffer
+ :nvme "M-a"         #'mark-whole-buffer
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
- :ni "M-b"           #'+amos/backward-word
- :ni "M-B"           #'+amos/backward-subword
- :ni "M-f"           #'+amos/forward-word
- :ni "M-F"           #'+amos/forward-subword
- :ni "M-d"           #'+amos/delete-word
- :ni "M-D"           #'+amos/delete-subword
+ :i "M-,"            (lambda! (insert ?:))
+ :i "M-."            (lambda! (insert ?\;))
  :n  "M-n"           #'evil-multiedit-match-symbol-and-next
  :n  "M-N"           #'evil-multiedit-match-symbol-and-prev
  :v  "M-n"           #'evil-multiedit-match-and-next
@@ -163,9 +139,17 @@
  :i  "M-n"           #'next-line
  :i  "M-p"           #'previous-line
  :n  "M-o"           #'lsp-ui-mode
- :ni [M-backspace]   #'+amos/backward-delete-word
- :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
- :ni [M-S-backspace] #'+amos/backward-delete-subword
+ :vn "E"             #'+amos/forward-subword
+ :vn "B"             #'+amos/backward-subword
+ :ni "M-b"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/backward-word-insert))
+ :ni "M-B"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/backward-subword-insert))
+ :ni "M-f"           (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/forward-word-insert))
+ :ni "M-F"           (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/forward-subword-insert))
+ :ni "M-d"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/delete-word))
+ :ni "M-D"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/delete-subword))
+ :ni [M-backspace]   (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-word))
+ :ni [134217855]     (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-word)) ; M-DEL
+ :ni [M-S-backspace] (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-subword))
  :i "M-r"            #'sp-slurp-hybrid-sexp
  :i "M-R"            #'sp-forward-barf-sexp
  :n "M-e"            #'counsel-dash-at-point
@@ -192,9 +176,11 @@
  :nvm "$"            #'doom/forward-to-last-non-comment-or-eol
  :nvm "-"            #'doom/forward-to-last-non-comment-or-eol
  :i "C-a"            #'doom/backward-to-bol-or-indent
+ :i "M-a"            #'doom/backward-to-bol-or-indent
  :vn "C-a"           #'evil-numbers/inc-at-pt
  :v "g C-a"          #'evil-numbers/inc-at-pt-incremental
  :i "C-e"            #'doom/forward-to-last-non-comment-or-eol
+ :i "M-e"            #'doom/forward-to-last-non-comment-or-eol
  :i "C-u"            #'doom/backward-kill-to-bol-and-indent
  :i [remap newline]  #'doom/newline-and-indent
  :i "C-o"            #'evil-delete-line
@@ -211,16 +197,15 @@
  :n  "!"             #'rotate-text
  :v "u"              #'undo-tree-undo
  :v "C-r"            #'undo-tree-redo
+ :n  "s"             #'evil-substitute
+ :n  "S"             #'evil-change-whole-line
  :v  "s"             #'evil-surround-region
  :v  "S"             #'evil-substitute
  :o  "s"             #'evil-surround-edit
- :o  "S"             #'evil-Surround-edit
  :v  "v"             #'er/expand-region
  :v  "V"             #'er/contract-region
  :nm  "C-."          #'next-error
  :nm  "C-,"          #'previous-error
- :n "E"              #'subword-forward
- :n "B"              #'subword-backward
  :n "p"              #'+amos@paste/evil-paste-after
  :n "P"              #'+amos@paste/evil-paste-before
  :m "("              #'+amos:previous-open-delim
@@ -399,12 +384,12 @@
      "C-h"        #'company-quickhelp-manual-begin
      [tab]        #'company-complete-common-or-cycle
      [backtab]    #'company-select-previous
-     [escape]     (λ! (company-abort) (evil-normal-state 1)))
+     [escape]     (lambda! (company-abort) (evil-normal-state 1)))
    ;; Automatically applies to `company-filter-map'
    (:map company-search-map
      "C-j"        #'company-search-repeat-forward
      "C-k"        #'company-search-repeat-backward
-     "C-s"        (λ! (company-search-abort) (company-filter-candidates))
+     "C-s"        (lambda! (company-search-abort) (company-filter-candidates))
      [escape]     #'company-search-abort))
 
  (:after ivy
@@ -437,12 +422,8 @@
      "C-o"     nil
      "C-i"     nil
      :nm "d"   #'dired-flag-file-deletion
-     :nm "y"   (lambda ()
-                 (interactive)
-                 (dired-ranger-copy nil))
-     :nm "c"   (lambda ()
-                 (interactive)
-                 (dired-ranger-copy t))
+     :nm "y"   (lambda! (dired-ranger-copy nil))
+     :nm "c"   (lambda! (dired-ranger-copy t))
      :nm "p"   #'dired-ranger-paste
      :nm "r"   #'dired-ranger-move
      "f"       #'counsel-find-file
@@ -450,7 +431,7 @@
      :nm "I"   #'dired-kill-subdir
      "j"       #'dired-next-line
      "k"       #'dired-previous-line
-     "W"       (lambda () (interactive) (dired-copy-filename-as-kill 0))
+     "W"       (lambda! (dired-copy-filename-as-kill 0))
      :nm "C-p" #'peep-dired-toggle
      :nm "C-v" #'peep-dired-scroll-page-down
      "M-v"     #'peep-dired-scroll-page-up
@@ -557,7 +538,7 @@
  (:after debug
    ;; For elisp debugging
    :map debugger-mode-map
-   :n "q"   (lambda () (interactive) (top-level) (doom/kill-this-buffer))
+   :n "q"   (lambda! (top-level) (doom/kill-this-buffer))
    :n "RET" #'debug-help-follow
    :n "e"   #'debugger-eval-expression
    :n "n"   #'debugger-step-through
@@ -642,6 +623,7 @@
      :nm "RET" #'profiler-report-expand-entry)))
 
 (map! (:map input-decode-map
+        "\035"    [escape]
         [S-iso-lefttab] [backtab]
         "\e[1;5B" [(control shift j)]
         "\e[1;5A" [(control shift d)]

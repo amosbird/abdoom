@@ -17,6 +17,11 @@
     (apply orig-fn args)))
 (advice-add #'tramp-read-passwd :around #'+amos*no-authinfo-for-tramp)
 
+(defun special-indent-fn (pos state)
+  (save-excursion
+    (search-backward ":hint")
+    (current-column)))
+(put :hint 'lisp-indent-function 'special-indent-fn)
 (def-hydra! +amos@paste (:hint nil
                          :color red
                          :pre (setq hydra-lv nil)
@@ -110,10 +115,10 @@
 
 (after! evil-mc
   (nconc evil-mc-known-commands
-  '((+amos:evil-delete-backward-symbol . ((:default . evil-mc-execute-default-call)))
-    (+amos:evil-delete-word . ((:default . evil-mc-execute-default-call)))
-    (+amos/replace-last-sexp . ((:default . evil-mc-execute-default-call)))
-    (+amos:evil-backward-symbol-begin . ((:default . evil-mc-execute-default-call-with-count) (visual . evil-mc-execute-visual-text-object)))))
+         '((+amos:evil-delete-backward-symbol . ((:default . evil-mc-execute-default-call)))
+           (+amos:evil-delete-word . ((:default . evil-mc-execute-default-call)))
+           (+amos/replace-last-sexp . ((:default . evil-mc-execute-default-call)))
+           (+amos:evil-backward-symbol-begin . ((:default . evil-mc-execute-default-call-with-count) (visual . evil-mc-execute-visual-text-object)))))
 
   ;; if I'm in insert mode, chances are I want cursors to resume
   (add-hook! 'evil-mc-before-cursors-created
@@ -141,7 +146,8 @@
     ("p" evil-paste-after "Paste After")
     ("P" evil-paste-before "Paste Before"))
 
-  (def-hydra! +amos@git-blame (:title "Git Blame Transient State"
+  (def-hydra! +amos@git-blame (:hint nil
+                               :title "Git Blame Transient State"
                                :doc "
 Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                                :on-enter (let (golden-ratio-mode)
@@ -961,11 +967,11 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
     (advice-add
      fun
      :around
-      (lambda (x &rest args)
-        "Swap the meaning the universal prefix argument"
-        (if (called-interactively-p 'any)
-            (apply x (cons (not (car args)) (cdr args)))
-          (apply x args))))))
+     (lambda (x &rest args)
+       "Swap the meaning the universal prefix argument"
+       (if (called-interactively-p 'any)
+           (apply x (cons (not (car args)) (cdr args)))
+         (apply x args))))))
 
 (def-package! evil-ediff
   :after ediff)
@@ -1000,13 +1006,13 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
                                 :foreign-keys run)
     "
 [_p_/_N_] previous [_n_] next [_c_] current [_g_] goto nth rev [_Y_] copy hash [_q_] quit"
-        ("c" git-timemachine-show-current-revision)
-        ("g" git-timemachine-show-nth-revision)
-        ("p" git-timemachine-show-previous-revision)
-        ("n" git-timemachine-show-next-revision)
-        ("N" git-timemachine-show-previous-revision)
-        ("Y" git-timemachine-kill-revision)
-        ("q" nil :exit t)))
+    ("c" git-timemachine-show-current-revision)
+    ("g" git-timemachine-show-nth-revision)
+    ("p" git-timemachine-show-previous-revision)
+    ("n" git-timemachine-show-next-revision)
+    ("N" git-timemachine-show-previous-revision)
+    ("Y" git-timemachine-kill-revision)
+    ("q" nil :exit t)))
 
 (def-package! gitattributes-mode
   :defer t)
@@ -1243,12 +1249,12 @@ This function should be hooked to `buffer-list-update-hook'."
 (def-package! go-playground
   :commands (go-playground go-playground-mode)
   :bind (:map go-playground-mode-map
-         ([S-return] . go-playground-rm)))
+          ([S-return] . go-playground-rm)))
 
 (def-package! rust-playground
   :commands (rust-playground rust-playground-mode)
   :bind (:map rust-playground-mode-map
-         ([S-return] . rust-playground-rm)))
+          ([S-return] . rust-playground-rm)))
 
 (def-package! cc-playground
   :commands (cc-playground cc-playground-mode)
@@ -1506,11 +1512,11 @@ Inc/Dec      _w_/_W_ brightness      _d_/_D_ saturation      _e_/_E_ hue    "
     ("E" kurecolor-increase-hue-by-step)
     ("q" nil "cancel" :color blue)))
 
- (defun +amos/replace-last-sexp ()
-    (interactive)
-    (let ((value (eval (preceding-sexp))))
-      (kill-sexp -1)
-      (insert (format "%S" value))))
+(defun +amos/replace-last-sexp ()
+  (interactive)
+  (let ((value (eval (preceding-sexp))))
+    (kill-sexp -1)
+    (insert (format "%S" value))))
 
 (defun +amos/new-empty-elisp-buffer ()
   "Create a new empty buffer.
@@ -1548,19 +1554,15 @@ The selected history element will be inserted into the minibuffer."
 
 (defun +amos/delete-word ()
   (interactive)
-  (if (eq evil-state 'normal) (evil-insert 1))
   (delete-region (point)
                  (max
                   (save-excursion
-                    (if (and (eolp) (not (eobp)))
-                        (evil-forward-word-begin)
-                      (+amos/forward-word))
+                    (+amos/forward-word-insert)
                     (point))
                   (line-beginning-position))))
 
 (defun +amos/backward-delete-word ()
   (interactive)
-  (if (eq evil-state 'normal) (evil-append 1))
   (let ((ci (current-indentation))
         (cc (current-column)))
     (delete-region (point)
@@ -1576,6 +1578,7 @@ The selected history element will be inserted into the minibuffer."
 
 (defun +amos/delete-subword ()
   (interactive)
+  (require 'subword)
   (if subword-mode
       (+amos/delete-word)
     (subword-mode +1)
@@ -1584,46 +1587,88 @@ The selected history element will be inserted into the minibuffer."
 
 (defun +amos/backward-delete-subword ()
   (interactive)
+  (require 'subword)
   (if subword-mode
       (+amos/backward-delete-word)
     (subword-mode +1)
     (+amos/backward-delete-word)
     (subword-mode -1)))
 
-(defun +amos/forward-word ()
+;; (if (and (string= (kbd "M-f") (this-command-keys))
+;;          (not (eq evil-state 'insert))) (evil-append 1))
+
+(defun +amos/forward-word-insert ()
   (interactive)
-  (if (eq evil-state 'normal) (evil-append 1))
-  (backward-char)
-  (evil-forward-word-end)
-  (forward-char))
+  (if (and (eolp) (not (eobp)))
+      (evil-forward-word-begin)
+    (backward-char)
+    (evil-forward-word-end)
+    (forward-char)))
+
+(defun +amos/forward-subword-insert ()
+  (interactive)
+  (require 'subword)
+  (if subword-mode
+      (+amos/forward-word-insert)
+    (subword-mode +1)
+    (+amos/forward-word-insert)
+    (subword-mode -1)))
+
+(defun +amos/backward-word-insert ()
+  (interactive)
+  (let ((ci (current-indentation))
+        (cc (current-column)))
+    (if (<= cc ci)
+        (progn
+          (evil-backward-word-end)
+          (doom/forward-to-last-non-comment-or-eol))
+      (evil-backward-word-begin))))
+
+(defun +amos/backward-subword-insert ()
+  (interactive)
+  (require 'subword)
+  (if subword-mode
+      (+amos/backward-word-insert)
+    (subword-mode +1)
+    (+amos/backward-word-insert)
+    (subword-mode -1)))
 
 (defun +amos/forward-subword ()
   (interactive)
+  (require 'subword)
   (if subword-mode
-      (+amos/forward-word)
+      (evil-forward-word-end)
     (subword-mode +1)
-    (+amos/forward-word)
+    (evil-forward-word-end)
     (subword-mode -1)))
-
-(defun +amos/backward-word ()
-  (interactive)
-  (if (eq evil-state 'normal) (evil-insert 1))
-  (evil-backward-word-begin))
 
 (defun +amos/backward-subword ()
   (interactive)
+  (require 'subword)
   (if subword-mode
-      (+amos/backward-word)
+      (evil-backward-word-begin)
     (subword-mode +1)
-    (+amos/backward-word)
+    (evil-backward-word-begin)
     (subword-mode -1)))
+
+(after! subword
+  (progn
+    (define-category ?U "Uppercase")
+    (define-category ?u "Lowercase")
+    (modify-category-entry (cons ?A ?Z) ?U)
+    (modify-category-entry (cons ?a ?z) ?u)
+    (make-variable-buffer-local 'evil-cjk-word-separating-categories)
+    (add-hook 'subword-mode-hook (lambda! (if subword-mode (push '(?u . ?U) evil-cjk-word-separating-categories)
+                                       (setq evil-cjk-word-separating-categories (default-value 'evil-cjk-word-separating-categories)))))))
 
 (defun +amos*subword-backward-internal ()
   (if superword-mode
       (forward-symbol -1)
     (if (save-excursion
           (let ((case-fold-search nil))
-            (re-search-backward "\\(\\(\\W\\|[[:lower:][:digit:]]\\)\\([[:upper:]_]+\\W*\\)\\|\\W\\w+\\)" nil t)))
+            (with-syntax-table (make-syntax-table (syntax-table))
+              (modify-syntax-entry ?_ "_")
+              (re-search-backward "\\(\\(\\W\\|[[:lower:][:digit:]]\\)\\([[:upper:]]+\\W*\\)\\|\\W\\w+\\)" nil t))))
         (goto-char
          (cond
           ((and (match-end 3)
@@ -1643,9 +1688,6 @@ The selected history element will be inserted into the minibuffer."
   (if (not (looking-back ";"))
       (insert ";"))
   (doom/newline-and-indent))
-
-(after! evil-snipe
-  (evil-snipe-def 2 'inclusive "f" "t"))
 
 (def-package! evil-textobj-anyblock
   :commands
@@ -1763,28 +1805,28 @@ The selected history element will be inserted into the minibuffer."
 (defun my/highlight-pattern-in-text (pattern line)
   (when (> (length pattern) 0)
     (let ((i 0))
-     (while (string-match pattern line i)
-       (setq i (match-end 0))
-       (add-face-text-property (match-beginning 0) (match-end 0) 'highlight t line)
-       )
-     line)))
+      (while (string-match pattern line i)
+        (setq i (match-end 0))
+        (add-face-text-property (match-beginning 0) (match-end 0) 'highlight t line)
+        )
+      line)))
 
 (with-eval-after-load 'lsp-methods
   ;;; Override
   ;; This deviated from the original in that it highlights pattern appeared in symbol
   (defun lsp--symbol-information-to-xref (pattern symbol)
-   "Return a `xref-item' from SYMBOL information."
-   (let* ((location (gethash "location" symbol))
-          (uri (gethash "uri" location))
-          (range (gethash "range" location))
-          (start (gethash "start" range))
-          (name (gethash "name" symbol)))
-     (xref-make (format "[%s] %s"
-                        (alist-get (gethash "kind" symbol) lsp--symbol-kind)
-                        (my/highlight-pattern-in-text (regexp-quote pattern) name))
-                (xref-make-file-location (string-remove-prefix "file://" uri)
-                                         (1+ (gethash "line" start))
-                                         (gethash "character" start)))))
+    "Return a `xref-item' from SYMBOL information."
+    (let* ((location (gethash "location" symbol))
+           (uri (gethash "uri" location))
+           (range (gethash "range" location))
+           (start (gethash "start" range))
+           (name (gethash "name" symbol)))
+      (xref-make (format "[%s] %s"
+                         (alist-get (gethash "kind" symbol) lsp--symbol-kind)
+                         (my/highlight-pattern-in-text (regexp-quote pattern) name))
+                 (xref-make-file-location (string-remove-prefix "file://" uri)
+                                          (1+ (gethash "line" start))
+                                          (gethash "character" start)))))
 
   (cl-defmethod xref-backend-apropos ((_backend (eql xref-lsp)) pattern)
     (let ((symbols (lsp--send-request (lsp--make-request
