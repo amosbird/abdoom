@@ -14,6 +14,7 @@
  '(browse-url-mailto-function (quote mu4e~compose-browse-url-mail))
  '(cc-compile-command
    "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out" t)
+ '(company-auto-complete nil)
  '(company-dabbrev-code-everywhere t)
  '(company-dabbrev-code-ignore-case t)
  '(counsel-org-goto-display-style (quote path))
