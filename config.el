@@ -606,8 +606,8 @@ Version 2017-01-27"
   :config
   (push #'+amos/dired-open-callgrind dired-open-functions))
 
-(def-package! dired-avfs
-  :after dired)
+;; (def-package! dired-avfs
+;;   :after dired)
 
 (def-package! org-mime
   :after org-mu4e)
@@ -1836,12 +1836,12 @@ The selected history element will be inserted into the minibuffer."
 
 (set!
   :jump 'c-mode
-  :definition #'xref-find-definitions
+  :definition #'lsp-ui-peek-find-definitions
   :references #'xref-find-references
   :documentation #'counsel-dash-at-point)
 (set!
   :jump 'c++-mode
-  :definition #'xref-find-definitions
+  :definition #'lsp-ui-peek-find-definitions
   :references #'xref-find-references
   :documentation #'counsel-dash-at-point)
 
@@ -1864,3 +1864,27 @@ The selected history element will be inserted into the minibuffer."
 (defun cquery/callers () (interactive) (cquery-xref-find-custom "$cquery/callers"))
 (defun cquery/derived () (interactive) (cquery-xref-find-custom "$cquery/derived"))
 (defun cquery/vars () (interactive) (cquery-xref-find-custom "$cquery/vars"))
+
+
+(evil-define-command evil-wipeout-buffer (buffer &optional bang)
+  "Deletes a buffer. Also clears related jump marks.
+All windows currently showing this buffer will be closed except
+for the last window in each frame."
+  (interactive "<b><!>")
+  (let* ((ring (make-ring evil-jumps-max-length))
+         (jump-struct (evil--jumps-get-current))
+         (idx (evil-jumps-struct-idx jump-struct))
+         (i 0))
+    (cl-loop for jump in (ring-elements (evil--jumps-get-window-jump-list))
+             do (let* ((file-name (cadr jump)))
+                  (if (or (string= file-name (buffer-file-name))
+                          (string-match-p evil--jumps-buffer-targets (buffer-name)))
+                      (if (<= i idx) (setq idx (1- idx)))
+                    ;; else
+                    (ring-insert ring jump)
+                    (setq i (1+ i)))))
+    (setf (evil-jumps-struct-ring jump-struct) ring)
+    (setf (evil-jumps-struct-idx jump-struct) idx))
+  (evil-delete-buffer buffer bang))
+
+(add-hook 'evil-insert-state-exit-hook #'save-buffer)

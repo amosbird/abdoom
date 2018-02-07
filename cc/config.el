@@ -58,12 +58,19 @@ compilation database is present in the project.")
   ;; The result isn't very intelligent (causes redundant characters), so just do
   ;; it ourselves.
   (map! (:map (c-mode-map c++-mode-map)
-         "<" nil
-         :i ">"        #'+cc/autoclose->-maybe
-         :i "M-j"      #'+amos/finish-line
-         "C-c C-r"     #'+amos/rc-index-current-file
-         "C-c l"       #'+amos/ivy-add-library-link
-         "C-c i"       #'+amos/ivy-add-include))
+          "<" nil
+          :i ">"        #'+cc/autoclose->-maybe
+          :i "M-j"      #'+amos/finish-line
+          "C-c C-r"     #'+amos/rc-index-current-file
+          "C-c l"       #'+amos/ivy-add-library-link
+          "C-c i"       #'+amos/ivy-add-include)
+
+        (:after lsp-ui-peek
+          :map lsp-ui-peek-mode-map
+          "M-j" #'lsp-ui-peek--select-next-file
+          "M-k" #'lsp-ui-peek--select-prev-file
+          "C-j" #'lsp-ui-peek--select-next
+          "C-k" #'lsp-ui-peek--select-prev))
 
   ;;; Style/formatting
   ;; C/C++ style settings

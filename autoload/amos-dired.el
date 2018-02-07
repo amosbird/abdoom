@@ -1,17 +1,17 @@
 ;;; private/amos/autoload/amos-dired.el -*- lexical-binding: t; -*-
 
 (setq ;; Always copy/delete recursively
-      dired-recursive-copies  'always
-      dired-recursive-deletes 'top
-      ;; Auto refresh dired, but be quiet about it
-      global-auto-revert-non-file-buffers t
-      auto-revert-verbose nil
-      ;; files
-      image-dired-dir (concat doom-cache-dir "image-dired/")
-      image-dired-db-file (concat image-dired-dir "image-dired/db.el")
-      image-dired-gallery-dir (concat image-dired-dir "gallery/")
-      image-dired-temp-image-file (concat image-dired-dir "temp-image")
-      image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image"))
+ dired-recursive-copies  'always
+ dired-recursive-deletes 'top
+ ;; Auto refresh dired, but be quiet about it
+ global-auto-revert-non-file-buffers t
+ auto-revert-verbose nil
+ ;; files
+ image-dired-dir (concat doom-cache-dir "image-dired/")
+ image-dired-db-file (concat image-dired-dir "image-dired/db.el")
+ image-dired-gallery-dir (concat image-dired-dir "gallery/")
+ image-dired-temp-image-file (concat image-dired-dir "temp-image")
+ image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image"))
 
 (defun +dired|sort-directories-first ()
   "List directories first in dired buffers."
@@ -226,17 +226,17 @@
   "Convert PATH to its sudoed version. root is used by default
 unless SUDO-USER is provided."
   (let* (;; Handle the case of local files. `tramp-dissect-file-name' does
-	 ;; not raise an error anymore.
-	 (path (if (tramp-tramp-file-p path) path (concat "/:" path)))
-	 (file-vec (or (ignore-errors (tramp-dissect-file-name
-				       path))
-		       (tramp-dissect-file-name
-			(concat "/:" path) 1)))
-	 (method  (tramp-file-name-method file-vec))
-	 (user (tramp-file-name-user file-vec))
-	 (host  (tramp-file-name-host file-vec))
-	 (localname (expand-file-name
-		     (tramp-file-name-localname file-vec))))
+         ;; not raise an error anymore.
+         (path (if (tramp-tramp-file-p path) path (concat "/:" path)))
+         (file-vec (or (ignore-errors (tramp-dissect-file-name
+                                       path))
+                       (tramp-dissect-file-name
+                        (concat "/:" path) 1)))
+         (method  (tramp-file-name-method file-vec))
+         (user (tramp-file-name-user file-vec))
+         (host  (tramp-file-name-host file-vec))
+         (localname (expand-file-name
+                     (tramp-file-name-localname file-vec))))
     (when (string= system-name host)
       (setq host nil))
     (cond
@@ -275,19 +275,19 @@ If called with `universal-argument' (C-u), ask for username.
 "
   (interactive "P")
   (let* ((fname (or buffer-file-name
-		    dired-directory))
-	 (sudo-user (if current-prefix-arg
-			(read-string "Username: ")
-		      sudo-user))
-	 (orig (current-buffer))
+                    dired-directory))
+         (sudo-user (if current-prefix-arg
+                        (read-string "Username: ")
+                      sudo-user))
+         (orig (current-buffer))
          (file-now (if (eq major-mode 'dired-mode)
                        (dired-get-filename t))))
     (when fname
       (setq fname (dired-toggle-sudo-internal fname sudo-user))
       (if (not (eq major-mode 'dired-mode))
-	  (dired-toggle-sudo-find fname)
-	(kill-buffer orig)
-	(dired fname)
+          (dired-toggle-sudo-find fname)
+        (kill-buffer orig)
+        (dired fname)
         (when file-now
           (dired-goto-file (expand-file-name file-now fname)))))))
 
@@ -319,11 +319,11 @@ If called with `universal-argument' (C-u), ask for username.
 
 (defun peep-dired-scroll-page-down ()
   (interactive)
-  (scroll-other-window))
+  (scroll-other-window 30))
 
 (defun peep-dired-scroll-page-up ()
   (interactive)
-  (scroll-other-window '-))
+  (scroll-other-window -30))
 
 (defun peep-dired-kill-buffers-without-window ()
   "Will kill all peep buffers that are not displayed in any window"

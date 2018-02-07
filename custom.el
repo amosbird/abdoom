@@ -6,6 +6,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auto-revert-interval 0.3)
+ '(auto-save-visited-interval 5)
+ '(auto-save-visited-mode nil)
  '(bibtex-completion-browser-function (quote browser-url-chromium))
  '(bibtex-completion-pdf-open-function (lambda (fpath) (call-process "zathura" nil 0 nil fpath)))
  '(browse-url-chrome-program (expand-file-name "~/scripts/vivaldi"))
