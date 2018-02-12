@@ -2,4 +2,4 @@
 # name: dump
 # key: dump
 # --
-DUMP($0)
+DUMP($0);
