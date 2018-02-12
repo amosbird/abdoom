@@ -175,7 +175,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       ;;   (set-fontset-font ft 'unicode (font-spec :name "Symbola monospacified for Ubuntu Mono") nil 'append))
       (dolist (charset '(kana han cjk-misc bopomofo))
         (set-fontset-font t charset
-                          (font-spec :family "WenQuanYi Micro Hei" :size 13)))
+                          (font-spec :family "WenQuanYi Micro Hei" :size 18)))
       (remove-hook! 'after-make-frame-functions #'+amos|init-frame))))
 
 (add-hook! 'after-init-hook
@@ -201,21 +201,22 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   evilnc-copy-and-comment-lines
   evilnc-comment-or-uncomment-lines)
 
-(def-package! centered-window-mode
-  :commands centered-window-mode
+(def-package! realign-mode
+  :commands realign-mode
+  :load-path "~/git/realign-mode"
   :config
   (defun amos-special-window-p (window)
     (let* ((buffer (window-buffer window))
            (buffname (string-trim (buffer-name buffer))))
       (or (equal buffname "*doom*")
           (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
-  (push #'amos-special-window-p cwm-ignore-window-predicates))
+  (push #'amos-special-window-p realign-ignore-window-predicates))
 
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
 (remove-hook! 'doom-post-init-hook #'blink-cursor-mode)
 ;; (remove-hook! 'doom-init-ui-hook #'show-paren-mode)
-(add-hook! 'doom-post-init-hook (centered-window-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil) )
+(add-hook! 'doom-post-init-hook (realign-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil) )
 
 (defun +amos*set-evil-cursors (&rest _)
   (let ((evil-cursors '(("normal" "DarkGoldenrod" box)
@@ -280,14 +281,13 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (global-git-gutter-mode +1)
   (advice-add #'git-gutter:set-window-margin :override #'ignore)
   (defun +amos*git-gutter:before-string (sign)
-    (let* ((gutter-sep (concat " " (make-string (- (car (window-margins (get-buffer-window))) 3) ? ) sign))
+    (let* ((gutter-sep (concat " " (make-string (- (car (window-margins (get-buffer-window))) 2) ? ) sign))
            (face (pcase sign
                    ("=" '+amos:modified)
                    ("+" '+amos:added)
                    ("-" '+amos:deleted)
                    ))
            (ovstring (propertize gutter-sep 'face face)))
-      ;; (propertize " " 'display `((margin left-margin) ,gutter-sep)))
       (propertize " " 'display `((margin left-margin) ,ovstring))))
   (advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
   (add-hook! 'window-configuration-change-hook #'git-gutter:update-all-windows))
@@ -663,6 +663,7 @@ Skip buffers that match `ivy-ignore-buffers'."
   (global-set-key [remap fill-paragraph] #'unfill-toggle))
 
 
+;; recenter buffer when switching windows
 (defun +amos|update-window-buffer-list ()
   (walk-window-tree
    (lambda (window)
@@ -1236,6 +1237,7 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (add-to-list 'auto-mode-alist '("/home/amos/git/serverconfig/scripts/.+" . sh-mode) 'append)
 (+file-templates-append '("/home/amos/git/serverconfig/scripts/.+"   "__"   sh-mode))
+(+file-templates-add '("/home/amos/git/serverconfig/.config/fish/functions/.+" "func" fish-mode))
 
 (defmacro +amos--def-browse-in! (name dir)
   `(defun ,(intern (format "+amos/browse-%s" name)) ()
@@ -1887,4 +1889,12 @@ for the last window in each frame."
     (setf (evil-jumps-struct-idx jump-struct) idx))
   (evil-delete-buffer buffer bang))
 
-(add-hook 'evil-insert-state-exit-hook #'save-buffer)
+(add-hook! 'evil-insert-state-exit-hook (if buffer-file-name (save-buffer)))
+
+(defun +amos/create-fish-function (name)
+  (interactive "sNew function's name: ")
+  (let ((full-name (expand-file-name (concat name ".fish") "/home/amos/.config/fish/functions/")))
+    (if (file-exists-p full-name)
+        (user-error "Function with the same name already exists!"))
+    (find-file full-name)
+    (evil-initialize-state 'insert)))

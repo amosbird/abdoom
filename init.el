@@ -67,6 +67,6 @@
 (setq save-interprogram-paste-before-kill t
       split-height-threshold nil
       split-width-threshold 0
-      doom-font (font-spec :family "Ubuntu Mono" :size 14)
+      doom-font (font-spec :family "Ubuntu Mono" :size 18)
       ;; fix start-process xdg-open
       process-connection-type nil)

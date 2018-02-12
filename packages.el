@@ -6,7 +6,9 @@
 (package! git-gutter-fringe :ignore t)
 (package! visual-fill-column :ignore t)
 (package! evil-numbers :ignore t)
-(package! centered-window-mode :recipe (:fetcher github :repo "amosbird/centered-window-mode"))
+(package! centered-window-mode :ignore t)
+;; TODO quelpa bug
+;; (package! realign-mode :recipe (:fetcher github :repo "amosbird/realign-mode.el"))
 (package! rainbow-mode :recipe (:fetcher github :repo "amosbird/rainbow-mode"))
 (package! evil-terminal-cursor-changer :recipe (:fetcher github :repo "amosbird/evil-terminal-cursor-changer"))
 (package! evil-textobj-line :recipe (:fetcher github :repo "syohex/evil-textobj-line"))
