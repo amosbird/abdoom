@@ -1756,14 +1756,14 @@ The selected history element will be inserted into the minibuffer."
   :config
   (require 'lsp-imenu)
   (add-hook 'lsp-after-open-hook #'lsp-enable-imenu)
-  ;; Disable lsp-flycheck.el in favor of lsp-ui-flycheck.el
-  ;; (setq lsp-enable-flycheck nil)
-  )
+  (setq lsp-enable-flycheck nil))
 
 (add-hook! (c-mode c++-mode) (flycheck-mode +1))
 
 (def-package! lsp-ui
-  :after lsp-mode)
+  :after lsp-mode
+  :config
+  (flycheck-add-mode 'lsp-ui 'c++-mode))
 
 (require 'cl-lib)
 (require 'subr-x)

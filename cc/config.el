@@ -255,9 +255,11 @@ compilation database is present in the project.")
             :action #'+amos/add-include))
 
 (defun +amos/add-library-link (library)
-  "Add an -llibrary line for `library' near top of file, avoiding duplicates."
-  (interactive "M#include: ")
-  (let ((lib (format "-l%s \\" library)))
+  "Add an -llibrary line for `library' near bottom of file, avoiding duplicates."
+  (interactive "M#library: ")
+  (let ((lib (if (s-suffix? ".a" library)
+                 (format "-l:%s \\" library)
+               (format "-l%s \\" library))))
     (save-excursion
       (if (search-forward lib nil t)
           nil
@@ -269,5 +271,9 @@ compilation database is present in the project.")
 
 (defun +amos/ivy-add-library-link ()
   (interactive)
-  (ivy-read "Library: " (split-string (shell-command-to-string "ldconfig -p | awk ' $1 ~ /^lib.*so$/ { print gensub(/^lib(.*).so$/, \"\\\\1\", 1, $1)}'"))
+  (ivy-read "Library: " (nconc
+                         (split-string
+                          (shell-command-to-string "ldconfig -p | awk ' $1 ~ /^lib.*so$/ { print gensub(/^lib(.*).so$/, \"\\\\1\", 1, $1)}'"))
+                         (split-string
+                          (shell-command-to-string "clang++ -print-search-dirs | sed -n 's/:/ /g;s/libraries.*=//p' | xargs ls | egrep '\.a$'")))
             :action #'+amos/add-library-link))

@@ -8,29 +8,27 @@
  '(auto-revert-interval 0.3)
  '(auto-save-visited-interval 5)
  '(auto-save-visited-mode nil)
- '(bibtex-completion-browser-function (quote browser-url-chromium))
+ '(bibtex-completion-browser-function 'browser-url-chromium)
  '(bibtex-completion-pdf-open-function (lambda (fpath) (call-process "zathura" nil 0 nil fpath)))
  '(browse-url-chrome-program (expand-file-name "~/scripts/vivaldi"))
- '(browse-url-firefox-arguments (quote ("new")))
+ '(browse-url-firefox-arguments '("new"))
  '(browse-url-firefox-program (expand-file-name "~/scripts/vivaldi"))
- '(browse-url-mailto-function (quote mu4e~compose-browse-url-mail))
+ '(browse-url-mailto-function 'mu4e~compose-browse-url-mail)
  '(cc-compile-command
    "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out" t)
- '(company-auto-complete nil)
+ '(company-auto-complete nil t)
  '(company-dabbrev-code-everywhere t)
  '(company-dabbrev-code-ignore-case t)
- '(counsel-org-goto-display-style (quote path))
- '(counsel-org-goto-face-style (quote org))
+ '(counsel-org-goto-display-style 'path)
+ '(counsel-org-goto-face-style 'org)
  '(counsel-org-goto-separator " ➜ ")
- '(counsel-org-headline-display-style (quote path))
+ '(counsel-org-headline-display-style 'path)
  '(counsel-org-headline-path-separator " ➜ ")
  '(custom-safe-themes
-   (quote
-    ("554b7f0439155d6eb648d4837ef03902f51124cacee021217e76f39e9dd314c2" "d0404bd38534a00ee72a4f887a987d6bff87f4cf8d8f85149e32849b262465a5" "73e35ffa5ca98b57a9923954f296c3854ce6d8736b31fdbdda3d27502d4b4d69" "0a3a41085c19d8121ed0ad3eb658a475ccb948a70a83604641ee7d4c3575a4d5" "a7e7804313dbf827a441c86a8109ef5b64b03011383322cbdbf646eb02692f76" "77bddca0879cb3b0ecdf071d9635c818827c57d69164291cb27268ae324efa84" "2e1d19424153d41462ad31144549efa41f55dacda9b76571f73904612b15fd0a" default)))
+   '("554b7f0439155d6eb648d4837ef03902f51124cacee021217e76f39e9dd314c2" "d0404bd38534a00ee72a4f887a987d6bff87f4cf8d8f85149e32849b262465a5" "73e35ffa5ca98b57a9923954f296c3854ce6d8736b31fdbdda3d27502d4b4d69" "0a3a41085c19d8121ed0ad3eb658a475ccb948a70a83604641ee7d4c3575a4d5" "a7e7804313dbf827a441c86a8109ef5b64b03011383322cbdbf646eb02692f76" "77bddca0879cb3b0ecdf071d9635c818827c57d69164291cb27268ae324efa84" "2e1d19424153d41462ad31144549efa41f55dacda9b76571f73904612b15fd0a" default))
  '(dired-omit-verbose nil)
  '(dired-open-extensions
-   (quote
-    (("pdf" . "xdg-open")
+   '(("pdf" . "xdg-open")
      ("ps" . "xdg-open")
      ("jpg" . "xdg-open")
      ("iso" . "xdg-open")
@@ -44,10 +42,10 @@
      ("ppt" . "xdg-open")
      ("mkv" . "xdg-open")
      ("pptx" . "xdg-open")
-     ("torrent" . "xdg-open"))))
- '(dired-open-find-file-function (function +amos/find-file))
+     ("torrent" . "xdg-open")))
+ '(dired-open-find-file-function #'+amos/find-file)
  '(display-line-numbers-current-absolute nil)
- '(display-line-numbers-type (quote visual))
+ '(display-line-numbers-type 'visual)
  '(evil-cjk-emacs-word-boundary t)
  '(evil-esc-delay 0.001)
  '(evil-ex-substitute-global t)
@@ -55,12 +53,14 @@
  '(evil-shift-round nil)
  '(evil-shift-width 4)
  '(evil-snipe-auto-scroll nil)
- '(evil-snipe-scope (quote visible))
+ '(evil-snipe-scope 'visible)
  '(explicit-shell-file-name "/bin/bash")
  '(find-file-visit-truename t)
+ '(flycheck-checkers
+   '(ledger ada-gnat asciidoctor asciidoc cfengine chef-foodcritic coffee coffee-coffeelint coq css-csslint css-stylelint cwl d-dmd dockerfile-hadolint elixir-dogma emacs-lisp emacs-lisp-checkdoc erlang-rebar3 erlang eruby-erubis fortran-gfortran go-gofmt go-golint go-vet go-build go-test go-errcheck go-unconvert go-megacheck groovy haml handlebars haskell-stack-ghc haskell-ghc haskell-hlint html-tidy javascript-eslint javascript-jshint javascript-standard json-jsonlint json-python-json jsonnet less less-stylelint llvm-llc lsp-ui lua-luacheck lua perl perl-perlcritic php php-phpmd php-phpcs processing proselint protobuf-protoc pug puppet-parser puppet-lint python-flake8 python-pylint python-pycompile r-lintr racket rpm-rpmlint markdown-markdownlint-cli markdown-mdl nix rst-sphinx rst ruby-rubocop ruby-reek ruby-rubylint ruby ruby-jruby rust-cargo rust rust-clippy scala scala-scalastyle scheme-chicken scss-lint scss-stylelint sass/scss-sass-lint sass scss sh-bash sh-posix-dash sh-posix-bash sh-zsh sh-shellcheck slim slim-lint sql-sqlint systemd-analyze tcl-nagelfar tex-chktex tex-lacheck texinfo typescript-tslint verilog-verilator vhdl-ghdl xml-xmlstarlet xml-xmllint yaml-jsyaml yaml-ruby))
  '(flycheck-pos-tip-mode nil)
  '(fringes-outside-margins t t)
- '(helm-bibtex-bibliography (quote ("~/zotero.bib")))
+ '(helm-bibtex-bibliography '("~/zotero.bib"))
  '(helm-bibtex-notes-path "~/bibnotes.org")
  '(helm-bibtex-pdf-field "file")
  '(intent-tabs-mode t)
@@ -69,26 +69,24 @@
  '(ivy-rich-switch-buffer-delimiter "|")
  '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
- '(ivy-virtual-abbreviate (quote full))
+ '(ivy-virtual-abbreviate 'full)
  '(lsp-ui-peek-force-fontify t)
  '(mode-line-format nil)
  '(nav-flash-delay 0.3)
- '(org-M-RET-may-split-line (quote ((default))))
- '(org-agenda-files (quote ("~/org/todo.org")))
+ '(org-M-RET-may-split-line '((default)))
+ '(org-agenda-files '("~/org/todo.org"))
  '(org-babel-load-languages
-   (quote
-    ((python . t)
+   '((python . t)
      (emacs-lisp . t)
      (dot . t)
      (gnuplot . t)
      (C . t)
      (sql . t)
-     (awk . t))))
+     (awk . t)))
  '(org-beamer-frame-level 2)
  '(org-beamer-theme "metropolis")
  '(org-capture-templates
-   (quote
-    (("c" "code" entry
+   '(("c" "code" entry
       (file+headline "~/org/code.org" "Triage")
       "** %a " :prepend t :empty-lines-before 1 :empty-lines-after 1)
      ("i" "idea" entry
@@ -108,22 +106,20 @@
       "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)
      ("tl" "learning" entry
       (file+headline "~/org/todo.org" "Learning")
-      "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1))) t)
- '(org-goto-interface (quote outline-path-completion))
+      "** TODO %?" :prepend t :empty-lines-before 1 :empty-lines-after 1)) t)
+ '(org-goto-interface 'outline-path-completion)
  '(org-html-text-markup-alist
-   (quote
-    ((bold . "<b>%s</b>")
+   '((bold . "<b>%s</b>")
      (code . "<code>%s</code>")
      (italic . "<i>%s</i>")
      (strike-through . "<strong style=\"color : red;\">%s</strong>")
      (underline . "<span class=\"underline\">%s</span>")
-     (verbatim . "<code>%s</code>"))))
+     (verbatim . "<code>%s</code>")))
  '(org-hugo-default-section-directory "post")
  '(org-latex-compiler "xelatex" t)
  '(org-latex-custom-lang-environments nil)
  '(org-latex-default-packages-alist
-   (quote
-    (("AUTO" "inputenc" t
+   '(("AUTO" "inputenc" t
       ("pdflatex"))
      ("T1" "fontenc" t
       ("pdflatex"))
@@ -139,110 +135,74 @@
      ("" "textcomp" t)
      ("" "amssymb" t)
      ("" "capt-of" nil)
-     ("" "hyperref" nil))))
+     ("" "hyperref" nil)))
  '(org-latex-tables-booktabs t)
  '(org-latex-text-markup-alist
-   (quote
-    ((bold . "\\textbf{%s}")
+   '((bold . "\\textbf{%s}")
      (code . protectedtexttt)
      (italic . "\\emph{%s}")
      (strike-through . "\\emph{%s}")
      (underline . "\\uline{%s}")
-     (verbatim . protectedtexttt))))
+     (verbatim . protectedtexttt)))
  '(org-mime-beautify-quoted-mail t)
  '(org-outline-path-complete-in-steps nil)
- '(org-preview-latex-default-process (quote imagemagick))
+ '(org-preview-latex-default-process 'imagemagick)
  '(org-ref-bibliography-notes "~/Papers/notes.org")
- '(org-ref-default-bibliography (quote ("~/Papers/references.bib")))
+ '(org-ref-default-bibliography '("~/Papers/references.bib"))
  '(org-ref-open-pdf-function
    (lambda
      (fpath)
      (start-process "zathura" "*helm-bibtex-zathura*" "/usr/bin/zathura" fpath)))
  '(org-ref-pdf-directory "~/Papers/")
- '(org-src-block-faces (quote (("c++" default))))
+ '(org-src-block-faces '(("c++" default)))
  '(org-src-tab-acts-natively t)
  '(org-twbs-text-markup-alist
-   (quote
-    ((bold . "<b>%s</b>")
+   '((bold . "<b>%s</b>")
      (code . "<code>%s</code>")
      (italic . "<i>%s</i>")
      (strike-through . "<strong style=\"color : red;\">%s</strong>")
      (underline . "<span class=\"underline\">%s</span>")
-     (verbatim . "<code>%s</code>"))))
+     (verbatim . "<code>%s</code>")))
  '(package-check-signature nil)
  '(package-selected-packages
-   (quote
-    (yard-mode yapfify yaml-mode xref-js2 ws-butler which-key wgrep web-mode web-beautify vimrc-mode use-package unicode-fonts unfill toml-mode toc-org tide stylus-mode solaire-mode smex smeargle smartparens smart-forward slime skewer-mode shrink-path shackle sdcv sass-mode rust-playground ruby-refactor rspec-mode rotate-text rjsx-mode rake rainbow-mode rainbow-delimiters rainbow-blocks racer quickrun quelpa purescript-mode pug-mode psc-ide pip-requirements phpunit php-refactor-mode php-extras php-boris persp-mode perl6-mode pdf-tools pcre2el pangu-spacing page-break-lines ox-twbs ox-pandoc ox-hugo overseer ov osc org-plus-contrib org-mime org-bullets org-autolist opencl-mode notmuch nose nodejs-repl nlinum-relative nlinum-hl nav-flash nasm-mode narrow-reindent mu4e-maildirs-extension move-text moonscript modern-cpp-font-lock mips-mode markdown-toc makefile-executor magit-svn lispyville link-hint less-css-mode ledger-mode kurecolor julia-mode json-mode js2-refactor ivy-xref ivy-rich ivy-hydra ivy-bibtex hy-mode hl-todo hl-line+ highlight-quoted highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-make haxor-mode gorepl-mode google-translate go-playground go-guru go-eldoc glsl-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-link git-gutter fringe-helper flyspell-correct-ivy flycheck-rust flycheck-pos-tip flycheck-plantuml flycheck-perl6 flycheck-ledger flycheck-elm flycheck-crystal flycheck-cask fish-mode fill-column-indicator fcitx eyebrowse evil-visualstar evil-vimish-fold evil-textobj-line evil-textobj-anyblock evil-terminal-cursor-changer evil-snipe evil-org evil-numbers evil-nerd-commenter evil-multiedit evil-mc evil-matchit evil-magit evil-ledger evil-indent-plus evil-exchange evil-escape evil-embrace evil-ediff evil-easymotion evil-args evil-anzu eslintd-fix ensime emmet-mode emacsql-sqlite elm-mode elfeed-org eldoc-eval editorconfig easy-hugo dumb-jump doom-themes dockerfile-mode disaster dired-quick-sort dired-k dired-hacks demangle-mode cuda-mode crystal-mode crux counsel-projectile counsel-dash counsel-css company-web company-tern company-statistics company-shell company-restclient company-racer company-quickhelp company-php company-lua company-lsp company-inf-ruby company-go company-glsl company-dict company-auctex company-anaconda command-log-mode coffee-mode cnfonts cmake-mode clj-refactor clang-format chinese-yasdcv centered-window-mode cc-playground bind-map auto-yasnippet auto-compile ag adoc-mode ace-link)))
+   '(yard-mode yapfify yaml-mode xref-js2 ws-butler which-key wgrep web-mode web-beautify vimrc-mode use-package unicode-fonts unfill toml-mode toc-org tide stylus-mode solaire-mode smex smeargle smartparens smart-forward slime skewer-mode shrink-path shackle sdcv sass-mode rust-playground ruby-refactor rspec-mode rotate-text rjsx-mode rake rainbow-mode rainbow-delimiters rainbow-blocks racer quickrun quelpa purescript-mode pug-mode psc-ide pip-requirements phpunit php-refactor-mode php-extras php-boris persp-mode perl6-mode pdf-tools pcre2el pangu-spacing page-break-lines ox-twbs ox-pandoc ox-hugo overseer ov osc org-plus-contrib org-mime org-bullets org-autolist opencl-mode notmuch nose nodejs-repl nlinum-relative nlinum-hl nav-flash nasm-mode narrow-reindent mu4e-maildirs-extension move-text moonscript modern-cpp-font-lock mips-mode markdown-toc makefile-executor magit-svn lispyville link-hint less-css-mode ledger-mode kurecolor julia-mode json-mode js2-refactor ivy-xref ivy-rich ivy-hydra ivy-bibtex hy-mode hl-todo hl-line+ highlight-quoted highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-make haxor-mode gorepl-mode google-translate go-playground go-guru go-eldoc glsl-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-link git-gutter fringe-helper flyspell-correct-ivy flycheck-rust flycheck-pos-tip flycheck-plantuml flycheck-perl6 flycheck-ledger flycheck-elm flycheck-crystal flycheck-cask fish-mode fill-column-indicator fcitx eyebrowse evil-visualstar evil-vimish-fold evil-textobj-line evil-textobj-anyblock evil-terminal-cursor-changer evil-snipe evil-org evil-numbers evil-nerd-commenter evil-multiedit evil-mc evil-matchit evil-magit evil-ledger evil-indent-plus evil-exchange evil-escape evil-embrace evil-ediff evil-easymotion evil-args evil-anzu eslintd-fix ensime emmet-mode emacsql-sqlite elm-mode elfeed-org eldoc-eval editorconfig easy-hugo dumb-jump doom-themes dockerfile-mode disaster dired-quick-sort dired-k dired-hacks demangle-mode cuda-mode crystal-mode crux counsel-projectile counsel-dash counsel-css company-web company-tern company-statistics company-shell company-restclient company-racer company-quickhelp company-php company-lua company-lsp company-inf-ruby company-go company-glsl company-dict company-auctex company-anaconda command-log-mode coffee-mode cnfonts cmake-mode clj-refactor clang-format chinese-yasdcv centered-window-mode cc-playground bind-map auto-yasnippet auto-compile ag adoc-mode ace-link))
  '(password-cache-expiry nil)
- '(powerline-default-separator (quote alternate))
+ '(powerline-default-separator 'alternate)
  '(process-environment initial-environment t)
  '(projectile-find-dir-includes-top-level t)
  '(projectile-require-project-root t)
  '(query-replace-skip-read-only t)
  '(recentf-exclude
-   (quote
-    ("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/")))
+   '("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/"))
  '(recentf-max-saved-items 10000)
- '(reftex-default-bibliography (quote ("~/zotero.bib")) t)
+ '(reftex-default-bibliography '("~/zotero.bib") t)
  '(require-final-newline t)
  '(safe-local-variable-values
-   (quote
-    ((eval c-set-offset
-           (quote arglist-close)
-           0)
-     (eval c-set-offset
-           (quote arglist-intro)
-           (quote ++))
-     (eval c-set-offset
-           (quote case-label)
-           0)
-     (eval c-set-offset
-           (quote statement-case-open)
-           0)
-     (eval c-set-offset
-           (quote substatement-open)
-           0)
+   '((eval c-set-offset 'arglist-close 0)
+     (eval c-set-offset 'arglist-intro '++)
+     (eval c-set-offset 'case-label 0)
+     (eval c-set-offset 'statement-case-open 0)
+     (eval c-set-offset 'substatement-open 0)
      (eval when
-           (fboundp
-            (quote rainbow-mode))
+           (fboundp 'rainbow-mode)
            (rainbow-mode 1))
      (eval font-lock-add-keywords nil
-           (\`
-            (((\,
-               (concat "("
+           `((,(concat "("
                        (regexp-opt
-                        (quote
-                         ("sp-do-move-op" "sp-do-move-cl" "sp-do-put-op" "sp-do-put-cl" "sp-do-del-op" "sp-do-del-cl"))
+                        '("sp-do-move-op" "sp-do-move-cl" "sp-do-put-op" "sp-do-put-cl" "sp-do-del-op" "sp-do-del-cl")
                         t)
-                       "\\_>"))
-              1
-              (quote font-lock-variable-name-face)))))
-     (eval add-hook
-           (quote text-mode-hook)
+                       "\\_>")
+              1 'font-lock-variable-name-face)))
+     (eval add-hook 'text-mode-hook
            (lambda nil
              (setq-local fill-column 70))
            :local)
      (eval progn
-           (put
-            (quote defendpoint)
-            (quote clojure-doc-string-elt)
-            3)
-           (put
-            (quote api/defendpoint)
-            (quote clojure-doc-string-elt)
-            3)
-           (put
-            (quote defsetting)
-            (quote clojure-doc-string-elt)
-            2)
-           (put
-            (quote setting/defsetting)
-            (quote clojure-doc-string-elt)
-            2)
-           (put
-            (quote s/defn)
-            (quote clojure-doc-string-elt)
-            2)
+           (put 'defendpoint 'clojure-doc-string-elt 3)
+           (put 'api/defendpoint 'clojure-doc-string-elt 3)
+           (put 'defsetting 'clojure-doc-string-elt 2)
+           (put 'setting/defsetting 'clojure-doc-string-elt 2)
+           (put 's/defn 'clojure-doc-string-elt 2)
            (define-clojure-indent
              (api-let 2)
              (assert 1)
@@ -281,7 +241,7 @@
      (cmake-ide-build-dir . "/home/amos/git/htop-vim")
      (mode . c++-mode)
      (mode . cc-playground-mode)
-     (cmake-ide-project-dir . "/home/amos/git/htop-vim"))))
+     (cmake-ide-project-dir . "/home/amos/git/htop-vim")))
  '(shell-file-name "/bin/bash")
  '(show-paren-priority -50)
  '(show-trailing-whitespace t)
@@ -289,17 +249,17 @@
  '(swiper-include-line-number-in-search t)
  '(tab-always-indent t)
  '(undo-tree-auto-save-history t)
- '(undo-tree-history-directory-alist (quote ((".*" . "~/.emacs.d/undo-files"))))
+ '(undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undo-files")))
  '(user-full-name "Amos Bird")
  '(user-mail-address "amosbird@gmail.com")
  '(visible-cursor nil)
- '(warning-suppress-types (quote ((yasnippet backquote-change))))
+ '(warning-suppress-types '((yasnippet backquote-change)))
  '(ws-butler-keep-whitespace-before-point nil)
  '(yas-triggers-in-field nil)
  '(yas-wrap-around-region 121)
  '(yasdcv-sdcv-command
    "sdcv --non-interactive --utf8-output --utf8-input \"%word\"")
- '(yasdcv-sdcv-dicts (quote (("jianminghy" "简明汉英词典" "powerword2007" t)))))
+ '(yasdcv-sdcv-dicts '(("jianminghy" "简明汉英词典" "powerword2007" t))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
