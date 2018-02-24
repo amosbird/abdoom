@@ -1898,3 +1898,7 @@ for the last window in each frame."
         (user-error "Function with the same name already exists!"))
     (find-file full-name)
     (evil-initialize-state 'insert)))
+
+(with-eval-after-load 'org-src
+  (add-hook 'org-src-mode-hook
+            'editorconfig-mode-apply t))
