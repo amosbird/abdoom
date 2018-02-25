@@ -1889,7 +1889,8 @@ for the last window in each frame."
     (setf (evil-jumps-struct-idx jump-struct) idx))
   (evil-delete-buffer buffer bang))
 
-(add-hook! 'evil-insert-state-exit-hook (if buffer-file-name (save-buffer)))
+;; causes undo-tree-canary an infinite loop when doing evil-repeat
+;; (add-hook! 'evil-insert-state-exit-hook (if buffer-file-name (save-buffer)))
 
 (defun +amos/create-fish-function (name)
   (interactive "sNew function's name: ")
