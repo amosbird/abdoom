@@ -12,6 +12,7 @@
         ;; +amos/forward-subword
         ;; +amos/delete-word
         ;; +amos/delete-subword
+        delete-char
         company-dabbrev-code
         +company/complete))
 
