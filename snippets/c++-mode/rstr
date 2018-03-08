@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: rstr
+# key: rstr
+# --
+R"-+-($0)-+-";

@@ -178,7 +178,10 @@
  '(reftex-default-bibliography '("~/zotero.bib") t)
  '(require-final-newline t)
  '(safe-local-variable-values
-   '((eval c-set-offset 'arglist-close 0)
+   '((cc-dbg . "g++ -g -O0")
+     (cc-rel . "g++ -O3 -static-libgcc -static-libstdc++")
+     (rpm-change-log-uses-utc . t)
+     (eval c-set-offset 'arglist-close 0)
      (eval c-set-offset 'arglist-intro '++)
      (eval c-set-offset 'case-label 0)
      (eval c-set-offset 'statement-case-open 0)

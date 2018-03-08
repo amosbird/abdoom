@@ -18,7 +18,11 @@
 
 (defun doom/forward-to-last-non-comment-or-eol-insert ()
   (interactive)
-  (doom/forward-to-last-non-comment-or-eol))
+  (if (eolp)
+      (if (looking-back ";" 1)
+          (doom/newline-and-indent)
+      (insert ?\;))
+    (doom/forward-to-last-non-comment-or-eol)))
 (defun doom/backward-to-bol-or-indent-insert ()
   (interactive)
   (doom/backward-to-bol-or-indent))
@@ -173,6 +177,7 @@
  :env "M-j"          #'evil-window-down
  :env "M-k"          #'evil-window-up
  :env "M-l"          #'evil-window-right
+ "C-x 1"             #'zygospore-toggle-delete-other-windows
  "C-x e"             #'pp-eval-last-sexp
  "C-x C-r"           #'+amos/replace-last-sexp
  :env "C-p"          #'+amos/counsel-projectile-switch-project

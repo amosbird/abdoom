@@ -494,8 +494,9 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (setq shackle-default-alignment 'right
       shackle-default-size 0.5
       shackle-rules
-      '(("*Messages*"  :noselect t :autoclose t)
+      '(("*Messages*" :noselect t :autoclose t)
 
+        ("*compilation*" :autoclose t)
         ("^\\*eww" :regexp t :size 0.5 :select t :autokill t :noesc t)
         ("^\\*ftp " :noselect t :autokill t :noesc t)
         ;; doom
@@ -525,7 +526,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         ("*Help*" :noselect t :autoclose t)
         ("*xref*" :noselect t :autoclose t)
         ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
-        ("*compilation*"  :noselect t :autoclose t)))
+        ))
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
@@ -1903,3 +1904,48 @@ for the last window in each frame."
 (with-eval-after-load 'org-src
   (add-hook 'org-src-mode-hook
             'editorconfig-mode-apply t))
+
+
+(defvar zygospore-spore-formation-register-name
+  "zygospore-windows-time-machine"
+  "Name of the register that zygospore uses to reverse `zygospore-delete-other-windows'.")
+
+(defvar zygospore-last-full-frame-window
+  nil
+  "Last window that was full-frame'd.")
+
+(defvar zygospore-last-full-frame-buffer
+  nil
+  "Last buffer that was full-frame'd.")
+
+(defun zygospore-delete-other-window ()
+  "Save current window-buffer configuration and full-frame the current buffer."
+  (setq zygospore-last-full-frame-window (selected-window))
+  (setq zygospore-last-full-frame-buffer (current-buffer))
+  (window-configuration-to-register zygospore-spore-formation-register-name)
+  (delete-other-windows))
+
+(defun zygospore-restore-other-windows ()
+  "Restore the window configuration to prior to full-framing."
+  (jump-to-register zygospore-spore-formation-register-name))
+
+(defun zygospore-toggle-delete-other-windows ()
+  "Main zygospore func.
+If the current frame has several windows, it will act as `delete-other-windows'.
+If the current frame has one window,
+	and it is the one that was last full-frame'd,
+	and the buffer remained the same,
+it will restore the window configuration to prior to full-framing."
+  (interactive)
+  (if (and (equal (selected-window) (next-window))
+           (equal (selected-window) zygospore-last-full-frame-window)
+           (equal (current-buffer) zygospore-last-full-frame-buffer))
+      (zygospore-restore-other-windows)
+    (zygospore-delete-other-window)))
+
+
+;; (add-hook! 'compilation-start-hook
+;;   (add-hook 'kill-buffer-hook #'kill-compilation nil t))
+
+;; (add-hook! 'compilation-finish-functions
+;;   (remove-hook 'kill-buffer-hook #'kill-compilation t))

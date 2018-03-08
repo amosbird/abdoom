@@ -2,6 +2,6 @@
 # name: microbenchstats
 # key: mbs
 # --
-`(+amos/add-include "abmb.h")`ab::mbs<`(yas/choose-value '("std::chrono::seconds" "std::chrono::milliseconds" "std::chrono::microseconds" "std::chrono::nanoseconds"))`, ${1:1}, ${2:100}>(
+`(+amos/add-include "abmb.h")`ab::mbs<`(yas/choose-value '("std::chrono::milliseconds" "std::chrono::seconds" "std::chrono::microseconds" "std::chrono::nanoseconds"))`, ${1:1}, ${2:1}>(
     $0
 ).`(yas/choose-value '("min()" "max()" "range()" "avg()" "variance()" "stddev()" "median()" "q1()" "q2()" "q3()"))`;

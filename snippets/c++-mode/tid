@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tid
+# key: tid
+# --
+`(+amos/add-include "omp.h")`omp_get_thread_num();

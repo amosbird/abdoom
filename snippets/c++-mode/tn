@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tn
+# key: tn
+# --
+`(+amos/add-include "omp.h")`omp_get_num_threads();
