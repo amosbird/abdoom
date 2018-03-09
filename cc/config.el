@@ -62,7 +62,6 @@ compilation database is present in the project.")
           :i ">"        #'+cc/autoclose->-maybe
           :i "M-j"      #'+amos/finish-line
           "C-c C-r"     #'+amos/rc-index-current-file
-          "C-c l"       #'+amos/ivy-add-library-link
           "C-c i"       #'+amos/ivy-add-include)
 
         (:after lsp-ui-peek
@@ -77,6 +76,7 @@ compilation database is present in the project.")
   (c-toggle-electric-state -1)
   (c-toggle-auto-newline -1)
   (c-set-offset 'substatement-open '0) ; don't indent brackets
+  (c-set-offset 'innamespace       '0)
   (c-set-offset 'inline-open       '0)
   (c-set-offset 'block-open        '+)
   (c-set-offset 'brace-list-open   '+)
@@ -128,80 +128,6 @@ compilation database is present in the project.")
   :symbols '(("public" "protected" "private")
              ("class" "struct")))
 
-(def-package! rtags
-  :after cc-mode
-  :disabled
-  :config
-  (require 'rtags)
-  (require 'counsel-dash)
-  (require 'ivy-rtags)
-  (require 'flycheck-rtags)
-
-  (defun +amos/rc-index-current-file ()
-    (interactive)
-    (let ((path (file-name-directory buffer-file-name)))
-      (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" path buffer-file-name))))
-
-  (defconst +amos-rdm-buffer-name "*rdm*" "The rdm buffer name.")
-
-  (defun +amos--system-process-running-p (name)
-    "If a process called NAME is running on the system."
-    (let* ((all-args (mapcar (lambda (x) (cdr (assq 'args (process-attributes x)))) (list-system-processes)))
-           (match-args (+amos--filter (lambda (x) (+amos--string-match (concat "\\b" name "\\b") x)) all-args)))
-      (not (null match-args))))
-
-  (defun +amos--string-match (regexp name)
-    "Wrap 'string-match' of REGEXP and NAME to make sure we don't pass it a nil string."
-    (when name
-      (string-match regexp name)))
-
-  (defun +amos--filter (pred seq)
-    "Apply PRED to filter SEQ."
-    (delq nil (mapcar (lambda (x) (and (funcall pred x) x)) seq)))
-
-  (defun +amos--process-running-p (name)
-    "If a process called NAME is running or not."
-    (or (get-process name) (+amos--system-process-running-p name)))
-
-  (defun +amos--message (str &rest vars)
-    "Output a message with STR and formatted by VARS."
-    (message (apply #'format (concat "+amos [%s]: " str) (cons (current-time-string) vars))))
-
-  (defun +amos-maybe-start-rdm ()
-    "Start the rdm (rtags) server."
-    (unless (+amos--process-running-p "rdm")
-      (let ((buf (get-buffer-create +amos-rdm-buffer-name)))
-        (+amos--message "Starting rdm server")
-        (with-current-buffer buf
-          (let ((rdm-process (start-process "rdm" (current-buffer)
-                                            "rdm")))
-            (set-process-query-on-exit-flag rdm-process nil))))))
-
-  (add-hook! (c-mode c++-mode) #'+amos-maybe-start-rdm)
-
-  (set!
-    :jump 'c-mode
-    :definition #'rtags-find-symbol-at-point
-    :references #'rtags-find-references-at-point
-    :documentation #'counsel-dash-at-point)
-  (set!
-    :jump 'c++-mode
-    :definition #'rtags-find-symbol-at-point
-    :references #'rtags-find-references-at-point
-    :documentation #'counsel-dash-at-point)
-
-  (add-hook! 'rtags-jump-hook #'evil-set-jump)
-  (add-hook! 'rtags-after-find-file-hook #'recenter)
-  (setq rtags-autostart-diagnostics t
-        rtags-use-bookmarks nil
-        rtags-display-result-backend 'ivy)
-  (defun my-flycheck-rtags-setup ()
-    (flycheck-select-checker 'rtags)
-    (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
-    (setq-local flycheck-check-syntax-automatically nil)
-    (flycheck-mode +1))
-  (add-hook! (c-mode c++-mode) #'my-flycheck-rtags-setup))
-
 (def-package! disaster :commands disaster)
 
 (def-package! cuda-mode :mode "\\.cuh?$")
@@ -212,26 +138,36 @@ compilation database is present in the project.")
   :commands demangle-mode
   :init (add-hook 'llvm-mode-hook #'demangle-mode))
 
-(def-package! glsl-mode
-  :mode "\\.glsl$"
-  :mode "\\.vert$"
-  :mode "\\.frag$"
-  :mode "\\.geom$")
-
-
-(when (featurep! :completion company)
-  (def-package! company-glsl
-    :after glsl-mode
-    :config
-    (if (executable-find "glslangValidator")
-        (warn "glsl-mode: couldn't find glslangValidator, disabling company-glsl")
-      (set! :company-backend 'glsl-mode '(company-glsl)))))
-
 (def-package! clang-format
   :commands clang-format-buffer clang-format)
 
 (defvar +amos/default-include-headers
-  '("algorithm" "any" "array" "atomic" "bitset" "cassert" "ccomplex" "cctype" "cerrno" "cfenv" "cfloat" "chrono" "cinttypes" "ciso646" "climits" "clocale" "cmath" "codecvt" "complex" "complex.h" "condition_variable" "csetjmp" "csignal" "cstdalign" "cstdarg" "cstdbool" "cstddef" "cstdint" "cstdio" "cstdlib" "cstring" "ctgmath" "ctime" "cuchar" "cwchar" "cwctype" "cxxabi.h" "deque" "exception" "fenv.h" "forward_list" "fstream" "functional" "future" "initializer_list" "iomanip" "ios" "iosfwd" "iostream" "istream" "iterator" "limits" "list" "locale" "map" "math.h" "memory" "mutex" "new" "numeric" "optional" "ostream" "queue" "random" "ratio" "regex" "scoped_allocator" "set" "shared_mutex" "sstream" "stack" "stdexcept" "stdlib.h" "streambuf" "string" "string_view" "system_error" "tgmath.h" "thread" "tuple" "type_traits" "typeindex" "typeinfo" "unordered_map" "unordered_set" "utility" "valarray" "variant" "vector" "auto_ptr.h" "backward_warning.h" "binders.h" "hash_fun.h" "hash_map" "hash_set" "hashtable.h" "strstream" "adxintrin.h" "altivec.h" "ammintrin.h" "arm_acle.h" "arm_neon.h" "armintr.h" "avx2intrin.h" "avx512bwintrin.h" "avx512cdintrin.h" "avx512dqintrin.h" "avx512erintrin.h" "avx512fintrin.h" "avx512ifmaintrin.h" "avx512ifmavlintrin.h" "avx512pfintrin.h" "avx512vbmiintrin.h" "avx512vbmivlintrin.h" "avx512vlbwintrin.h" "avx512vlcdintrin.h" "avx512vldqintrin.h" "avx512vlintrin.h" "avx512vpopcntdqintrin.h" "avxintrin.h" "bmi2intrin.h" "bmiintrin.h" "clflushoptintrin.h" "clzerointrin.h" "cpuid.h" "cuda_wrappers" "emmintrin.h" "f16cintrin.h" "float.h" "fma4intrin.h" "fmaintrin.h" "fxsrintrin.h" "htmintrin.h" "htmxlintrin.h" "ia32intrin.h" "immintrin.h" "intrin.h" "inttypes.h" "iso646.h" "limits.h" "lwpintrin.h" "lzcntintrin.h" "mm3dnow.h" "mm_malloc.h" "mmintrin.h" "module.modulemap" "msa.h" "mwaitxintrin.h" "nmmintrin.h" "opencl-c.h" "pkuintrin.h" "pmmintrin.h" "popcntintrin.h" "prfchwintrin.h" "rdseedintrin.h" "rtmintrin.h" "s390intrin.h" "sanitizer" "shaintrin.h" "smmintrin.h" "stdalign.h" "stdarg.h" "stdatomic.h" "stdbool.h" "stddef.h" "stdint.h" "stdnoreturn.h" "tbmintrin.h" "tgmath.h" "tmmintrin.h" "unwind.h" "vadefs.h" "varargs.h" "vecintrin.h" "wmmintrin.h" "x86intrin.h" "xmmintrin.h" "xopintrin.h" "xray" "xsavecintrin.h" "xsaveintrin.h" "xsaveoptintrin.h" "xsavesintrin.h" "xtestintrin.h" "unistd.h" "libaio.h"))
+  '("algorithm" "any" "array" "atomic" "bitset" "cassert" "ccomplex" "cctype" "cerrno"
+    "cfenv" "cfloat" "chrono" "cinttypes" "ciso646" "climits" "clocale" "cmath" "codecvt"
+    "complex" "complex.h" "condition_variable" "csetjmp" "csignal" "cstdalign" "cstdarg"
+    "cstdbool" "cstddef" "cstdint" "cstdio" "cstdlib" "cstring" "ctgmath" "ctime" "cuchar"
+    "cwchar" "cwctype" "cxxabi.h" "deque" "exception" "fenv.h" "forward_list" "fstream"
+    "functional" "future" "initializer_list" "iomanip" "ios" "iosfwd" "iostream" "istream"
+    "iterator" "limits" "list" "locale" "map" "math.h" "memory" "mutex" "new" "numeric"
+    "optional" "ostream" "queue" "random" "ratio" "regex" "scoped_allocator" "set"
+    "shared_mutex" "sstream" "stack" "stdexcept" "stdlib.h" "streambuf" "string" "string_view"
+    "system_error" "tgmath.h" "thread" "tuple" "type_traits" "typeindex" "typeinfo" "unordered_map"
+    "unordered_set" "utility" "valarray" "variant" "vector" "auto_ptr.h" "backward_warning.h"
+    "binders.h" "hash_fun.h" "hash_map" "hash_set" "hashtable.h" "strstream" "adxintrin.h"
+    "altivec.h" "ammintrin.h" "arm_acle.h" "arm_neon.h" "armintr.h" "avx2intrin.h" "avx512bwintrin.h"
+    "avx512cdintrin.h" "avx512dqintrin.h" "avx512erintrin.h" "avx512fintrin.h" "avx512ifmaintrin.h"
+    "avx512ifmavlintrin.h" "avx512pfintrin.h" "avx512vbmiintrin.h" "avx512vbmivlintrin.h"
+    "avx512vlbwintrin.h" "avx512vlcdintrin.h" "avx512vldqintrin.h" "avx512vlintrin.h" "avx512vpopcntdqintrin.h"
+    "avxintrin.h" "bmi2intrin.h" "bmiintrin.h" "clflushoptintrin.h" "clzerointrin.h" "cpuid.h"
+    "cuda_wrappers" "emmintrin.h" "f16cintrin.h" "fcntl.h" "float.h" "fma4intrin.h" "fmaintrin.h" "fxsrintrin.h"
+    "htmintrin.h" "htmxlintrin.h" "ia32intrin.h" "immintrin.h" "intrin.h" "inttypes.h" "iso646.h"
+    "limits.h" "lwpintrin.h" "lzcntintrin.h" "mm3dnow.h" "mm_malloc.h" "mmintrin.h" "module.modulemap"
+    "msa.h" "mwaitxintrin.h" "nmmintrin.h" "opencl-c.h" "pkuintrin.h" "pmmintrin.h" "popcntintrin.h"
+    "prfchwintrin.h" "rdseedintrin.h" "rtmintrin.h" "s390intrin.h" "sanitizer" "shaintrin.h" "smmintrin.h"
+    "stdalign.h" "stdarg.h" "stdatomic.h" "stdbool.h" "stddef.h" "stdint.h" "stdnoreturn.h" "tbmintrin.h"
+    "tgmath.h" "tmmintrin.h" "unwind.h" "vadefs.h" "varargs.h" "vecintrin.h" "wmmintrin.h" "x86intrin.h"
+    "xmmintrin.h" "xopintrin.h" "xray" "xsavecintrin.h" "xsaveintrin.h" "xsaveoptintrin.h" "xsavesintrin.h"
+    "xtestintrin.h" "unistd.h" "libaio.h" "numa.h"))
 
 (defun +amos/add-include (h &rest others)
   "Add an #include line for `h' near top of file, avoiding duplicates."
@@ -249,31 +185,9 @@ compilation database is present in the project.")
 
 (defun +amos/ivy-add-include ()
   (interactive)
-  (ivy-read "Include: " (append +amos/default-include-headers
-                                (split-string
-                                 (shell-command-to-string "cd /usr/local/include ; find . -type f | sed 's=^./=='")))
+  (ivy-read "Include: "
+            (append
+             +amos/default-include-headers
+             (split-string
+              (shell-command-to-string "(cd /usr/local/include ; find . -type f ; cd /usr/include ; find ./sys -type f) | sed 's=^./=='")))
             :action #'+amos/add-include))
-
-(defun +amos/add-library-link (library)
-  "Add an -llibrary line for `library' near bottom of file, avoiding duplicates."
-  (interactive "M#library: ")
-  (let ((lib (if (s-suffix? ".a" library)
-                 (format "-l:%s \\" library)
-               (format "-l%s \\" library))))
-    (save-excursion
-      (if (search-forward lib nil t)
-          nil
-        (when (re-search-forward "^-l.*\\\\$" nil 'stop-at-the-end 1)
-          (forward-line)
-          (beginning-of-line))
-        (insert lib)
-        (newline)))))
-
-(defun +amos/ivy-add-library-link ()
-  (interactive)
-  (ivy-read "Library: " (nconc
-                         (split-string
-                          (shell-command-to-string "ldconfig -p | awk ' $1 ~ /^lib.*so$/ { print gensub(/^lib(.*).so$/, \"\\\\1\", 1, $1)}'"))
-                         (split-string
-                          (shell-command-to-string "clang++ -print-search-dirs | sed -n 's/:/ /g;s/libraries.*=//p' | xargs ls | egrep '\.a$'")))
-            :action #'+amos/add-library-link))

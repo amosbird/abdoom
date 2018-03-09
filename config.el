@@ -23,7 +23,7 @@
     (current-column)))
 (put :hint 'lisp-indent-function 'special-indent-fn)
 (def-hydra! +amos@paste (:hint nil
-                         :color red
+                         :foreign-keys nil
                          :pre (setq hydra-lv nil)
                          :after-exit (setq hydra-lv t))
   "Paste"
@@ -1195,37 +1195,7 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (define-key emacs-lisp-mode-map "#" #'endless/sharp)
 
-(setq my-shebang-patterns
-      (list "^#!/usr/.*/perl\\(\\( \\)\\|\\( .+ \\)\\)-w *.*"
-            "^#!/usr/.*/sh"
-            "^#!/usr/.*/bash"
-            "^#!/usr/.*/fish"
-            "^#!/usr/bin/env"
-            "^#!/bin/sh"
-            "^#!/bin/bash"
-            "^#!/bin/fish"))
-
-(add-hook! 'after-save-hook
-  (if (not (= (shell-command (concat "test -x " (buffer-file-name))) 0))
-      (progn
-        ;; This puts message in *Message* twice, but minibuffer
-        ;; output looks better.
-        (message (concat "Wrote " (buffer-file-name)))
-        (save-excursion
-          (goto-char (point-min))
-          ;; Always checks every pattern even after
-          ;; match.  Inefficient but easy.
-          (dolist (my-shebang-pat my-shebang-patterns)
-            (if (looking-at my-shebang-pat)
-                (if (= (shell-command
-                        (concat "chmod u+x " (buffer-file-name)))
-                       0)
-                    (message (concat
-                              "Wrote and made executable "
-                              (buffer-file-name))))))))
-    ;; This puts message in *Message* twice, but minibuffer output
-    ;; looks better.
-    (message (concat "Wrote " (buffer-file-name)))))
+(add-hook! 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 
 (defun +file-templates-append (args)
   (cl-destructuring-bind (regexp trigger &optional mode project-only-p) args
@@ -1259,11 +1229,26 @@ This function should be hooked to `buffer-list-update-hook'."
   :bind (:map rust-playground-mode-map
           ([S-return] . rust-playground-rm)))
 
-(def-package! cc-playground
-  :commands (cc-playground cc-playground-mode)
-  :config
-  (add-hook! 'cc-playground-hook (shell-command (format "rc --project-root=%s -c clang++ -std=c++17 -x c++ %s" (file-name-directory buffer-file-name) buffer-file-name)) (evil-open-below 1))
-  (add-hook! 'cc-playground-rm-hook (shell-command (format "rc -W %s" (file-name-directory buffer-file-name)))))
+(if (equal (system-name) "t450s")
+    (def-package! cc-playground
+      :commands (cc-playground cc-playground-mode)
+      :load-path "~/git/cc-playground"
+      :bind (:map cc-playground-mode-map
+              ("C-c d" . cc-playground-debug)
+              ("C-c t" . cc-playground-debug-test)
+              ("C-c l" . cc-playground-ivy-add-library-link)
+              ("C-c c" . cc-playground-change-compiler)
+              ("C-c o" . cc-playground-switch-optimization-flag)
+              ("C-c f" . cc-playground-add-compilation-flags)))
+  (def-package! cc-playground
+    :commands (cc-playground cc-playground-mode)
+    :bind (:map cc-playground-mode-map
+            ("C-c d" . cc-playground-debug)
+            ("C-c t" . cc-playground-debug-test)
+            ("C-c l" . cc-playground-ivy-add-library-link)
+            ("C-c c" . cc-playground-change-compiler)
+            ("C-c o" . cc-playground-switch-optimization-flag)
+            ("C-c f" . cc-playground-add-compilation-flags))))
 
 (put :hint  'lisp-indent-function 1)
 (put :color 'lisp-indent-function 'defun)
@@ -1868,7 +1853,6 @@ The selected history element will be inserted into the minibuffer."
 (defun cquery/derived () (interactive) (cquery-xref-find-custom "$cquery/derived"))
 (defun cquery/vars () (interactive) (cquery-xref-find-custom "$cquery/vars"))
 
-
 (evil-define-command evil-wipeout-buffer (buffer &optional bang)
   "Deletes a buffer. Also clears related jump marks.
 All windows currently showing this buffer will be closed except
@@ -1948,9 +1932,34 @@ it will restore the window configuration to prior to full-framing."
       (zygospore-restore-other-windows)
     (zygospore-delete-other-window)))
 
+(defun save-buffer-maybe ()
+  (when (and (buffer-file-name)
+             (buffer-modified-p))
+    (save-buffer)))
+(add-hook '+evil-esc-hook #'save-buffer-maybe)
 
-;; (add-hook! 'compilation-start-hook
-;;   (add-hook 'kill-buffer-hook #'kill-compilation nil t))
+(defun my-reload-dir-locals-for-all-buffer-in-this-directory ()
+  "For every buffer with the same `default-directory` as the
+current buffer's, reload dir-locals."
+  (interactive)
+  (let ((dir default-directory))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (equal default-directory dir))
+        (my-reload-dir-locals-for-current-buffer)))))
 
-;; (add-hook! 'compilation-finish-functions
-;;   (remove-hook 'kill-buffer-hook #'kill-compilation t))
+(defun my-reload-dir-locals-for-current-buffer ()
+  "reload dir locals for the current buffer"
+  (interactive)
+  (let ((enable-local-variables :all))
+    (hack-dir-local-variables-non-file-buffer)))
+
+(add-hook 'emacs-lisp-mode-hook
+          (defun enable-autoreload-for-dir-locals ()
+            (when (and (buffer-file-name)
+                       (equal dir-locals-file
+                              (file-name-nondirectory (buffer-file-name))))
+              (add-hook (make-variable-buffer-local 'after-save-hook)
+                        'my-reload-dir-locals-for-all-buffer-in-this-directory))))
+
+(advice-remove #'counsel-ag-function #'+ivy*counsel-ag-function)

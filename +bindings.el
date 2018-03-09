@@ -104,8 +104,8 @@
         +jump/references
         counsel-imenu
         +eval/buffer
-        +amos/escape
-        projectile-find-other-file))
+        ;; +amos/escape
+        +amos/projectile-find-other-file))
 
 (defun text-scale-reset ()
   (interactive)
@@ -121,13 +121,18 @@
 (defun +workspace/switch-to-8 () (interactive) (+workspace/switch-to 8))
 (defun +workspace/switch-to-9 () (interactive) (+workspace/switch-to 9))
 
-(defun +amos/escape () (interactive)
-       (evil-force-normal-state)
-       (if buffer-file-name
-           (save-buffer)))
+(defun +amos/projectile-find-other-file ()
+  (interactive)
+  (if (cc-playground-mode)
+      (cc-switch-between-src-and-test)
+    (projectile-find-other-file)))
+;; (defun +amos/escape () (interactive)
+;;        (evil-force-normal-state)
+;;        (if buffer-file-name
+;;            (save-buffer)))
 
 (map!
- :n [escape]         #'+amos/escape
+ ;; :n [escape]         #'+amos/escape
  :nvime "M-x"        #'execute-extended-command
  "M-+"               #'text-scale-increase
  "M-="               #'text-scale-reset
@@ -251,7 +256,7 @@
  :n  "gr"            #'+jump/references
  :n  "gR"            #'+eval/buffer
  :v  "gR"            #'+eval:replace-region
- :n ",,"             #'projectile-find-other-file
+ :n  ",,"            #'+amos/projectile-find-other-file
 
  (:prefix "C-x"
    :nvime "u" #'link-hint-open-link
