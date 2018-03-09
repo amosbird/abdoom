@@ -2,4 +2,4 @@
 # name: cerr
 # --
 `(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
---cpp-ns`cerr << ${1:string};`(progn (makunbound '--cpp-ns) "")`
+--cpp-ns`cerr << ${1:string} << `--cpp-ns`endl;`(progn (makunbound '--cpp-ns) "")`
