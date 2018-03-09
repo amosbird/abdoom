@@ -1901,6 +1901,11 @@ for the last window in each frame."
     (find-file full-name)
     (evil-initialize-state 'insert)))
 
+(def-package! persistent-scratch
+  :commands (persistent-scratch-setup-default)
+  :init
+  (persistent-scratch-setup-default))
+
 (with-eval-after-load 'org-src
   (add-hook 'org-src-mode-hook
             'editorconfig-mode-apply t))

@@ -78,3 +78,5 @@
 (package! lsp-mode)
 (package! lsp-ui)
 (package! company-lsp)
+
+(package! persistent-scratch)

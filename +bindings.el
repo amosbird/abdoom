@@ -121,7 +121,10 @@
 (defun +workspace/switch-to-8 () (interactive) (+workspace/switch-to 8))
 (defun +workspace/switch-to-9 () (interactive) (+workspace/switch-to 9))
 
-(defun +amos/escape () (interactive) (evil-force-normal-state) (save-buffer))
+(defun +amos/escape () (interactive)
+       (evil-force-normal-state)
+       (if buffer-file-name
+           (save-buffer)))
 
 (map!
  :n [escape]         #'+amos/escape
@@ -439,31 +442,33 @@
      "b"       nil
      "n"       nil
      "N"       nil
+     "y"       nil
      "C-o"     nil
      "C-i"     nil
-     :nm "d"   #'dired-flag-file-deletion
-     :nm "y"   (lambda! (dired-ranger-copy nil))
-     :nm "c"   (lambda! (dired-ranger-copy t))
-     :nm "p"   #'dired-ranger-paste
-     :nm "r"   #'dired-ranger-move
-     "f"       #'counsel-find-file
-     "S"       #'hydra-dired-quick-sort/body
-     :nm "I"   #'dired-kill-subdir
-     "j"       #'dired-next-line
-     "k"       #'dired-previous-line
-     "W"       (lambda! (dired-copy-filename-as-kill 0))
-     :nm "C-i" #'peep-dired-toggle
-     :nm "C-v" #'peep-dired-scroll-page-down
-     "M-v"     #'peep-dired-scroll-page-up
-     :nm "Y"   #'+amos/dired-rsync
-     :nm "S"   #'hydra-dired-quick-sort/body
-     :n  "j"   #'+amos/evil-undefine
-     :n  "k"   #'+amos/evil-undefine
-     :n  "M-n" #'+amos/counsel-jumpfile-function
-     :n  "M-o" #'+amos/prev-history
-     :n  "M-i" #'+amos/next-history
-     :n  "h"   #'+amos/up-directory
-     :n  "l"   #'dired-open-file))
+     :n "d"   #'dired-flag-file-deletion
+     :n "y"   (lambda! (dired-ranger-copy nil))
+     :n "c"   (lambda! (dired-ranger-copy t))
+     :n "p"   #'dired-ranger-paste
+     :n "E"   #'wdired-change-to-wdired-mode
+     :n "r"   #'dired-ranger-move
+     "f"      #'counsel-find-file
+     "S"      #'hydra-dired-quick-sort/body
+     :n "I"   #'dired-kill-subdir
+     "j"      #'dired-next-line
+     "k"      #'dired-previous-line
+     "W"      (lambda! (dired-copy-filename-as-kill 0))
+     :n "C-i" #'peep-dired-toggle
+     :n "C-v" #'peep-dired-scroll-page-down
+     "M-v"    #'peep-dired-scroll-page-up
+     :n "Y"   #'+amos/dired-rsync
+     :n "S"   #'hydra-dired-quick-sort/body
+     :n "j"   #'+amos/evil-undefine
+     :n "k"   #'+amos/evil-undefine
+     :n "M-n" #'+amos/counsel-jumpfile-function
+     :n "M-o" #'+amos/prev-history
+     :n "M-i" #'+amos/next-history
+     :n "h"   #'+amos/up-directory
+     :n "l"   #'dired-open-file))
 
  ;; evil-magit
  (:after evil-magit
