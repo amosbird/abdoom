@@ -2,5 +2,4 @@
 # name: replace_copy
 # key: rpc
 # --
-std::replace_copy(std::begin(${1:container}), std::end($1), std::begin($1), $2, $3);
-$0
+std::replace_copy(std::begin(${1:src}), std::end($1), std::begin(${2:dst}), ${3:old}, ${4:new});

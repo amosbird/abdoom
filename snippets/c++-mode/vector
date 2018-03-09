@@ -2,4 +2,5 @@
 # name: vector
 # key: vec
 # --
-std::vector<${1:Class}> ${2:var}${3:(${4:10}, $1($5))};
+`(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
+--cpp-ns`vector<${1:int}> ${2:var}${3:(${4:10}, $1($5))};`(progn (makunbound '--cpp-ns) "")`

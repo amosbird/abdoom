@@ -2,5 +2,4 @@
 # name: partial_sort
 # key: pst
 # --
-std::partial_sort(std::begin(${1:container}), std::end($1), std::end($1));
-$0
+std::partial_sort(std::begin(${1:start}), std::begin($1) + ${2:n}, std::end($1));

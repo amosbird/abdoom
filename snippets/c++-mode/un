@@ -2,4 +2,4 @@
 # name: un
 # key: un
 # --
-unsigned
+unsigned $0

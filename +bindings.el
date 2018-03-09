@@ -20,7 +20,7 @@
   (interactive)
   (if (eolp)
       (if (looking-back ";" 1)
-          (doom/newline-and-indent)
+          (funcall-interactively (key-binding (kbd "RET")))
       (insert ?\;))
     (doom/forward-to-last-non-comment-or-eol)))
 (defun doom/backward-to-bol-or-indent-insert ()

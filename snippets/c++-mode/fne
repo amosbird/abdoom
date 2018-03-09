@@ -2,9 +2,8 @@
 # name: find_end
 # key: fne
 # --
-auto pos = std::find_std::end(std::begin(${1:container}), std::end($1),
-  std::begin($2), std::end($3));
+auto pos = std::find_end(std::begin(${1:haystack}), std::end($1), std::begin(${2:needle}), std::end($2));
 if (pos != std::end($1)) {
-  $4
+    $3
 }
 $0

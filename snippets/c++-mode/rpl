@@ -2,5 +2,4 @@
 # name: replace
 # key: rpl
 # --
-std::replace(std::begin(${1:container}), std::end($1), $2, $3);
-$0
+std::replace(std::begin(${1:container}), std::end($1), ${2:old}, ${3:new});

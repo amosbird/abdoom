@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: rotate
+# key: rot
+# --
+std::rotate(std::begin(${1:container}), std::begin($1) + ${2:n}, std::end($1));
