@@ -64,7 +64,11 @@
 
 (package! go-playground)
 (package! rust-playground)
-(package! cc-playground :recipe (:fetcher github :repo "amosbird/cc-playground"))
+;; (package! cc-playground :recipe (:fetcher github :repo "amosbird/cc-playground"))
+(package! cc-playground :recipe (:fetcher github
+                                          :repo "amosbird/cc-playground"
+                                          :files ("*.el" "templates")))
+
 
 (package! pdf-tools)
 (package! bind-map)
