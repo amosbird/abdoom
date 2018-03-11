@@ -134,7 +134,8 @@
                 (delq 'yas-installed-snippets-dir yas-snippet-dirs))))
 
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
-(after! wdired (evil-set-initial-state 'wdire-mode 'normal))
+(after! wdired (evil-set-initial-state 'wdired-mode 'normal))
+(after! ivy (evil-set-initial-state 'ivy-occur-grep-mode 'normal))
 
 (def-package! evil-magit
   :after magit
@@ -398,33 +399,14 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   :demand
   :config
   (ws-butler-global-mode))
-;;; config.el ends here
-
-;; (advice-add #'split-window-below :override #'split-window-right)
 
 (setq company-idle-delay 0.1
+      company-show-numbers t
       company-minimum-prefix-length 2
       company-selection-wrap-around t
-      company-show-numbers t
-      company-require-match 'never
       company-dabbrev-downcase nil
       company-dabbrev-ignore-case t
-      company-jedi-python-bin "python")
-(defun my-company-abort ()
-  (interactive)
-  (company-abort)
-  (when (and (bound-and-true-p evil-mode)
-             (eq evil-state 'insert))
-    (evil-force-normal-state)))
-
-(with-eval-after-load 'company
-  (define-key company-active-map (kbd "<escape>") 'my-company-abort)
-  (define-key company-search-map (kbd "<escape>") 'company-search-abort))
-
-(setq company-frontends
-      '(company-pseudo-tooltip-unless-just-one-frontend
-        company-echo-metadata-frontend
-        company-preview-frontend)
+      company-jedi-python-bin "python"
       company-auto-complete t)
 
 (with-eval-after-load 'smartparens
@@ -551,45 +533,6 @@ but do not execute them."
   :after dired
   :config
   (dired-quick-sort-setup))
-
-(def-package! eyebrowse
-  :diminish eyebrowse-mode
-  :disabled
-  :demand
-  :config
-  (define-key eyebrowse-mode-map (kbd "M-1") 'eyebrowse-switch-to-window-config-1)
-  (define-key eyebrowse-mode-map (kbd "M-2") 'eyebrowse-switch-to-window-config-2)
-  (define-key eyebrowse-mode-map (kbd "M-3") 'eyebrowse-switch-to-window-config-3)
-  (define-key eyebrowse-mode-map (kbd "M-4") 'eyebrowse-switch-to-window-config-4)
-  (define-key eyebrowse-mode-map (kbd "M-5") 'eyebrowse-switch-to-window-config-5)
-  (define-key eyebrowse-mode-map (kbd "M-6") 'eyebrowse-switch-to-window-config-6)
-  (define-key eyebrowse-mode-map (kbd "M-7") 'eyebrowse-switch-to-window-config-7)
-  (define-key eyebrowse-mode-map (kbd "M-8") 'eyebrowse-switch-to-window-config-8)
-  (define-key eyebrowse-mode-map (kbd "M-9") 'eyebrowse-switch-to-window-config-9)
-  (define-key eyebrowse-mode-map (kbd "M-0") 'eyebrowse-close-window-config)
-  (eyebrowse-mode +1)
-  (setq eyebrowse-new-workspace nil) ;; clone
-  ;; (setq eyebrowse-new-workspace t) ;; scratch
-  )
-
-;; (def-modeline-segment! eyebrowse
-;;   (when eyebrowse-mode
-;;     (eyebrowse-mode-line-indicator)))
-
-;; (def-modeline! main
-;;   (bar matches " " buffer-info "  %l:%c %p  " selection-info)
-;;   (eyebrowse " " buffer-encoding major-mode vcs flycheck))
-
-;; (def-package! highlight-parentheses
-;;   :demand
-;;   :config
-;;   (global-highlight-parentheses-mode))
-
-(defun +amos/swiper-replace ()
-  "Swiper replace with mc selction."
-  (interactive)
-  (run-at-time nil nil #'ivy-wgrep-change-to-wgrep-mode)
-  (ivy-occur))
 
 (defun xah-display-minor-mode-key-priority  ()
   "Print out minor mode's key priority.
@@ -1966,7 +1909,9 @@ current buffer's, reload dir-locals."
 (add-hook 'tty-setup-hook #'setup-input-decode-map)
 
 (require 'yasnippet)
+(require 'company)
 (add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet)
+(add-hook 'evil-insert-state-exit-hook #'company-abort)
 
 (put 'cc-exec 'safe-local-variable #'stringp)
 (put 'cc-flags 'safe-local-variable #'stringp)
