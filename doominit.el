@@ -38,7 +38,7 @@
        spellcheck        ; tasing you for misspelling mispelling
        syntax-checker    ; tasing you for every semicolon you forget
        version-control   ; remember, remember that commit in November
-       workspaces        ; tab emulation, persistence & separate workspaces
+       ;; workspaces        ; tab emulation, persistence & separate workspaces
 
        :completion
        company           ; the ultimate code completion backend
@@ -48,7 +48,7 @@
 
        :ui
        doom              ; what makes DOOM look the way it does
-       doom-dashboard    ; a nifty splash screen for Emacs
+       ;; doom-dashboard    ; a nifty splash screen for Emacs
        doom-modeline     ; a snazzy Atom-inspired mode-line
       ;doom-quit         ; DOOM quit-message prompts when you quit Emacs
        hl-todo           ; highlight TODO/FIXME/NOTE tags
@@ -119,3 +119,4 @@
        org-capture
        org-export
        email)
+(put 'narrow-to-region 'disabled nil)

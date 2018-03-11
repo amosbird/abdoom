@@ -60,8 +60,6 @@ compilation database is present in the project.")
   (map! (:map (c-mode-map c++-mode-map)
           "<" nil
           :i ">"        #'+cc/autoclose->-maybe
-          :i "M-j"      #'+amos/finish-line
-          "C-c C-r"     #'+amos/rc-index-current-file
           "C-c i"       #'+amos/ivy-add-include)
 
         (:after lsp-ui-peek

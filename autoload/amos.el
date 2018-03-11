@@ -39,24 +39,123 @@ the current state and point position."
   (dotimes (_ count) (save-excursion (evil-insert-newline-below))))
 
 ;;;###autoload
+(defun +amos/copy-without-useless-indent-and-newline ()
+  (interactive)
+  (let ((inhibit-message t))
+    (when (evil-visual-state-p)
+      (call-interactively #'narrow-reindent-to-region)
+      ;; (call-interactively #'narrow-to-region)
+      (set-mark (point-min))
+      (goto-char (point-max))
+      (backward-char)
+      (end-of-line)
+      (call-interactively #'copy-region-as-kill)
+      (narrow-reindent-widen)
+      ;; (widen)
+      (recenter))))
+
+(defun +amos/copy-without-useless-indent-and-newline2 ()
+  (interactive)
+  (let ((inhibit-message t))
+    (when (evil-visual-state-p)
+      (call-interactively #'narrow-reindent-to-region)
+      (goto-char (point-max))
+      (backward-char)
+      (end-of-line)
+      (let ((text (filter-buffer-substring (point-min) (point))))
+        (evil-set-register ?y text))
+      (narrow-reindent-widen)
+      (recenter))))
+
+;;;###autoload
 (defun +amos/evil-visual-insert-snippet ()
   (interactive)
-  (when (evil-visual-state-p)
-    (call-interactively #'narrow-to-region)
-    (execute-kbd-macro "gv")
-    (setq evil-this-register ?y)
-    (execute-kbd-macro "y")
-    (call-interactively #'widen)
-    (execute-kbd-macro "gv")
-    (setq evil-this-register ?n)
-    (call-interactively #'evil-substitute)
-    (yas-insert-snippet)))
+  (let ((start (region-beginning))
+        (end (region-end)))
+    (+amos/copy-without-useless-indent-and-newline2)
+    (setq yas--condition-cache-timestamp (current-time))
+    (let* ((templates (yas--all-templates (yas--get-snippet-tables)))
+           (yas--current-template (and templates
+                                       (or (and (cl-rest templates) ;; more than one template for same key
+                                                (yas--prompt-for-template templates))
+                                           (car templates))))
+           (where (cons (point) (point))))
+      (if yas--current-template
+          (progn
+            (evil-substitute start end 'line ?_)
+            (yas-expand-snippet (yas--template-content yas--current-template)
+                                (car where)
+                                (cdr where)
+                                (yas--template-expand-env yas--current-template)))
+        (yas--message 1 "No snippets can be inserted here!")))))
+
+;;;###autoload
+(defun shell-command! (command)
+  (let ((inhibit-message t))
+    (shell-command command)))
 
 ;;;###autoload
 (defun +amos/tmux-detach ()
   "Detach if inside tmux."
   (interactive)
-  (+tmux/run "detach-client"))
+  (shell-command! "tmux detach-client"))
+
+;;;###autoload
+(defun +amos/tmux-switch-window (&optional next)
+  "Switch window if inside tmux."
+  (interactive)
+  ;; (push (selected-frame) last-frame)
+  (if next
+      (shell-command! (format "tmux next-window; tmux send f12"))
+    (shell-command! (format "tmux previous-window; tmux send f12"))))
+
+;;;###autoload
+(defun +amos/tmux-select-window (num)
+  "Select window if inside tmux."
+  (interactive)
+  (shell-command! (format "tmux select-window -t %d; tmux send f12" num)))
+
+;;;###autoload
+(defun +amos/tmux-new-window (&optional func)
+  "New window if inside tmux."
+  (interactive)
+  (if (functionp func)
+      (shell-command! (format "tmux new-window emacsclient -t -eval '(%s)'" (symbol-name func)))
+    (shell-command! "tmux new-window emacsclient -t")))
+
+;;;###autoload
+(defun +amos/tmux-fork-window ()
+  "Detach if inside tmux."
+  (interactive)
+  (+amos-store-jump-history)
+  (shell-command! (format "tmux switch-client -t amos; tmux run \"tmux new-window -c %s\"" default-directory)))
+
+;; ;;;###autoload
+;; (defun +amos/tmux-kill-window ()
+;;   "Kill tmux window if inside tmux."
+;;   (interactive)
+;;   (let ((current-frame (selected-frame))
+;;         (flag t)
+;;         frame)
+;;     (while (and last-frame flag)
+;;       (setq frame (pop last-frame))
+;;       (when (frame-live-p frame)
+;;         (select-frame-set-input-focus frame)
+;;         (setq flag nil)))
+;;     ;; (delete-frame current-frame)))
+;;     (shell-command "tmux kill-window")))
+
+;;;###autoload
+(defun +amos/tmux-kill-window ()
+  "Kill tmux window if inside tmux."
+  (interactive)
+  (shell-command! "tmux send -t $(tmux display -pt'{last}' '#{pane_id}') f12; tmux kill-window"))
+
+;;;###autoload
+(defun +amos/tmux-source ()
+  "Source tmux config if inside tmux."
+  (interactive)
+  (shell-command! "tmux source-file ~/.tmux/.tmux.conf.emacs"))
 
 ;;;###autoload
 (defun +amos/copy-and-comment-lines-inverse (&optional arg)

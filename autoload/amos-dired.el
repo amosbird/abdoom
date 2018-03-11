@@ -168,8 +168,9 @@
             :action #'+amos/find-file
             :caller #'+amos/counsel-jumpdir-function))
 
+;;;###autoload
 (defun +amos-store-jump-history ()
-  (shell-command-to-string "jump chdir"))
+  (shell-command! "jump chdir || true"))
 
 ;;;###autoload
 (defun +amos/dired-jump ()

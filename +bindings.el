@@ -5,27 +5,35 @@
  :nmvo doom-localleader-key nil)
 
 (mapc #'evil-declare-change-repeat
-      '(
-        ;; +amos/forward-word
-        ;; +amos/backward-word
-        ;; +amos/backward-subword
-        ;; +amos/forward-subword
-        ;; +amos/delete-word
-        ;; +amos/delete-subword
-        delete-char
-        company-dabbrev-code
+      '(company-dabbrev-code
         +company/complete))
 
-(defun doom/forward-to-last-non-comment-or-eol-insert ()
+(defun +amos/maybe-add-end-of-statement ()
   (interactive)
+  (save-excursion
+    (let (s e)
+      (beginning-of-line)
+      (setq s (point))
+      (end-of-line);
+      (setq e (point));
+      (delete-trailing-whitespace s e));
+    (if (not (looking-back ";" 1));
+        (insert ?\;))))
+
+(defun +amos/smart-eol-insert ()
+  (interactive)
+  (save-excursion
+    (let (s e)
+      (beginning-of-line)
+      (setq s (point))
+      (end-of-line)
+      (setq e (point))
+      (delete-trailing-whitespace s e)))
   (if (eolp)
       (if (looking-back ";" 1)
           (funcall-interactively (key-binding (kbd "RET")))
-      (insert ?\;))
-    (doom/forward-to-last-non-comment-or-eol)))
-(defun doom/backward-to-bol-or-indent-insert ()
-  (interactive)
-  (doom/backward-to-bol-or-indent))
+        (insert ?\;))
+    (end-of-line)))
 
 (mapc #'evil-declare-ignore-repeat
       '(execute-extended-command
@@ -111,28 +119,30 @@
   (interactive)
   (text-scale-set 0))
 
-(defun +workspace/switch-to-1 () (interactive) (+workspace/switch-to 1))
-(defun +workspace/switch-to-2 () (interactive) (+workspace/switch-to 2))
-(defun +workspace/switch-to-3 () (interactive) (+workspace/switch-to 3))
-(defun +workspace/switch-to-4 () (interactive) (+workspace/switch-to 4))
-(defun +workspace/switch-to-5 () (interactive) (+workspace/switch-to 5))
-(defun +workspace/switch-to-6 () (interactive) (+workspace/switch-to 6))
-(defun +workspace/switch-to-7 () (interactive) (+workspace/switch-to 7))
-(defun +workspace/switch-to-8 () (interactive) (+workspace/switch-to 8))
-(defun +workspace/switch-to-9 () (interactive) (+workspace/switch-to 9))
+(defun +workspace/switch-to-1 () (interactive) (+amos/tmux-select-window 1))
+(defun +workspace/switch-to-2 () (interactive) (+amos/tmux-select-window 2))
+(defun +workspace/switch-to-3 () (interactive) (+amos/tmux-select-window 3))
+(defun +workspace/switch-to-4 () (interactive) (+amos/tmux-select-window 4))
+(defun +workspace/switch-to-5 () (interactive) (+amos/tmux-select-window 5))
+(defun +workspace/switch-to-6 () (interactive) (+amos/tmux-select-window 6))
+(defun +workspace/switch-to-7 () (interactive) (+amos/tmux-select-window 7))
+(defun +workspace/switch-to-8 () (interactive) (+amos/tmux-select-window 8))
+(defun +workspace/switch-to-9 () (interactive) (+amos/tmux-select-window 9))
+
+(defun +amos/tmux-switch-window-previous () (interactive) (+amos/tmux-switch-window))
+(defun +amos/tmux-switch-window-next () (interactive) (+amos/tmux-switch-window t))
 
 (defun +amos/projectile-find-other-file ()
   (interactive)
   (if (cc-playground-mode)
       (cc-switch-between-src-and-test)
     (projectile-find-other-file)))
-;; (defun +amos/escape () (interactive)
-;;        (evil-force-normal-state)
-;;        (if buffer-file-name
-;;            (save-buffer)))
+
+(defun nop ()
+  (interactive))
 
 (map!
- ;; :n [escape]         #'+amos/escape
+ "<f12>"             #'realign-windows
  :nvime "M-x"        #'execute-extended-command
  "M-+"               #'text-scale-increase
  "M-="               #'text-scale-reset
@@ -156,8 +166,8 @@
  :nvme "M-a"         #'mark-whole-buffer
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
- :i "M-,"            (lambda! (insert ?:))
- :i "M-."            (lambda! (insert ?\;))
+ :nm "M-<"           #'flycheck-previous-error
+ :nm "M->"           #'flycheck-next-error
  :n  "M-n"           #'evil-multiedit-match-symbol-and-next
  :n  "M-N"           #'evil-multiedit-match-symbol-and-prev
  :v  "M-n"           #'evil-multiedit-match-and-next
@@ -165,17 +175,17 @@
  :i  "M-n"           #'next-line
  :i  "M-p"           #'previous-line
  :n  "M-o"           #'lsp-ui-mode
- :vn "E"             #'+amos/forward-subword
- :vn "B"             #'+amos/backward-subword
- :ni "M-b"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/backward-word-insert))
- :ni "M-B"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/backward-subword-insert))
- :ni "M-f"           (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/forward-word-insert))
- :ni "M-F"           (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/forward-subword-insert))
- :ni "M-d"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/delete-word))
- :ni "M-D"           (lambda! (if (not (eq evil-state 'insert)) (evil-insert 1)) (+amos/delete-subword))
- :ni [M-backspace]   (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-word))
- :ni [134217855]     (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-word)) ; M-DEL
- :ni [M-S-backspace] (lambda! (if (not (eq evil-state 'insert)) (evil-append 1)) (+amos/backward-delete-subword))
+ :vn "E"             #'+amos/evil-forward-subword-end
+ :vn "B"             #'+amos/evil-backward-subword-begin
+ :ni "M-b"           #'+amos/backward-word-insert
+ :ni "M-B"           (lambda! (+amos/backward-subword-insert t))
+ :ni "M-f"           #'+amos/forward-word-insert
+ :ni "M-F"           (lambda! (+amos/forward-subword-insert t))
+ :ni "M-d"           #'+amos/forward-delete-word
+ :ni "M-D"           (lambda! (+amos/forward-delete-word t))
+ :ni [M-backspace]   #'+amos/backward-delete-word
+ :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
+ :ni [M-S-backspace] (lambda! (+amos/backward-delete-word t))
  :i "M-r"            #'sp-slurp-hybrid-sexp
  :i "M-R"            #'sp-forward-barf-sexp
  :n "M-e"            #'counsel-dash-at-point
@@ -199,15 +209,13 @@
  :m "C-b"            #'evilem--motion-evil-find-char-backward
  :m "C-y"            #'+amos/yank-buffer-filename-with-line-position
  :m "C-w"            #'bury-buffer
- :nvm "0"            #'doom/backward-to-bol-or-indent
- :nvm "$"            #'doom/forward-to-last-non-comment-or-eol
- :nvm "-"            #'doom/forward-to-last-non-comment-or-eol
- :i "C-a"            #'doom/backward-to-bol-or-indent-insert
- :i "M-a"            #'doom/backward-to-bol-or-indent-insert
+ :i "C-a"            #'doom/backward-to-bol-or-indent
+ :i "M-a"            #'doom/backward-to-bol-or-indent
  :vn "C-a"           #'evil-numbers/inc-at-pt
  :v "g C-a"          #'evil-numbers/inc-at-pt-incremental
- :i "C-e"            #'doom/forward-to-last-non-comment-or-eol-insert
- :i "M-e"            #'doom/forward-to-last-non-comment-or-eol-insert
+ :n "C-e"            #'+amos/maybe-add-end-of-statement
+ :i "C-e"            #'+amos/smart-eol-insert
+ :i "M-e"            #'+amos/smart-eol-insert
  :i "C-u"            #'doom/backward-kill-to-bol-and-indent
  :i [remap newline]  #'doom/newline-and-indent
  :i "C-o"            #'evil-delete-line
@@ -231,8 +239,8 @@
  :o  "s"             #'evil-surround-edit
  :v  "v"             #'er/expand-region
  :v  "V"             #'er/contract-region
- :nm  "C-."          #'next-error
- :nm  "C-,"          #'previous-error
+ :nm  "C-."          #'+amos/tmux-switch-window-next
+ :nm  "C-,"          #'+amos/tmux-switch-window-previous
  :n "p"              #'+amos@paste/evil-paste-after
  :n "P"              #'+amos@paste/evil-paste-before
  :m "("              #'+amos:previous-open-delim
@@ -260,6 +268,10 @@
 
  (:prefix "C-x"
    :nvime "u" #'link-hint-open-link
+   "c"        #'+amos/tmux-new-window
+   "k"        #'+amos/tmux-kill-window
+   "o"        #'+amos/tmux-fork-window
+   :nvime "r" #'+amos/tmux-source
    "C-c"      #'+amos/tmux-detach
    "p"        #'doom/other-popup)
 
@@ -336,7 +348,8 @@
    (:desc "notes" :prefix "n"
      :desc "Rust playground"       :en "r" #'rust-playground
      :desc "Go playground"         :en "g" #'go-playground
-     :desc "C++ playground"        :en "c" #'cc-playground
+     :desc "C++ playground"        :en "c" (lambda! (+amos/tmux-new-window 'cc-playground))
+     :desc "C++ playground"        :en "l" #'cc-playground-find-snippet
      :desc "Elisp playground"      :en "e" #'+amos/new-empty-elisp-buffer
      :desc "Browse script"         :en "s" #'+amos/browse-script
      :desc "Browse org"            :en "o" #'+amos/browse-org
@@ -652,28 +665,22 @@
    (:map profiler-report-mode-map
      :nm "RET" #'profiler-report-expand-entry)))
 
-(map! (:map input-decode-map
-        "\035"    [escape]
-        [S-iso-lefttab] [backtab]
-        "\e[1;5B" [(control shift j)]
-        "\e[1;5A" [(control shift d)]
-        "\e[1;5C" [S-return]
-        "\e[1;5D" [M-S-backspace]
-        (:unless window-system "TAB" [tab])) ; Fix TAB in terminal
-
-      (:after cus-edit
+(map! (:after cus-edit
         (:map custom-mode-map
-          :n "q"    #'Custom-buffer-done))
+          :n "q" #'Custom-buffer-done))
 
       (:after view
         (:map view-mode-map
-          :n "q"    #'View-quit))
+          :n "q" #'View-quit))
 
       (:after image-mode
         (:map image-mode-map
           :n "q" #'quit-window))
 
       (:map key-translation-map
+        "\035"    [escape]
+        [S-iso-lefttab] [backtab]
+        ;; (:unless window-system "TAB" [tab]) ; Fix TAB in terminal
         "C-RET" [C-return]
         "C-1"   (kbd "1")
         "C-2"   (kbd "2")

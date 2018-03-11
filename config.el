@@ -202,7 +202,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   evilnc-comment-or-uncomment-lines)
 
 (def-package! realign-mode
-  :commands realign-mode
+  :commands realign-mode realign-windows
   :load-path "~/git/realign-mode"
   :config
   (defun amos-special-window-p (window)
@@ -210,7 +210,9 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
            (buffname (string-trim (buffer-name buffer))))
       (or (equal buffname "*doom*")
           (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
-  (push #'amos-special-window-p realign-ignore-window-predicates))
+  (push #'amos-special-window-p realign-ignore-window-predicates)
+  ;; (add-hook! 'realign-hooks (call-interactively #'git-gutter))
+  )
 
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
@@ -1083,6 +1085,11 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
 ;; Override the original function using advice
 (advice-add 'ivy-rich-switch-buffer-pad :override #'+amos*ivy-rich-switch-buffer-pad)
 
+(evil-define-motion +amos*evil-beginning-of-line ()
+  "Move the cursor to the beginning of the current line."
+  :type exclusive
+  (doom/backward-to-bol-or-indent))
+(advice-add 'evil-beginning-of-line :override #'+amos*evil-beginning-of-line)
 
 (defun +amos/save-buffer-without-dtw ()
   (interactive)
@@ -1229,26 +1236,17 @@ This function should be hooked to `buffer-list-update-hook'."
   :bind (:map rust-playground-mode-map
           ([S-return] . rust-playground-rm)))
 
-(if (equal (system-name) "t450s")
-    (def-package! cc-playground
-      :commands (cc-playground cc-playground-mode)
-      :load-path "~/git/cc-playground"
-      :bind (:map cc-playground-mode-map
-              ("C-c d" . cc-playground-debug)
-              ("C-c t" . cc-playground-debug-test)
-              ("C-c l" . cc-playground-ivy-add-library-link)
-              ("C-c c" . cc-playground-change-compiler)
-              ("C-c o" . cc-playground-switch-optimization-flag)
-              ("C-c f" . cc-playground-add-compilation-flags)))
-  (def-package! cc-playground
-    :commands (cc-playground cc-playground-mode)
-    :bind (:map cc-playground-mode-map
-            ("C-c d" . cc-playground-debug)
-            ("C-c t" . cc-playground-debug-test)
-            ("C-c l" . cc-playground-ivy-add-library-link)
-            ("C-c c" . cc-playground-change-compiler)
-            ("C-c o" . cc-playground-switch-optimization-flag)
-            ("C-c f" . cc-playground-add-compilation-flags))))
+(def-package! cc-playground
+  :commands cc-playground cc-playground-mode cc-playground-find-snippet
+  :load-path (lambda () (interactive) (if (equal (system-name) "t450s") "~/git/cc-playground"))
+  :bind (:map cc-playground-mode-map
+          ("C-c r" . cc-playground-add-or-modify-tag)
+          ("C-c d" . cc-playground-debug)
+          ("C-c t" . cc-playground-debug-test)
+          ("C-c l" . cc-playground-ivy-add-library-link)
+          ("C-c c" . cc-playground-change-compiler)
+          ("C-c o" . cc-playground-switch-optimization-flag)
+          ("C-c f" . cc-playground-add-compilation-flags)))
 
 (put :hint  'lisp-indent-function 1)
 (put :color 'lisp-indent-function 'defun)
@@ -1540,104 +1538,98 @@ The selected history element will be inserted into the minibuffer."
                         (insert (substring-no-properties x))
                         (ivy--cd-maybe)))))
 
-(defun +amos/delete-word ()
+(evil-define-motion +amos/evil-forward-subword-end (count)
+  "Move the cursor to the end of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (subword-mode +1)
+  (let ((thing 'evil-word)
+        (count (or count 1)))
+    (evil-signal-at-bob-or-eob count)
+    ;; Evil special behaviour: e or E on a one-character word in
+    ;; operator state does not move point
+    (unless (and (evil-operator-state-p)
+                 (= 1 count)
+                 (let ((bnd (bounds-of-thing-at-point thing)))
+                   (and bnd
+                        (= (car bnd) (point))
+                        (= (cdr bnd) (1+ (point)))))
+                 (looking-at "[[:word:]]"))
+      (evil-forward-end thing count)))
+  (subword-mode -1))
+
+(evil-define-motion +amos/evil-backward-subword-begin (count)
+  "Move the cursor to the beginning of the COUNT-th previous word.
+If BIGWORD is non-nil, move by WORDS."
+  :type exclusive
+  (subword-mode +1)
+  (let ((thing 'evil-word))
+    (evil-signal-at-bob-or-eob (- (or count 1)))
+    (evil-backward-beginning thing count))
+  (subword-mode -1))
+
+(defun +amos/forward-delete-word (&optional subword)
   (interactive)
+  (evil-signal-at-bob-or-eob 1)
+  (unless (evil-insert-state-p)
+    (evil-insert-state 1))
+  (if subword (subword-mode +1))
   (delete-region (point)
                  (max
                   (save-excursion
-                    (+amos/forward-word-insert)
+                    (if (looking-at "[ \t\r\n\v\f]")
+                        (progn
+                          (re-search-forward "[^ \t\r\n\v\f]")
+                          (backward-char))
+                      (forward-thing 'evil-word 1))
                     (point))
-                  (line-beginning-position))))
+                  (line-beginning-position)))
+  (if subword (subword-mode -1)))
 
-(defun +amos/backward-delete-word ()
+(defun +amos/backward-delete-word (&optional subword)
   (interactive)
-  (let ((ci (current-indentation))
-        (cc (current-column)))
-    (delete-region (point)
-                   (min
-                    (save-excursion
-                      (if (<= cc ci)
-                          (progn
-                            (evil-backward-word-end)
-                            (forward-char))
-                        (evil-backward-word-begin))
-                      (point))
-                    (line-end-position)))))
+  (evil-signal-at-bob-or-eob -1)
+  (unless (or (eolp) (evil-insert-state-p))
+    (evil-insert-state 1)
+    (forward-char))
+  (if subword (subword-mode +1))
+  (delete-region (point)
+                 (min
+                  (save-excursion
+                    (if (looking-back "[ \t\r\n\v\f]")
+                        (progn
+                          (re-search-backward "[^ \t\r\n\v\f]")
+                          (forward-char))
+                      (forward-thing 'evil-word -1))
+                    (point))
+                  (line-end-position)))
+  (if subword (subword-mode -1)))
 
-(defun +amos/delete-subword ()
+(defun +amos/backward-word-insert (&optional subword)
   (interactive)
-  (require 'subword)
-  (if subword-mode
-      (+amos/delete-word)
-    (subword-mode +1)
-    (+amos/delete-word)
-    (subword-mode -1)))
+  (evil-signal-at-bob-or-eob -1)
+  (if subword (subword-mode +1))
+  (unless (or (eolp) (evil-insert-state-p))
+    (evil-insert-state 1)
+    (forward-char))
+  (if (looking-back "[ \t\r\n\v\f]")
+      (progn
+        (re-search-backward "[^ \t\r\n\v\f]")
+        (forward-char))
+    (forward-thing 'evil-word -1))
+  (if subword (subword-mode -1)))
 
-(defun +amos/backward-delete-subword ()
+(defun +amos/forward-word-insert (&optional subword)
   (interactive)
-  (require 'subword)
-  (if subword-mode
-      (+amos/backward-delete-word)
-    (subword-mode +1)
-    (+amos/backward-delete-word)
-    (subword-mode -1)))
-
-;; (if (and (string= (kbd "M-f") (this-command-keys))
-;;          (not (eq evil-state 'insert))) (evil-append 1))
-
-(defun +amos/forward-word-insert ()
-  (interactive)
-  (if (and (eolp) (not (eobp)))
-      (evil-forward-word-begin)
-    (backward-char)
-    (evil-forward-word-end)
-    (forward-char)))
-
-(defun +amos/forward-subword-insert ()
-  (interactive)
-  (require 'subword)
-  (if subword-mode
-      (+amos/forward-word-insert)
-    (subword-mode +1)
-    (+amos/forward-word-insert)
-    (subword-mode -1)))
-
-(defun +amos/backward-word-insert ()
-  (interactive)
-  (let ((ci (current-indentation))
-        (cc (current-column)))
-    (if (<= cc ci)
-        (progn
-          (evil-backward-word-end)
-          (doom/forward-to-last-non-comment-or-eol))
-      (evil-backward-word-begin))))
-
-(defun +amos/backward-subword-insert ()
-  (interactive)
-  (require 'subword)
-  (if subword-mode
-      (+amos/backward-word-insert)
-    (subword-mode +1)
-    (+amos/backward-word-insert)
-    (subword-mode -1)))
-
-(defun +amos/forward-subword ()
-  (interactive)
-  (require 'subword)
-  (if subword-mode
-      (evil-forward-word-end)
-    (subword-mode +1)
-    (evil-forward-word-end)
-    (subword-mode -1)))
-
-(defun +amos/backward-subword ()
-  (interactive)
-  (require 'subword)
-  (if subword-mode
-      (evil-backward-word-begin)
-    (subword-mode +1)
-    (evil-backward-word-begin)
-    (subword-mode -1)))
+  (evil-signal-at-bob-or-eob 1)
+  (if subword (subword-mode +1))
+  (evil-insert-state 1)
+  (if (looking-at "[ \t\r\n\v\f]")
+      (progn
+        (re-search-forward "[^ \t\r\n\v\f]")
+        (backward-char))
+    (forward-thing 'evil-word 1))
+  (if subword (subword-mode -1)))
 
 (after! subword
   (progn
@@ -1667,15 +1659,6 @@ The selected history element will be inserted into the minibuffer."
            (1+ (match-beginning 0)))))
       (backward-word 1))))
 (advice-add #'subword-backward-internal :override #'+amos*subword-backward-internal)
-
-(defun +amos/finish-line ()
-  (interactive)
-  (end-of-line)
-  (if (looking-back "[[:space:]]")
-      (c-hungry-backspace))
-  (if (not (looking-back ";"))
-      (insert ";"))
-  (doom/newline-and-indent))
 
 (def-package! evil-textobj-anyblock
   :commands
@@ -1720,8 +1703,6 @@ The selected history element will be inserted into the minibuffer."
 
 (def-package! subword
   :commands subword-forward subword-backward)
-
-
 
 (def-package! company-lsp
   :after company
@@ -1832,9 +1813,6 @@ The selected history element will be inserted into the minibuffer."
   :definition #'lsp-ui-peek-find-definitions
   :references #'xref-find-references
   :documentation #'counsel-dash-at-point)
-
-;; (add-hook! 'rtags-jump-hook #'evil-set-jump)
-;; (add-hook! 'rtags-after-find-file-hook #'recenter)
 
 ;; lsp-ui-peek-find-{definitions,references}
 ;; (lsp-ui-peek-jump-backward)
@@ -1963,3 +1941,32 @@ current buffer's, reload dir-locals."
                         'my-reload-dir-locals-for-all-buffer-in-this-directory))))
 
 (advice-remove #'counsel-ag-function #'+ivy*counsel-ag-function)
+
+(def-modeline-segment! tmux
+  (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
+        (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
+    (string-match highlight-string full-string)
+    ;; (string-match " 1 " "| 1 | 2 |")
+    (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
+    full-string))
+
+(def-modeline! main
+  (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
+  (buffer-encoding major-mode vcs flycheck))
+
+(defun setup-input-decode-map ()
+  (map!
+   (:map input-decode-map
+     "\e[1;5B" [(control shift j)]
+     "\e[1;5A" [(control shift d)]
+     "\e[1;5C" [S-return]
+     "\e[1;5D" [M-S-backspace])))
+
+(add-hook 'tty-setup-hook #'setup-input-decode-map)
+
+(require 'yasnippet)
+(add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet)
+
+(put 'cc-exec 'safe-local-variable #'stringp)
+(put 'cc-flags 'safe-local-variable #'stringp)
+(put 'cc-links 'safe-local-variable #'stringp)
