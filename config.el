@@ -141,6 +141,7 @@
   :config
   (def-hydra! +amos@paste (:hint nil)
     "Paste"
+    ("0" evil-digit-argument-or-evil-beginning-of-line "bol" :exit t)
     ("C-j" evil-paste-pop "Next Paste")
     ("C-k" evil-paste-pop-next "Prev Paste")
     ("p" evil-paste-after "Paste After")
