@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
 # name: push_heap
 # key: phh
+# type: command
 # --
-std::push_heap(std::begin(${1:container}), std::end($1));
+(+amos/add-include "algorithm")
+(yas-expand-snippet "std::push_heap(std::begin(${1:container}), std::end($1));")

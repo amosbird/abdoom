@@ -16,9 +16,10 @@
  '(browse-url-mailto-function 'mu4e~compose-browse-url-mail)
  '(cc-compile-command
    "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out" t)
- '(company-auto-complete t)
+ '(company-auto-complete nil)
  '(company-dabbrev-code-everywhere t)
  '(company-dabbrev-code-ignore-case t)
+ '(company-idle-delay 0)
  '(counsel-org-goto-display-style 'path)
  '(counsel-org-goto-face-style 'org)
  '(counsel-org-goto-separator " ➜ ")

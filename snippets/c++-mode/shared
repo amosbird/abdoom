@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: shared
-# key: sha
-# --
-`(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
---cpp-ns`shared_ptr<$1> $0`(progn (makunbound '--cpp-ns) "")`

@@ -2,8 +2,6 @@
 # name: copy_if
 # key: cpi
 # --
-std::copy_if(std::begin(${1:container}), std::end($1), std::begin($2),
-[]($3) {
-  $4
+std::copy_if(std::begin(${1:container}), std::end($1), std::begin($2), []($3) {
+    $4
 });
-$0

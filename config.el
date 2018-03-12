@@ -400,15 +400,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   :config
   (ws-butler-global-mode))
 
-(setq company-idle-delay 0.1
-      company-show-numbers t
-      company-minimum-prefix-length 2
-      company-selection-wrap-around t
-      company-dabbrev-downcase nil
-      company-dabbrev-ignore-case t
-      company-jedi-python-bin "python"
-      company-auto-complete t)
-
 (with-eval-after-load 'smartparens
   (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
   (sp-local-pair 'minibuffer-inactive-mode "`" nil :actions nil)
@@ -1481,36 +1472,6 @@ The selected history element will be inserted into the minibuffer."
                         (delete-minibuffer-contents)
                         (insert (substring-no-properties x))
                         (ivy--cd-maybe)))))
-
-(evil-define-motion +amos/evil-forward-subword-end (count)
-  "Move the cursor to the end of the COUNT-th next word.
-If BIGWORD is non-nil, move by WORDS."
-  :type inclusive
-  (subword-mode +1)
-  (let ((thing 'evil-word)
-        (count (or count 1)))
-    (evil-signal-at-bob-or-eob count)
-    ;; Evil special behaviour: e or E on a one-character word in
-    ;; operator state does not move point
-    (unless (and (evil-operator-state-p)
-                 (= 1 count)
-                 (let ((bnd (bounds-of-thing-at-point thing)))
-                   (and bnd
-                        (= (car bnd) (point))
-                        (= (cdr bnd) (1+ (point)))))
-                 (looking-at "[[:word:]]"))
-      (evil-forward-end thing count)))
-  (subword-mode -1))
-
-(evil-define-motion +amos/evil-backward-subword-begin (count)
-  "Move the cursor to the beginning of the COUNT-th previous word.
-If BIGWORD is non-nil, move by WORDS."
-  :type exclusive
-  (subword-mode +1)
-  (let ((thing 'evil-word))
-    (evil-signal-at-bob-or-eob (- (or count 1)))
-    (evil-backward-beginning thing count))
-  (subword-mode -1))
 
 (defun +amos/forward-delete-word (&optional subword)
   (interactive)

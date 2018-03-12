@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: weak
-# key: weak
-# --
-`(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
---cpp-ns`weak_ptr<$1>$0`(progn (makunbound '--cpp-ns) "")`

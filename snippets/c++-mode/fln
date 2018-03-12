@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
 # name: fill_n
 # key: fln
+# type: command
 # --
-std::fill_n(std::begin(${1:container}), ${2:count}, ${3:value});
+(+amos/add-include "algorithm")
+(yas-expand-snippet "std::fill_n(std::begin(${1:container}), ${2:count}, ${3:value});")

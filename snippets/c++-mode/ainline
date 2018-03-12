@@ -2,4 +2,4 @@
 # name: ainline
 # key: ainline
 # --
-__attribute__((always_inline))$0
+__attribute__((always_inline))

@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
 # name: cout
+# key: cout
+# type: command
 # --
-`(setq --cpp-ns (if (search "using namespace std;" (buffer-string)) "" "std::"))
---cpp-ns`cout << ${1:string} << `--cpp-ns`endl;`(progn (makunbound '--cpp-ns) "")`
+(+amos/add-include "iostream")
+(yas-expand-snippet "std::cout << ${1:\"string\"} << std::endl;")

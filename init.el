@@ -50,6 +50,20 @@
     (warn "rust-mode: racer binary can't be found; auto-completion is disabled"))
   nil)
 
+(def-package-hook! company
+  :post-config
+  (require 'company-tng)
+  (setq company-idle-delay 0.1
+        company-show-numbers t
+        company-minimum-prefix-length 2
+        company-selection-wrap-around t
+        company-dabbrev-downcase nil
+        company-dabbrev-ignore-case t
+        company-jedi-python-bin "python"
+        company-frontends '(company-tng-frontend company-pseudo-tooltip-frontend company-echo-metadata-frontend)
+        company-auto-complete nil)
+  t)
+
 (pcase (getenv "GUI")
   ("t"
    ;; gui

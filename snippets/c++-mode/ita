@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
 # name: iota
 # key: ita
+# type: command
 # --
-std::iota(std::begin(${1:container}), std::end($1), $2);
+(+amos/add-include "algorithm")
+(yas-expand-snippet "std::iota(std::begin(${1:container}), std::end($1), $2);")

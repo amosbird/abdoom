@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
 # name: copy
 # key: cpy
+# type: command
 # --
-std::copy(std::begin(${1:container}), std::end($1), std::begin($2));
+(+amos/add-include "algorithm")
+(yas-expand-snippet "std::copy(std::begin(${1:container}), std::end($1), std::begin($2));")

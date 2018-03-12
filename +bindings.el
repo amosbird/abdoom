@@ -178,9 +178,9 @@
  :vn "E"             #'+amos/evil-forward-subword-end
  :vn "B"             #'+amos/evil-backward-subword-begin
  :ni "M-b"           #'+amos/backward-word-insert
- :ni "M-B"           (lambda! (+amos/backward-subword-insert t))
+ :ni "M-B"           (lambda! (+amos/backward-word-insert t))
  :ni "M-f"           #'+amos/forward-word-insert
- :ni "M-F"           (lambda! (+amos/forward-subword-insert t))
+ :ni "M-F"           (lambda! (+amos/forward-word-insert t))
  :ni "M-d"           #'+amos/forward-delete-word
  :ni "M-D"           (lambda! (+amos/forward-delete-word t))
  :ni [M-backspace]   #'+amos/backward-delete-word
@@ -425,8 +425,12 @@
      "C-SPC"      #'company-complete-common
      "C-l"        #'company-complete-selection
      "C-h"        #'company-quickhelp-manual-begin
-     [tab]        #'company-complete-common-or-cycle
-     [backtab]    #'company-select-previous
+     "C-i"        nil
+     "RET"        nil
+     "SPC"        nil
+     [return]     nil
+     [tab]        nil
+     [backtab]    nil
      [escape]     (lambda! (company-abort) (evil-normal-state 1)))
    ;; Automatically applies to `company-filter-map'
    (:map company-search-map
@@ -562,12 +566,12 @@
      "C-e"           #'+snippets/goto-end-of-field
      "C-a"           #'+snippets/goto-start-of-field
      "<M-backspace>" #'+snippets/delete-to-start-of-field
-     "C-l"           #'yas-next-field
+     "C-i"           #'yas-next-field
      [escape]        #'evil-normal-state
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
    (:map yas-minor-mode-map
-     :i "C-l" yas-maybe-expand
+     :i "C-i" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
 
  ;; --- Custom evil text-objects ---------------------
