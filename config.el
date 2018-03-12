@@ -23,9 +23,9 @@
     (current-column)))
 (put :hint 'lisp-indent-function 'special-indent-fn)
 (def-hydra! +amos@paste (:hint nil
-                         :foreign-keys nil
-                         :pre (setq hydra-lv nil)
-                         :after-exit (setq hydra-lv t))
+                          :foreign-keys nil
+                          :pre (setq hydra-lv nil)
+                          :after-exit (setq hydra-lv t))
   "Paste"
   ("C-j" evil-paste-pop "Next Paste")
   ("C-k" evil-paste-pop-next "Prev Paste")
@@ -149,13 +149,13 @@
     ("P" evil-paste-before "Paste Before"))
 
   (def-hydra! +amos@git-blame (:hint nil
-                               :title "Git Blame Transient State"
-                               :doc "
+                                :title "Git Blame Transient State"
+                                :doc "
 Press [_b_] again to blame further in the history, [_q_] to go up or quit."
-                               :on-enter (let (golden-ratio-mode)
-                                           (unless (bound-and-true-p magit-blame-mode)
-                                             (call-interactively 'magit-blame)))
-                               :foreign-keys run)
+                                :on-enter (let (golden-ratio-mode)
+                                            (unless (bound-and-true-p magit-blame-mode)
+                                              (call-interactively 'magit-blame)))
+                                :foreign-keys run)
     ("b" magit-blame)
     ;; here we use the :exit keyword because we should exit the
     ;; micro-state only if the magit-blame-quit effectively disable
@@ -334,7 +334,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
    counsel-dash-min-length 2
    counsel-dash-candidate-format "%d %n (%t)"
    counsel-dash-enable-debugging t
-   counsel-dash-browser-func 'browse-url
+   counsel-dash-browser-func (lambda (url) (interactive) (browse-url url t))
    counsel-dash-ignored-docsets nil)
   (defun counsel-dash-at-point ()
     (interactive)
@@ -938,12 +938,12 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
   :commands +amos@time-machine/body
   :config
   (defhydra +amos@time-machine (:hint nil
-                                :pre (let (golden-ratio-mode)
-                                       (unless (bound-and-true-p git-timemachine-mode)
-                                         (call-interactively 'git-timemachine)))
-                                :post (when (bound-and-true-p git-timemachine-mode)
-                                        (git-timemachine-quit))
-                                :foreign-keys run)
+                                 :pre (let (golden-ratio-mode)
+                                        (unless (bound-and-true-p git-timemachine-mode)
+                                          (call-interactively 'git-timemachine)))
+                                 :post (when (bound-and-true-p git-timemachine-mode)
+                                         (git-timemachine-quit))
+                                 :foreign-keys run)
     "
 [_p_/_N_] previous [_n_] next [_c_] current [_g_] goto nth rev [_Y_] copy hash [_q_] quit"
     ("c" git-timemachine-show-current-revision)
@@ -1206,9 +1206,9 @@ This function should be hooked to `buffer-list-update-hook'."
   ;; | teal     | :foreign-keys warn :exit t | transient w  |
   ;; | pink     | :foreign-keys run          | nested       |
   (defhydra +amos@pdf-tools (:hint nil
-                             :color amaranth
-                             :pre (setq which-key-inhibit t)
-                             :post (setq which-key-inhibit nil))
+                              :color amaranth
+                              :pre (setq which-key-inhibit t)
+                              :post (setq which-key-inhibit nil))
     "
  Navigation^^^^                Scale/Fit^^                    Annotations^^       Actions^^           Other^^
  ----------^^^^--------------- ---------^^------------------  -----------^^------ -------^^---------- -----^^---
@@ -1545,7 +1545,7 @@ The selected history element will be inserted into the minibuffer."
     (modify-category-entry (cons ?a ?z) ?u)
     (make-variable-buffer-local 'evil-cjk-word-separating-categories)
     (add-hook 'subword-mode-hook (lambda! (if subword-mode (push '(?u . ?U) evil-cjk-word-separating-categories)
-                                       (setq evil-cjk-word-separating-categories (default-value 'evil-cjk-word-separating-categories)))))))
+                                        (setq evil-cjk-word-separating-categories (default-value 'evil-cjk-word-separating-categories)))))))
 
 (defun +amos*subword-backward-internal ()
   (if superword-mode
@@ -1806,8 +1806,8 @@ for the last window in each frame."
   "Main zygospore func.
 If the current frame has several windows, it will act as `delete-other-windows'.
 If the current frame has one window,
-	and it is the one that was last full-frame'd,
-	and the buffer remained the same,
+  and it is the one that was last full-frame'd,
+  and the buffer remained the same,
 it will restore the window configuration to prior to full-framing."
   (interactive)
   (if (and (equal (selected-window) (next-window))

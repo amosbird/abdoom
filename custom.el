@@ -60,7 +60,6 @@
  '(helm-bibtex-bibliography '("~/zotero.bib"))
  '(helm-bibtex-notes-path "~/bibnotes.org")
  '(helm-bibtex-pdf-field "file")
- '(helm-dash-browser-func 'browse-url-browser-function)
  '(initial-buffer-choice t)
  '(intent-tabs-mode t)
  '(ivy-rich-abbreviate-paths t)
