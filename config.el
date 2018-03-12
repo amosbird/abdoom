@@ -193,9 +193,13 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     (if (display-graphic-p)
         (i3-nav-right)
       (osc-nav-right)))
-  (setq
-   interprogram-cut-function 'osc-select-text
-   browse-url-browser-function (lambda (url &optional _new-window) (browse-url-osc url t))))
+  (setq interprogram-cut-function 'osc-select-text
+        browse-url-browser-function (lambda (url &optional _new-window)
+                                      (if (display-graphic-p)
+                                          (if _new-window
+                                              (browse-url-chrome url)
+                                            (browse-url-firefox url))
+                                        (browse-url-osc url _new-window)))))
 
 (def-package! evil-nerd-commenter
   :commands
@@ -212,9 +216,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
            (buffname (string-trim (buffer-name buffer))))
       (or (equal buffname "*doom*")
           (equal (with-current-buffer buffer major-mode) 'pdf-view-mode))))
-  (push #'amos-special-window-p realign-ignore-window-predicates)
-  ;; (add-hook! 'realign-hooks (call-interactively #'git-gutter))
-  )
+  (push #'amos-special-window-p realign-ignore-window-predicates))
 
 (setq recenter-redisplay nil)
 (remove-hook! 'kill-emacs-query-functions #'doom-quit-p)
@@ -289,8 +291,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
            (face (pcase sign
                    ("=" '+amos:modified)
                    ("+" '+amos:added)
-                   ("-" '+amos:deleted)
-                   ))
+                   ("-" '+amos:deleted)))
            (ovstring (propertize gutter-sep 'face face)))
       (propertize " " 'display `((margin left-margin) ,ovstring))))
   (advice-add #'git-gutter:before-string :override #'+amos*git-gutter:before-string)
@@ -1847,17 +1848,16 @@ current buffer's, reload dir-locals."
 
 (advice-remove #'counsel-ag-function #'+ivy*counsel-ag-function)
 
-(def-modeline-segment! tmux
-  (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
-        (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
-    (string-match highlight-string full-string)
-    ;; (string-match " 1 " "| 1 | 2 |")
-    (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
-    full-string))
-
-(def-modeline! main
-  (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
-  (buffer-encoding major-mode vcs flycheck))
+(unless (equal (system-name) "t450s")
+  (def-modeline-segment! tmux
+    (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
+          (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
+      (string-match highlight-string full-string)
+      (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
+      full-string))
+  (def-modeline! main
+    (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
+    (buffer-encoding major-mode vcs flycheck)))
 
 (defun setup-input-decode-map ()
   (map!
@@ -1877,3 +1877,20 @@ current buffer's, reload dir-locals."
 (put 'cc-exec 'safe-local-variable #'stringp)
 (put 'cc-flags 'safe-local-variable #'stringp)
 (put 'cc-links 'safe-local-variable #'stringp)
+
+(defun +amos*helm-dash-result-url (docset-name filename &optional anchor)
+  "Return the full, absolute URL to documentation.
+Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
+ of spaces or a http(s):// URL formed as-is if FILENAME is a full HTTP(S) URL."
+  (let* ((clean-filename (replace-regexp-in-string "<dash_entry_.*>" "" filename))
+         (path (format "%s%s" clean-filename (if anchor (replace-regexp-in-string "%2E" "%252E" (format "#%s" anchor) "")))))
+    (if (string-match-p "^https?://" path)
+        path
+      (replace-regexp-in-string
+       " "
+       "%20"
+       (concat
+        "file:///"
+        (expand-file-name "Contents/Resources/Documents/" (helm-dash-docset-path docset-name))
+        path)))))
+(advice-add #'helm-dash-result-url :override #'+amos*helm-dash-result-url)
