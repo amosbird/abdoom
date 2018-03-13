@@ -14,26 +14,27 @@
     (let (s e)
       (beginning-of-line)
       (setq s (point))
-      (end-of-line);
-      (setq e (point));
-      (delete-trailing-whitespace s e));
-    (if (not (looking-back ";" 1));
-        (insert ?\;))))
+      (end-of-line)
+      (setq e (point))
+      (if (looking-back "[ \t\r\n\v\f]")
+          (delete-trailing-whitespace s e)
+        (if (not (looking-back ";" 1))
+            (insert ?\;))))))
 
 (defun +amos/smart-eol-insert ()
   (interactive)
-  (save-excursion
-    (let (s e)
-      (beginning-of-line)
-      (setq s (point))
-      (end-of-line)
-      (setq e (point))
-      (delete-trailing-whitespace s e)))
-  (if (eolp)
-      (if (looking-back ";" 1)
-          (funcall-interactively (key-binding (kbd "RET")))
-        (insert ?\;))
-    (end-of-line)))
+  (when (eolp)
+    (save-excursion
+      (let (s e)
+        (beginning-of-line)
+        (setq s (point))
+        (end-of-line)
+        (setq e (point))
+        (delete-trailing-whitespace s e)))
+    (if (looking-back ";" 1)
+        (funcall-interactively (key-binding (kbd "RET")))
+      (insert ?\;)))
+  (end-of-line))
 
 (mapc #'evil-declare-ignore-repeat
       '(execute-extended-command
@@ -112,7 +113,6 @@
         +jump/references
         counsel-imenu
         +eval/buffer
-        ;; +amos/escape
         +amos/projectile-find-other-file))
 
 (defun text-scale-reset ()
@@ -142,7 +142,7 @@
   (interactive))
 
 (map!
- "<f12>"             #'realign-windows
+ "<f12>"             #'realign-windows   ; also used to refresh terminal frames
  :nvime "M-x"        #'execute-extended-command
  "M-+"               #'text-scale-increase
  "M-="               #'text-scale-reset
@@ -440,6 +440,7 @@
 
  (:after ivy
    (:map ivy-mode-map
+     [remap find-file-other-frame]  #'+amos/find-file-other-frame
      "C-o" #'evil-delete-line))
 
  (:after swiper

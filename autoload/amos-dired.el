@@ -134,7 +134,6 @@
                        (not (eq (current-buffer) orig)))
               (unless ignore-history
                 (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))
-              (+amos-store-jump-history)
               (+amos/kill-all-other-dired-buffers (current-buffer))))
         (message (shell-command-to-string "jump clean"))
         (error "File doesn't exist anymore!")))))

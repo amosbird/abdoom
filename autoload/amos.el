@@ -124,11 +124,25 @@ the current state and point position."
     (shell-command! "tmux new-window emacsclient -t")))
 
 ;;;###autoload
+(defun +amos/find-file-other-frame (filename &optional wildcards)
+  "Open file if inside tmux."
+  (interactive
+   (find-file-read-args "Find file in other frame: "
+                        (confirm-nonexistent-file-or-buffer)))
+  (shell-command! (format "tmux new-window emacsclient -t -eval '(find-file \"%s\" \"%s\")'" filename wildcards)))
+
+;;;###autoload
+(defun +amos/switch-to-buffer-other-frame (buffer-or-name &optional norecord)
+  (interactive
+   (list (read-buffer-to-switch "Switch to buffer in other frame: ")))
+  (shell-command! (format "tmux new-window emacsclient -t -eval '(switch-to-buffer \"%s\" %s)'" buffer-or-name norecord)))
+
+;;;###autoload
 (defun +amos/tmux-fork-window ()
   "Detach if inside tmux."
   (interactive)
   (+amos-store-jump-history)
-  (shell-command! (format "tmux switch-client -t amos; tmux run \"tmux new-window -c %s\"" default-directory)))
+  (shell-command! (format "tmux switch-client -t amos; tmux run -t amos \"tmux new-window -c %s\"" default-directory)))
 
 ;; ;;;###autoload
 ;; (defun +amos/tmux-kill-window ()

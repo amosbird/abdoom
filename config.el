@@ -40,7 +40,8 @@
   (add-hook! 'dired-mode-hook
     (let ((inhibit-message t))
       (toggle-truncate-lines +1)
-      (dired-omit-mode))))
+      (dired-omit-mode)
+      (+amos-store-jump-history))))
 
 (define-advice dired-revert (:after (&rest _) +amos*dired-revert)
   "Call `recenter' after `dired-revert'."
@@ -473,6 +474,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       shackle-rules
       '(("*Messages*" :noselect t :autoclose t)
 
+        (" *Marked Files*" :noselect t :autoclose t :align below) ; fix dired multi file commands hiding ivy minibuffer
         ("*compilation*" :autoclose t)
         ("^\\*eww" :regexp t :size 0.5 :select t :autokill t :noesc t)
         ("^\\*ftp " :noselect t :autokill t :noesc t)
@@ -1151,7 +1153,7 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (add-to-list 'auto-mode-alist '("/home/amos/git/serverconfig/scripts/.+" . sh-mode) 'append)
 (+file-templates-append '("/home/amos/git/serverconfig/scripts/.+"   "__"   sh-mode))
-(+file-templates-add '("/home/amos/git/serverconfig/.config/fish/functions/.+" "func" fish-mode))
+(+file-templates-add '("/home/amos/git/serverconfig/.config/fish/functions/.+" "__func" fish-mode))
 
 (defmacro +amos--def-browse-in! (name dir)
   `(defun ,(intern (format "+amos/browse-%s" name)) ()
@@ -1894,3 +1896,21 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
         (expand-file-name "Contents/Resources/Documents/" (helm-dash-docset-path docset-name))
         path)))))
 (advice-add #'helm-dash-result-url :override #'+amos*helm-dash-result-url)
+
+(unless (string= (getenv "GUI") "t")
+    (advice-add #'switch-to-buffer-other-frame :override #'+amos/switch-to-buffer-other-frame))
+
+(after! ivy
+  (dolist (cmd '(counsel-find-file +amos/counsel-projectile-switch-project))
+    (ivy-add-actions
+     cmd
+     '(("f" find-file-other-frame "other frame")))))
+
+(after! ivy
+  (dolist (cmd '(ivy-switch-buffer))
+    (ivy-add-actions
+     cmd
+     '(("f" switch-to-buffer-other-frame "other frame")))))
+
+(add-hook! 'doom-init-ui-hook
+  (set-face-background 'vertical-border "#333333"))
