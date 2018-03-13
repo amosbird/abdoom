@@ -228,7 +228,6 @@
  :n "C-k"            #'move-text-up
  :nv "C-SPC"         #'+amos/other-window
  :i "C-SPC"          #'+company/complete
- ;; :i "C-SPC"          #'counsel-company
  :v  "R"             #'evil-multiedit-match-all
  :n  "!"             #'rotate-text
  :v "u"              #'undo-tree-undo

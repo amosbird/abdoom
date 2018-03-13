@@ -302,18 +302,13 @@ If called with `universal-argument' (C-u), ask for username.
   :group 'peep-dired
   :type 'boolean)
 
-(defcustom peep-dired-enable-on-directories t
-  "When t it will enable the mode when visiting directories"
-  :group 'peep-dired
-  :type 'boolean)
-
 (defcustom peep-dired-ignored-extensions
   '("mkv" "iso" "mp4")
   "Extensions to not try to open"
   :group 'peep-dired
   :type 'list)
 
-(defcustom peep-dired-max-size (* 100 1024 1024)
+(defcustom peep-dired-max-size (* 10 1024 1024)
   "Do to not try to open file exteeds this size"
   :group 'peep-dired
   :type 'integer)
@@ -326,22 +321,8 @@ If called with `universal-argument' (C-u), ask for username.
   (interactive)
   (scroll-other-window -30))
 
-(defun peep-dired-kill-buffers-without-window ()
-  "Will kill all peep buffers that are not displayed in any window"
-  (interactive)
-  (cl-loop for buffer in peep-dired-peeped-buffers do
-           (unless (get-buffer-window buffer t)
-             (kill-buffer-if-not-modified buffer))))
-
-(defun peep-dired-dir-buffer (entry-name)
-  (with-current-buffer (or
-                        (car (or (dired-buffers-for-dir entry-name) ()))
-                        (dired-noselect entry-name))
-    (when peep-dired-enable-on-directories
-      (run-hooks 'peep-dired-hook))
-    (current-buffer)))
-
 (defun peep-dired-display-file-other-window ()
+  ;; (remove-hook 'post-command-hook #'peep-dired-display-file-other-window)
   (if (eq (buffer-local-value 'major-mode (window-buffer peep-dired-window)) 'dired-mode)
       (when (eq major-mode 'dired-mode)
         (let ((entry-name (dired-file-name-at-point)))
@@ -350,17 +331,14 @@ If called with `universal-argument' (C-u), ask for username.
                                 peep-dired-ignored-extensions)
                         (> (nth 7 (file-attributes entry-name))
                            peep-dired-max-size))
-              (add-to-list 'peep-dired-peeped-buffers
-                           (window-buffer
-                            (display-buffer
-                             (progn
-                               (delete-other-windows)
-                               (if (file-directory-p entry-name)
-                                   (peep-dired-dir-buffer entry-name)
-                                 (or
-                                  (find-buffer-visiting entry-name)
-                                  (find-file-noselect entry-name))))
-                             t)))))))
+              (remove-hook 'find-file-hook #'recentf-track-opened-file)
+              (let ((buffer (find-file-noselect entry-name)))
+                (add-to-list 'peep-dired-peeped-buffers buffer)
+                (display-buffer buffer
+                                '((display-buffer-use-some-window display-buffer-pop-up-window)
+                                  (inhibit-switch-frame . t)
+                                  (inhibit-same-window . t))))
+              (add-hook 'find-file-hook #'recentf-track-opened-file)))))
     (peep-dired-disable)))
 
 (defun peep-dired-cleanup ()
@@ -383,7 +361,7 @@ If called with `universal-argument' (C-u), ask for username.
     (error "Run it from dired buffer"))
   ;; (window-configuration-to-register :peep_dired_before)
   (setq peep-dired-window (selected-window))
-  (peep-dired-display-file-other-window)
+  ;; (peep-dired-display-file-other-window)
   (add-hook 'post-command-hook #'peep-dired-display-file-other-window 'append))
 
 ;;;###autoload
