@@ -1874,7 +1874,7 @@ current buffer's, reload dir-locals."
 (require 'yasnippet)
 (require 'company)
 (add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet)
-(add-hook 'evil-insert-state-exit-hook #'company-abort)
+;; (add-hook 'evil-insert-state-exit-hook #'company-complete-selection)
 
 (put 'cc-exec 'safe-local-variable #'stringp)
 (put 'cc-flags 'safe-local-variable #'stringp)
@@ -1914,3 +1914,7 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
 
 (add-hook! 'doom-init-ui-hook
   (set-face-background 'vertical-border "#333333"))
+
+(advice-add #'cc-playground-exec :before #'evil-force-normal-state)
+(advice-add #'cc-playground-debug :before #'evil-force-normal-state)
+(advice-add #'cc-playground-exec-test :before #'evil-force-normal-state)

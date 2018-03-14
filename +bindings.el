@@ -142,11 +142,11 @@
   (interactive))
 
 (map!
- "<f12>"             #'realign-windows   ; also used to refresh terminal frames
+ "<f12>"             (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
  :nvime "M-x"        #'execute-extended-command
- "M-+"               #'text-scale-increase
- "M-="               #'text-scale-reset
- "M-*"               #'text-scale-decrease
+ :nvime "<f2>"       #'text-scale-increase
+ :nvime "<f1>"       #'text-scale-reset
+ :nvime "<f3>"       #'text-scale-decrease
  "M-w"               #'evil-wipeout-buffer
  "M-W"               #'+workspace/close-workspace-or-frame
  "M-1"               #'+workspace/switch-to-1
@@ -158,7 +158,14 @@
  "M-7"               #'+workspace/switch-to-7
  "M-8"               #'+workspace/switch-to-8
  "M-9"               #'+workspace/switch-to-9
- "M-0"               #'+workspace/switch-to-last
+ "M-0"               (lambda! (send-string-to-terminal
+                          (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
+                                    "\ePtmux;\e\e[2 q\e\\"))
+                         (shell-command! "tmux switch-client -t amos"))
+ "M-="               (lambda! (send-string-to-terminal
+                          (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
+                                    "\ePtmux;\e\e[2 q\e\\"))
+                         (shell-command! "tmux switch-client -t htop"))
  "M-r"               #'+eval/buffer
  "M-R"               #'+eval/region-and-replace
  "M-m"               #'evil-switch-to-windows-last-buffer
@@ -413,6 +420,8 @@
    (:map company-active-map
      ;; Don't interfere with `evil-delete-backward-word' in insert mode
      "C-w"        nil
+     "C-v"        #'company-next-page
+     "M-v"        #'company-previous-page
      "C-o"        #'company-search-kill-others
      "C-j"        #'company-select-next
      "C-k"        #'company-select-previous
@@ -422,7 +431,7 @@
      "C-s"        #'company-filter-candidates
      ;; "C-s"        #'counsel-company
      "C-SPC"      #'company-complete-common
-     "C-l"        #'company-complete-selection
+     ;; "C-l"        #'company-complete-selection
      "C-h"        #'company-quickhelp-manual-begin
      "C-i"        nil
      "RET"        nil
@@ -544,6 +553,7 @@
    :map ivy-minibuffer-map
    [escape]        #'keyboard-escape-quit
    ;; "C-c C-o"       #'+amos/swiper-replace
+   "C-o"           #'evil-delete-line
    "TAB"           #'ivy-call-and-recenter
    "M-z"           #'undo
    "M-j"           #'ivy-immediate-done
@@ -567,11 +577,13 @@
      "C-a"           #'+snippets/goto-start-of-field
      "<M-backspace>" #'+snippets/delete-to-start-of-field
      "C-i"           #'yas-next-field
+     "C-l"           #'yas-next-field
      [escape]        #'evil-normal-state
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
    (:map yas-minor-mode-map
      :i "C-i" yas-maybe-expand
+     :i "C-l" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
 
  ;; --- Custom evil text-objects ---------------------

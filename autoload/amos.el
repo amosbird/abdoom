@@ -64,7 +64,7 @@ the current state and point position."
       (end-of-line)
       (let ((text (filter-buffer-substring (point-min) (point))))
         (evil-set-register ?y text))
-      (narrow-reindent-widen)
+      (call-interactively #'narrow-reindent-widen)
       (recenter))))
 
 ;;;###autoload
@@ -79,10 +79,10 @@ the current state and point position."
                                        (or (and (cl-rest templates) ;; more than one template for same key
                                                 (yas--prompt-for-template templates))
                                            (car templates))))
+           (_ (evil-substitute start end 'line ?_))
            (where (cons (point) (point))))
       (if yas--current-template
           (progn
-            (evil-substitute start end 'line ?_)
             (yas-expand-snippet (yas--template-content yas--current-template)
                                 (car where)
                                 (cdr where)
