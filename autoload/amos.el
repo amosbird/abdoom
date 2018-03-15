@@ -144,21 +144,6 @@ the current state and point position."
   (+amos-store-jump-history)
   (shell-command! (format "tmux switch-client -t amos; tmux run -t amos \"tmux new-window -c %s\"" default-directory)))
 
-;; ;;;###autoload
-;; (defun +amos/tmux-kill-window ()
-;;   "Kill tmux window if inside tmux."
-;;   (interactive)
-;;   (let ((current-frame (selected-frame))
-;;         (flag t)
-;;         frame)
-;;     (while (and last-frame flag)
-;;       (setq frame (pop last-frame))
-;;       (when (frame-live-p frame)
-;;         (select-frame-set-input-focus frame)
-;;         (setq flag nil)))
-;;     ;; (delete-frame current-frame)))
-;;     (shell-command "tmux kill-window")))
-
 ;;;###autoload
 (defun +amos/tmux-kill-window ()
   "Kill tmux window if inside tmux."

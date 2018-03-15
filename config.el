@@ -166,6 +166,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                           (not (bound-and-true-p magit-blame-mode)))))
 
   (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
+  (setq magit-display-buffer-noselect t)
   (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     "))
   (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1))
   (add-hook! 'git-commit-mode-hook 'fci-mode))
@@ -210,7 +211,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 
 (def-package! realign-mode
   :commands realign-mode realign-windows
-  :load-path "~/git/realign-mode"
   :config
   (defun amos-special-window-p (window)
     (let* ((buffer (window-buffer window))
@@ -362,6 +362,11 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (setq-local amos-browse t)
   ad-do-it)
 
+(after! ediff
+  (add-hook! 'ediff-keymap-setup-hook
+    (define-key ediff-mode-map "k" 'ediff-previous-difference)
+    (define-key ediff-mode-map "j" 'ediff-next-difference)))
+
 (def-package! easy-hugo
   :commands easy-hugo
   :config
@@ -473,7 +478,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       shackle-default-size 0.5
       shackle-rules
       '(("*Messages*" :noselect t :autoclose t)
-
+        ("*Warnings*" :noselect t :autoclose t)
         (" *Marked Files*" :noselect t :autoclose t :align below) ; fix dired multi file commands hiding ivy minibuffer
         ("*compilation*" :autoclose t)
         ("^\\*eww" :regexp t :size 0.5 :select t :autokill t :noesc t)
@@ -487,7 +492,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         ("*info*" :select t :autokill t)
         ("*Backtrace*" :noselect t)
         ("*Warnings*"  :noselect t :autofit t)
-        ("*Messages*"  :noselect t)
         ("^\\*.*Shell Command.*\\*$" :regexp t :noselect t :autokill t :autoclose t)
         (apropos-mode :autokill t :autoclose t)
         (Buffer-menu-mode :autokill t)
@@ -504,8 +508,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
         (" *mu4e-update*" :size 0.1 :autoclose t :noselect t :align below)
         ("*Help*" :noselect t :autoclose t)
         ("*xref*" :noselect t :autoclose t)
-        ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)
-        ))
+        ("^ ?\\*doom " :regexp t :noselect t :autokill t :autoclose t :autofit t)))
 
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
@@ -914,9 +917,6 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
        (if (called-interactively-p 'any)
            (apply x (cons (not (car args)) (cdr args)))
          (apply x args))))))
-
-(def-package! evil-ediff
-  :after ediff)
 
 (after! evil-surround
   (setq-default evil-surround-pairs-alist (append '((?` . ("`" . "`")) (?~ . ("~" . "~"))) evil-surround-pairs-alist)))
@@ -1435,6 +1435,84 @@ Inc/Dec      _w_/_W_ brightness      _d_/_D_ saturation      _e_/_E_ hue    "
     ("e" kurecolor-decrease-hue-by-step)
     ("E" kurecolor-increase-hue-by-step)
     ("q" nil "cancel" :color blue)))
+
+(defun ab-char-inc ()
+  (interactive)
+  (save-excursion
+    (let ((chr  (1+ (char-after))))
+      (unless (characterp chr) (error "Cannot increment char by one"))
+      (delete-char 1)
+      (insert chr))))
+
+(def-hydra! +amos@perf-stat (:color blue :hint nil)
+  "
+# CPU counter statistics for the specified command:
+_a_:perf stat command
+
+# Detailed CPU counter statistics (includes extras) for the specified command:
+_b_:perf stat -d command
+
+# CPU counter statistics for the specified PID, until Ctrl-C:
+_c_:perf stat -p PID
+
+# CPU counter statistics for the entire system, for 5 seconds:
+_d_:perf stat -a sleep 5
+
+# Various basic CPU statistics, system wide, for 10 seconds:
+_e_:perf stat -e cycles,instructions,cache-references,cache-misses,bus-cycles -a sleep 10
+
+# Various CPU level 1 data cache statistics for the specified command:
+_f_:perf stat -e L1-dcache-loads,L1-dcache-load-misses,L1-dcache-stores command
+
+# Various CPU data TLB statistics for the specified command:
+_g_:perf stat -e dTLB-loads,dTLB-load-misses,dTLB-prefetch-misses command
+
+# Various CPU last level cache statistics for the specified command:
+_h_:perf stat -e LLC-loads,LLC-load-misses,LLC-stores,LLC-prefetches command
+
+# Using raw PMC counters, eg, unhalted core cycles:
+_i_:perf stat -e r003c -a sleep 5
+
+# PMCs: cycles and frontend stalls via raw specification
+_j_:perf stat -e cycles -e cpu/event=0x0e,umask=0x01,inv,cmask=0x01/ -a sleep 5
+
+# Count syscalls per-second system-wide (this should be in /proc)
+_k_:perf stat -e rawsyscalls:sysenter -I 1000 -a
+
+# Count system calls by type for the specified PID, until Ctrl-C
+_l_:perf stat -e 'syscalls:sysenter*' -p PID
+
+# Count system calls by type for the entire system, for 5 seconds
+_m_:perf stat -e 'syscalls:sysenter*' -a sleep 5
+
+# Count scheduler events for the specified PID, for 10 seconds
+_o_:perf stat -e 'sched:*' -p PID sleep 10
+
+# Count ext4 events for the entire system, for 10 seconds
+_p_:perf stat -e 'ext4:*' -a sleep 10
+
+# Count block device I/O events for the entire system, for 10 seconds
+_q_:perf stat -e 'block:*' -a sleep 10"
+
+  ;; TODO
+    ("a" kurecolor-decrease-brightness-by-step)
+    ("b" kurecolor-decrease-brightness-by-step)
+    ("c" kurecolor-decrease-brightness-by-step)
+    ("d" kurecolor-decrease-brightness-by-step)
+    ("e" kurecolor-decrease-brightness-by-step)
+    ("f" kurecolor-decrease-brightness-by-step)
+    ("g" kurecolor-decrease-brightness-by-step)
+    ("h" kurecolor-decrease-brightness-by-step)
+    ("i" kurecolor-decrease-brightness-by-step)
+    ("j" kurecolor-decrease-brightness-by-step)
+    ("k" kurecolor-decrease-brightness-by-step)
+    ("l" kurecolor-decrease-brightness-by-step)
+    ("m" kurecolor-decrease-brightness-by-step)
+    ("n" kurecolor-decrease-brightness-by-step)
+    ("o" kurecolor-decrease-brightness-by-step)
+    ("p" kurecolor-decrease-brightness-by-step)
+    ("q" kurecolor-increase-brightness-by-step)
+    ("r" kurecolor-decrease-saturation-by-step))
 
 (defun +amos/replace-last-sexp ()
   (interactive)

@@ -35,10 +35,7 @@
   :commands org-bullets-mode
   :init (add-hook 'org-mode-hook #'org-bullets-mode))
 
-(def-package! org-autolist
-  :after org
-  :config
-  (add-hook! org-mode (org-autolist-mode)))
+
 
 (def-package! evil-org
   :after org
@@ -146,29 +143,7 @@
 (defun +org-init-keybinds ()
   "Sets up org-mode and evil keybindings. Tries to fix the idiosyncrasies
 between the two."
-  (map! (:map org-mode-map
-          :vn "RET"   #'org-open-at-point
-          :en "M-h"   #'evil-window-left
-          :en "M-j"   #'evil-window-down
-          :en "M-k"   #'evil-window-up
-          :en "M-l"   #'evil-window-right
-          :en "C-j"   #'org-metadown
-          :en "C-k"   #'org-metaup
-          :i  "C-d"   #'delete-char
-          :n  "g j"   #'evil-next-visual-line
-          :n  "g k"   #'evil-previous-visual-line
-          "C-c e"     #'+amos/org-babel-edit
-          "C-c C-j"   #'counsel-org-goto
-          "C-c C-S-l" #'+org/remove-link)
-
-        (:after org-agenda
-          (:map org-agenda-mode-map
-            :e "<escape>" #'org-agenda-Quit
-            :e "m"   #'org-agenda-month-view
-            :e "C-j" #'org-agenda-next-item
-            :e "C-k" #'org-agenda-previous-item
-            :e "C-n" #'org-agenda-next-item
-            :e "C-p" #'org-agenda-previous-item))))
+  )
 
 ;;
 (defun +org-hacks ()
@@ -228,8 +203,6 @@ between the two."
         (setq string (replace-match "\\1\\2" nil nil string)
               start (string-match regexp string start))))
     string)
-  ;; (add-to-list 'org-export-filter-final-output-functions
-  ;;              '+org-export|clear-single-linebreak-in-cjk-string)
 
   ;; remove comments from org document for use with export hook
   ;; https://emacs.stackexchange.com/questions/22574/orgmode-export-how-to-prevent-a-new-line-for-comment-lines
@@ -247,6 +220,10 @@ between the two."
 
 (def-package! ox-hugo
   :after ox)
+
+(after! ox
+  (add-to-list 'org-export-filter-final-output-functions
+               '+org-export|clear-single-linebreak-in-cjk-string))
 
 (defun +org*mu4e-mime-switch-headers-or-body ()
   "Switch the buffer to either mu4e-compose-mode (when in headers)
@@ -292,20 +269,84 @@ or org-mode (when in the body)."
   (flet ((start-process-shell-command (cmd &rest _) (shell-command cmd)))
     ad-do-it))
 
-(after! org-element
-  (defadvice pangu-spacing-search-and-replace (around +org*pangu-spacing-search-and-replace activate)
-    "Addvise the function not to replace the match when one of the match group is from an org-link element"
-    (if (not (eq 'org-mode (buffer-local-value 'major-mode (current-buffer))))
-        ad-do-it
-      (pangu-spacing-search-buffer
-       regexp (point-min) (point-max)
-       (when (not (member 'link
-                          (save-match-data
-                            (save-excursion
-                              (let ((p1 (match-beginning 1))
-                                    (p2 (match-beginning 2)))
-                                (mapcar (lambda (pt) (goto-char pt)
-                                          (org-element-type
-                                           (org-element-context)))
-                                        (list p1 p2)))))))
-         (replace-match match nil nil))))))
+(require 'org)
+(require 'org-element)
+
+(defun org-autolist-beginning-of-item-after-bullet ()
+  "Returns the position before the first character after the
+bullet of the current list item.
+
+This function uses the same logic as `org-beginning-of-line' when
+`org-special-ctrl-a/e' is enabled"
+  (save-excursion
+    (beginning-of-line 1)
+    (when (looking-at org-list-full-item-re)
+      (let ((box (match-end 3)))
+        (if (not box) (match-end 1)
+          (let ((after (char-after box)))
+            (if (and after (= after ? )) (1+ box) box)))))))
+
+(defun org-autolist-at-empty-item-description-p ()
+  "Is point at an *empty* description list item?"
+  (message "evaluating...")
+  (org-list-at-regexp-after-bullet-p "\\(\\s-*\\)::\\(\\s-*$\\)"))
+
+(defadvice org-return (around org-autolist-return)
+  "Wraps the org-return function to allow the Return key to
+automatically insert new list items."
+  (if (and (org-at-item-p)
+           (not
+            (and org-return-follows-link
+                 (eq 'org-link (get-text-property (point) 'face)))))
+      (if (and (eolp)
+               (<= (point) (org-autolist-beginning-of-item-after-bullet)))
+          (condition-case nil
+              (call-interactively 'org-outdent-item)
+            ('error (delete-region (line-beginning-position)
+                                   (line-end-position))))
+        (cond
+         ((org-at-item-checkbox-p)
+          (org-insert-todo-heading nil))
+         ((and (org-at-item-description-p)
+               (> (point) (org-autolist-beginning-of-item-after-bullet))
+               (< (point) (line-end-position)))
+          (newline))
+         (t
+          (org-meta-return))))
+    ad-do-it))
+
+(defadvice org-delete-backward-char (around org-autolist-delete-backward-char)
+  "Wraps the org-delete-backward-char function to allow the Backspace
+key to automatically delete list prefixes."
+  (if (and (org-at-item-p)
+           (<= (point) (org-autolist-beginning-of-item-after-bullet)))
+      (progn
+          (goto-char (org-autolist-beginning-of-item-after-bullet))
+          (cond
+           ((= 1 (line-number-at-pos))
+            (delete-region (point) (line-beginning-position)))
+           ((org-autolist-at-empty-item-description-p)
+            (delete-region (line-end-position)
+                           (save-excursion (forward-line -2)
+                                           (line-end-position))))
+           (t
+            (delete-region (point)
+                           (save-excursion (forward-line -2)
+                                           (line-end-position))))))
+    ad-do-it))
+
+;;;###autoload
+(define-minor-mode org-autolist-mode
+  "Enables improved list management in org-mode."
+  nil " Autolist" nil
+  (cond
+   ;; If enabling org-autolist-mode, then add our advice functions.
+   (org-autolist-mode
+    (ad-activate 'org-return)
+    (ad-activate 'org-delete-backward-char))
+   ;; Be sure to clean up after ourselves when org-autolist-mode gets disabled.
+   (t
+    (ad-deactivate 'org-return)
+    (ad-deactivate 'org-delete-backward-char))))
+
+(add-hook! org-mode (org-autolist-mode))

@@ -1,9 +1,5 @@
 ;;; private/amos/+bindings.el -*- lexical-binding: t; -*-
 
-(map!
- :nmvo doom-leader-key nil
- :nmvo doom-localleader-key nil)
-
 (mapc #'evil-declare-change-repeat
       '(company-dabbrev-code
         +company/complete))
@@ -20,6 +16,10 @@
           (delete-trailing-whitespace s e)
         (if (not (looking-back ";" 1))
             (insert ?\;))))))
+
+(defun ab-mark-whole-buffer ()
+  (interactive)
+  (evil-visual-line (point-min) (point-max)))
 
 (defun +amos/smart-eol-insert ()
   (interactive)
@@ -141,36 +141,38 @@
 (defun nop ()
   (interactive))
 
+(defun ab-switch-to (name)
+  (interactive)
+  (send-string-to-terminal
+   (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
+             "\ePtmux;\e\e[2 q\e\\"))
+  (shell-command! (concat "tmux switch-client -t " name)))
+
 (map!
- "<f12>"             (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
- :nvime "M-x"        #'execute-extended-command
- :nvime "<f2>"       #'text-scale-increase
- :nvime "<f1>"       #'text-scale-reset
- :nvime "<f3>"       #'text-scale-decrease
- "M-w"               #'evil-wipeout-buffer
- "M-W"               #'+workspace/close-workspace-or-frame
- "M-1"               #'+workspace/switch-to-1
- "M-2"               #'+workspace/switch-to-2
- "M-3"               #'+workspace/switch-to-3
- "M-4"               #'+workspace/switch-to-4
- "M-5"               #'+workspace/switch-to-5
- "M-6"               #'+workspace/switch-to-6
- "M-7"               #'+workspace/switch-to-7
- "M-8"               #'+workspace/switch-to-8
- "M-9"               #'+workspace/switch-to-9
- "M-0"               (lambda! (send-string-to-terminal
-                          (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
-                                    "\ePtmux;\e\e[2 q\e\\"))
-                         (shell-command! "tmux switch-client -t amos"))
- "M-="               (lambda! (send-string-to-terminal
-                          (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
-                                    "\ePtmux;\e\e[2 q\e\\"))
-                         (shell-command! "tmux switch-client -t htop"))
- "M-r"               #'+eval/buffer
- "M-R"               #'+eval/region-and-replace
- "M-m"               #'evil-switch-to-windows-last-buffer
- :nvmei "M-m"        #'evil-switch-to-windows-last-buffer
- :nvme "M-a"         #'mark-whole-buffer
+ :g "<f12>"          (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
+ :g "M-x"            #'execute-extended-command
+ :g "<f2>"           #'text-scale-increase
+ :g "<f1>"           #'text-scale-reset
+ :g "<f3>"           #'text-scale-decrease
+ :g "M-w"            #'evil-wipeout-buffer
+ :g "M-W"            #'+workspace/close-workspace-or-frame
+ :g "M-1"            #'+workspace/switch-to-1
+ :g "M-2"            #'+workspace/switch-to-2
+ :g "M-3"            #'+workspace/switch-to-3
+ :g "M-4"            #'+workspace/switch-to-4
+ :g "M-5"            #'+workspace/switch-to-5
+ :g "M-6"            #'+workspace/switch-to-6
+ :g "M-7"            #'+workspace/switch-to-7
+ :g "M-8"            #'+workspace/switch-to-8
+ :g "M-9"            #'+workspace/switch-to-9
+ :g "M-0"            (lambda! (ab-switch-to "htop"))
+ :g "M-="            (lambda! (ab-switch-to "htop"))
+ :g "M-r"            #'+eval/buffer
+ :g "M-R"            #'+eval/region-and-replace
+ :g "M-m"            #'evil-switch-to-windows-last-buffer
+ :g "M-m"            #'evil-switch-to-windows-last-buffer
+ :g "M-a"            #'ab-mark-whole-buffer
+ :i "M-a"            #'evil-beginning-of-line
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
  :nm "M-<"           #'flycheck-previous-error
@@ -182,8 +184,9 @@
  :i  "M-n"           #'next-line
  :i  "M-p"           #'previous-line
  :n  "M-o"           #'lsp-ui-mode
- :vn "E"             #'+amos/evil-forward-subword-end
- :vn "B"             #'+amos/evil-backward-subword-begin
+ :m  "N"             #'evil-ex-search-previous
+ :m  "E"             #'+amos/evil-forward-subword-end
+ :m  "B"             #'+amos/evil-backward-subword-begin
  :ni "M-b"           #'+amos/backward-word-insert
  :ni "M-B"           (lambda! (+amos/backward-word-insert t))
  :ni "M-f"           #'+amos/forward-word-insert
@@ -198,26 +201,25 @@
  :n "M-e"            #'counsel-dash-at-point
  :n "M-i"            #'yasdcv-translate-at-point
  :v "M-i"            #'+amos/evil-visual-insert-snippet
- :env "M-h"          #'evil-window-left
- :env "M-j"          #'evil-window-down
- :env "M-k"          #'evil-window-up
- :env "M-l"          #'evil-window-right
- "C-x 1"             #'zygospore-toggle-delete-other-windows
- "C-x e"             #'pp-eval-last-sexp
- "C-x C-r"           #'+amos/replace-last-sexp
+ :gme "M-h"          #'evil-window-left
+ :gme "M-j"          #'evil-window-down
+ :gme "M-k"          #'evil-window-up
+ :gme "M-l"          #'evil-window-right
+ :g "C-x 1"          #'zygospore-toggle-delete-other-windows
+ :g "C-x e"          #'pp-eval-last-sexp
+ :g "C-x C-r"        #'+amos/replace-last-sexp
  :env "C-p"          #'+amos/counsel-projectile-switch-project
- "C-l"               nil
+ :g "C-l"            nil
  :nvm "C-l"          #'+amos:redisplay-and-recenter
- "C-s"               #'swiper
+ :g "C-s"            #'swiper
  :env "C-s"          #'swiper
- "C-S-s"             #'counsel-projectile-rg
- "C-S-d"             #'+amos/counsel-rg-cur-dir
+ :g "C-S-s"          #'counsel-projectile-rg
+ :g "C-S-d"          #'+amos/counsel-rg-cur-dir
  :m "C-f"            #'evilem--motion-evil-find-char
  :m "C-b"            #'evilem--motion-evil-find-char-backward
  :m "C-y"            #'+amos/yank-buffer-filename-with-line-position
  :m "C-w"            #'bury-buffer
- :i "C-a"            #'doom/backward-to-bol-or-indent
- :i "M-a"            #'doom/backward-to-bol-or-indent
+ :i "C-a"            #'evil-beginning-of-line
  :vn "C-a"           #'evil-numbers/inc-at-pt
  :v "g C-a"          #'evil-numbers/inc-at-pt-incremental
  :n "C-e"            #'+amos/maybe-add-end-of-statement
@@ -235,45 +237,53 @@
  :n "C-k"            #'move-text-up
  :nv "C-SPC"         #'+amos/other-window
  :i "C-SPC"          #'+company/complete
- :v  "R"             #'evil-multiedit-match-all
- :n  "!"             #'rotate-text
+ :v "R"              #'evil-multiedit-match-all
+ :n "!"              #'rotate-text
  :v "u"              #'undo-tree-undo
  :v "C-r"            #'undo-tree-redo
- :n  "s"             #'evil-substitute
- :n  "S"             #'evil-change-whole-line
- :v  "s"             #'evil-surround-region
- :v  "S"             #'evil-substitute
- :o  "s"             #'evil-surround-edit
- :v  "v"             #'er/expand-region
- :v  "V"             #'er/contract-region
- :nm  "C-."          #'+amos/tmux-switch-window-next
- :nm  "C-,"          #'+amos/tmux-switch-window-previous
+ :n "s"              #'evil-substitute
+ :n "S"              #'evil-change-whole-line
+ :v "s"              #'evil-surround-region
+ :v "S"              #'evil-substitute
+ :o "s"              #'evil-surround-edit
+ :v "v"              #'er/expand-region
+ :v "V"              #'er/contract-region
+ :nm "C-."           #'+amos/tmux-switch-window-next
+ :nm "C-,"           #'+amos/tmux-switch-window-previous
  :n "p"              #'+amos@paste/evil-paste-after
  :n "P"              #'+amos@paste/evil-paste-before
  :m "("              #'+amos:previous-open-delim
  :m ")"              #'+amos:next-close-delim
- :v  "<"             #'+evil/visual-dedent
- :v  ">"             #'+evil/visual-indent
- :v  "@"             #'+evil:macro-on-all-lines
- :n  "g@"            #'+evil:macro-on-all-lines
- :n  "gc"            #'evilnc-comment-or-uncomment-lines
- :n  "gx"            #'evil-exchange
- :n  "gl"            #'counsel-imenu
- :n  "gh"            #'lsp-ui-peek-find-references
- :n  "gf"            #'+amos:evil-find-file-at-point-with-line
- :m  "gd"            #'+jump/definition
- :m  "gy"            #'+amos/copy-and-comment-lines-inverse
- :m  "gY"            #'+amos/copy-and-comment-lines
- :m  "gh"            #'+jump/documentation
- :n  "go"            #'+amos/evil-insert-line-below
- :n  "gO"            #'+amos/evil-insert-line-above
- :n  "gp"            #'+evil/reselect-paste
- :n  "gr"            #'+jump/references
- :n  "gR"            #'+eval/buffer
- :v  "gR"            #'+eval:replace-region
- :n  ",,"            #'+amos/projectile-find-other-file
+ :v "<"              #'+evil/visual-dedent
+ :v ">"              #'+evil/visual-indent
+ :v "@"              #'+evil:macro-on-all-lines
+ :n "g@"             #'+evil:macro-on-all-lines
+ :n "gc"             #'evilnc-comment-or-uncomment-lines
+ :n "gx"             #'evil-exchange
+ :n "gl"             #'counsel-imenu
+ :n "gh"             #'lsp-ui-peek-find-references
+ :n "gf"             #'+amos:evil-find-file-at-point-with-line
+ :m "gd"             #'+jump/definition
+ :m "gy"             #'+amos/copy-and-comment-lines-inverse
+ :m "gY"             #'+amos/copy-and-comment-lines
+ :m "gh"             #'+jump/documentation
+ :n "go"             #'+amos/evil-insert-line-below
+ :n "gO"             #'+amos/evil-insert-line-above
+ :n "gp"             #'+evil/reselect-paste
+ :n "gr"             #'+jump/references
+ :n "gR"             #'+eval/buffer
+ :v "gR"             #'+eval:replace-region
+ :n ",,"             #'+amos/projectile-find-other-file
 
  (:prefix "C-x"
+   :i "C-l"   #'+company/whole-lines
+   :i "C-k"   #'+company/dict-or-keywords
+   :i "C-f"   #'company-files
+   :i "s"     #'company-ispell
+   :i "C-s"   #'company-yasnippet
+   :i "C-o"   #'company-capf
+   :i "C-n"   #'company-dabbrev-code
+   :i "C-p"   #'+company/dabbrev-code-previous
    :nvime "u" #'link-hint-open-link
    "c"        #'+amos/tmux-new-window
    "k"        #'+amos/tmux-kill-window
@@ -285,8 +295,7 @@
  (:prefix "C-c"
    "C-SPC" #'easy-hugo)
 
- ;; --- <leader> -------------------------------------
- (:leader
+ (:prefix "SPC"
    ;; Most commonly used
    :desc "Find file in project"     :en "SPC" #'+ivy/switch-workspace-buffer
    :desc "Switch buffer"            :en "."   #'projectile-find-file
@@ -406,16 +415,6 @@
      :desc "Big mode"               :en "b" #'doom-big-font-mode
      :desc "Evil goggles"           :en "g" #'+evil-goggles/toggle))
 
- (:prefix "C-x"
-   :i "C-l"   #'+company/whole-lines
-   :i "C-k"   #'+company/dict-or-keywords
-   :i "C-f"   #'company-files
-   :i "s"     #'company-ispell
-   :i "C-s"   #'company-yasnippet
-   :i "C-o"   #'company-capf
-   :i "C-n"   #'company-dabbrev-code
-   :i "C-p"   #'+company/dabbrev-code-previous)
-
  (:after company
    (:map company-active-map
      ;; Don't interfere with `evil-delete-backward-word' in insert mode
@@ -436,10 +435,10 @@
      "C-i"        nil
      "RET"        nil
      "SPC"        nil
+     ;; [escape]     (lambda! (company-abort) (evil-normal-state 1))
      [return]     nil
      [tab]        nil
-     [backtab]    nil
-     [escape]     (lambda! (company-abort) (evil-normal-state 1)))
+     [backtab]    nil)
    ;; Automatically applies to `company-filter-map'
    (:map company-search-map
      "C-j"        #'company-search-repeat-forward
@@ -467,32 +466,32 @@
  ;; dired
  (:after dired
    (:map dired-mode-map
-     "SPC"     nil
-     "G"       nil
-     "g"       nil
-     "e"       nil
-     "v"       nil
-     "b"       nil
-     "n"       nil
-     "N"       nil
-     "y"       nil
-     "C-o"     nil
-     "C-i"     nil
+     :g "SPC" nil
+     :g "G"   nil
+     :g "g"   nil
+     :g "e"   nil
+     :g "v"   nil
+     :g "b"   nil
+     :g "n"   nil
+     :g "N"   nil
+     :g "y"   nil
+     :g "C-o" nil
+     :g "C-i" nil
      :n "d"   #'dired-flag-file-deletion
      :n "y"   (lambda! (dired-ranger-copy nil))
      :n "c"   (lambda! (dired-ranger-copy t))
      :n "p"   #'dired-ranger-paste
      :n "E"   #'wdired-change-to-wdired-mode
      :n "r"   #'dired-ranger-move
-     "f"      #'counsel-find-file
-     "S"      #'hydra-dired-quick-sort/body
+     :g "f"   #'counsel-find-file
+     :g "S"   #'hydra-dired-quick-sort/body
      :n "I"   #'dired-kill-subdir
-     "j"      #'dired-next-line
-     "k"      #'dired-previous-line
-     "W"      (lambda! (dired-copy-filename-as-kill 0))
+     :g "j"   #'dired-next-line
+     :g "k"   #'dired-previous-line
+     :g "W"   (lambda! (dired-copy-filename-as-kill 0))
      :n "C-i" #'peep-dired-toggle
      :n "C-v" #'peep-dired-scroll-page-down
-     "M-v"    #'peep-dired-scroll-page-up
+     :g "M-v" #'peep-dired-scroll-page-up
      :n "Y"   #'+amos/dired-rsync
      :n "S"   #'hydra-dired-quick-sort/body
      :n "j"   #'+amos/evil-undefine
@@ -506,7 +505,7 @@
  ;; evil-magit
  (:after evil-magit
    :map (magit-status-mode-map magit-revision-mode-map)
-   "SPC" nil
+   :g "SPC" nil
    :n "C-j" nil
    :n [tab] #'magit-section-toggle
    :n "C-k" nil)
@@ -523,6 +522,7 @@
    :nv "P" #'evil-mc-make-and-goto-first-cursor
    :nv "d" #'evil-mc-make-and-goto-next-match
    :nv "D" #'evil-mc-make-and-goto-prev-match)
+
  (:after evil-mc
    :map evil-mc-key-map
    :nv "C-n" #'evil-mc-make-and-goto-next-cursor
@@ -563,6 +563,7 @@
    "C-l"           #'ivy-alt-done
    "C-w"           #'ivy-yank-word
    "<M-backspace>" #'ivy-backward-kill-word
+   "M-r"           #'ivy-toggle-fuzzy
    "C-u"           #'ivy-kill-line
    "M-b"           #'backward-word
    "M-f"           #'forward-word
@@ -585,14 +586,6 @@
      :i "C-i" yas-maybe-expand
      :i "C-l" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
-
- ;; --- Custom evil text-objects ---------------------
- :textobj "a" #'evil-inner-arg                    #'evil-outer-arg
- :textobj "j" #'evil-textobj-anyparen-inner-block #'evil-textobj-anyparen-a-block
- :textobj "u" #'evil-textobj-anyquote-inner-block #'evil-textobj-anyquote-a-block
- :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
- :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
- :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down
 
 
  ;; --- Built-in plugins -----------------------------
@@ -660,6 +653,33 @@
    ;; statistics
    :n "="        #'edebug-temp-display-freq-count)
 
+ (:after org
+   (:map org-mode-map
+     :vn "RET"   #'org-open-at-point
+     :en "M-h"   #'evil-window-left
+     :en "M-j"   #'evil-window-down
+     :en "M-k"   #'evil-window-up
+     :en "M-l"   #'evil-window-right
+     :en "C-j"   #'org-metadown
+     :en "C-k"   #'org-metaup
+     :i  "C-d"   #'delete-char
+     :i  "DEL"   #'org-delete-backward-char
+     :n  "gj"   #'evil-next-visual-line
+     :n  "gk"   #'evil-previous-visual-line
+     :n  "M-a"   #'ab-mark-whole-buffer
+     :g "C-c e"     #'+amos/org-babel-edit
+     :g "C-c C-j"   #'counsel-org-goto
+     :g "C-c C-S-l" #'+org/remove-link))
+
+ (:after org-agenda
+   (:map org-agenda-mode-map
+     :e "<escape>" #'org-agenda-Quit
+     :e "m"   #'org-agenda-month-view
+     :e "C-j" #'org-agenda-next-item
+     :e "C-k" #'org-agenda-previous-item
+     :e "C-n" #'org-agenda-next-item
+     :e "C-p" #'org-agenda-previous-item))
+
  (:map help-mode-map
    :n "C-o" #'help-go-back
    :n "C-i" #'help-go-forward
@@ -676,67 +696,73 @@
    :n "C-j" #'vc-annotate-next-revision
    :n "C-k" #'vc-annotate-prev-revision
    :n "TAB" #'vc-annotate-toggle-annotation-visibility
-   :n "RET" #'vc-annotate-find-revision-at-line))
+   :n "RET" #'vc-annotate-find-revision-at-line)
 
-(after! profiler
-  (map!
+ (:after  profiler
    (:map profiler-report-mode-map
-     :nm "RET" #'profiler-report-expand-entry)))
+     :nm "RET" #'profiler-report-expand-entry))
 
-(map! (:after cus-edit
-        (:map custom-mode-map
-          :n "q" #'Custom-buffer-done))
+ (:after cus-edit
+   (:map custom-mode-map
+     :n "q" #'Custom-buffer-done))
 
-      (:after view
-        (:map view-mode-map
-          :n "q" #'View-quit))
+ (:after view
+   (:map view-mode-map
+     :n "q" #'View-quit))
 
-      (:after image-mode
-        (:map image-mode-map
-          :n "q" #'quit-window))
+ (:after image-mode
+   (:map image-mode-map
+     :n "q" #'quit-window))
 
-      (:map key-translation-map
-        "\035"    [escape]
-        [S-iso-lefttab] [backtab]
-        ;; (:unless window-system "TAB" [tab]) ; Fix TAB in terminal
-        "C-RET" [C-return]
-        "C-1"   (kbd "1")
-        "C-2"   (kbd "2")
-        "C-3"   (kbd "3")
-        "C-4"   (kbd "4")
-        "C-5"   (kbd "5")
-        "C-6"   (kbd "6")
-        "C-7"   (kbd "7")
-        "C-8"   (kbd "8")
-        "C-9"   (kbd "9")
-        "C-0"   (kbd "0")
-        "M-`"   (kbd "C-S-s")
-        "C-@"   (kbd "C-SPC")
-        "C-^"   (kbd "C-,")
-        "C-_"   (kbd "C-."))
+ (:map key-translation-map
+   "\035"    [escape]
+   [S-iso-lefttab] [backtab]
+   "C-RET" [C-return]
+   "C-1"   (kbd "1")
+   "C-2"   (kbd "2")
+   "C-3"   (kbd "3")
+   "C-4"   (kbd "4")
+   "C-5"   (kbd "5")
+   "C-6"   (kbd "6")
+   "C-7"   (kbd "7")
+   "C-8"   (kbd "8")
+   "C-9"   (kbd "9")
+   "C-0"   (kbd "0")
+   "M-`"   (kbd "C-S-s")
+   "C-@"   (kbd "C-SPC")
+   "C-^"   (kbd "C-,")
+   "C-_"   (kbd "C-."))
 
-      (:map (minibuffer-local-map
-             minibuffer-local-ns-map
-             minibuffer-local-completion-map
-             minibuffer-local-must-match-map
-             minibuffer-local-isearch-map
-             evil-ex-completion-map
-             evil-ex-search-keymap
-             read-expression-map)
-        [escape] #'abort-recursive-edit
-        "C-r" #'evil-paste-from-register
-        "C-a" #'move-beginning-of-line
-        "C-w" #'doom/minibuffer-kill-word
-        "C-u" #'doom/minibuffer-kill-line
-        "C-d" #'delete-char
-        "M-b" #'backward-word
-        "M-f" #'forward-word
-        "M-d" #'kill-word
-        "M-z" #'doom/minibuffer-undo)
+ (:map (minibuffer-local-map
+        minibuffer-local-ns-map
+        minibuffer-local-completion-map
+        minibuffer-local-must-match-map
+        minibuffer-local-isearch-map
+        evil-ex-completion-map
+        evil-ex-search-keymap
+        read-expression-map)
+   [escape] #'abort-recursive-edit
+   "C-r" #'evil-paste-from-register
+   "C-a" #'move-beginning-of-line
+   "C-w" #'doom/minibuffer-kill-word
+   "C-u" #'doom/minibuffer-kill-line
+   "C-d" #'delete-char
+   "M-b" #'backward-word
+   "M-f" #'forward-word
+   "M-d" #'kill-word
+   "M-z" #'doom/minibuffer-undo)
 
-      (:map messages-buffer-mode-map
-        "M-;" #'eval-expression
-        "A-;" #'eval-expression)
+ (:map messages-buffer-mode-map
+   "M-;" #'eval-expression
+   "A-;" #'eval-expression)
 
-      (:map tabulated-list-mode-map
-        [remap evil-record-macro] #'doom/popup-close-maybe))
+ (:map tabulated-list-mode-map
+   [remap evil-record-macro] #'doom/popup-close-maybe)
+
+ ;; --- Custom evil text-objects ---------------------
+ :textobj "a" #'evil-inner-arg                    #'evil-outer-arg
+ :textobj "j" #'evil-textobj-anyparen-inner-block #'evil-textobj-anyparen-a-block
+ :textobj "u" #'evil-textobj-anyquote-inner-block #'evil-textobj-anyquote-a-block
+ :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
+ :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
+ :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down)

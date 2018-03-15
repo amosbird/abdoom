@@ -11,4 +11,3 @@
 (package! ox-hugo)
 (package! ox-twbs)
 (package! ox-pandoc)
-(package! org-autolist)

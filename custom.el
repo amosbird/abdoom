@@ -5,6 +5,14 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(TeX-view-program-selection
+   '(((output-dvi has-no-display-manager)
+      "dvi2tty")
+     ((output-dvi style-pstricks)
+      "dvips and gv")
+     (output-dvi "xdvi")
+     (output-pdf "Zathura")
+     (output-html "xdg-open")))
  '(auto-revert-interval 0.3)
  '(auto-save-visited-interval 5)
  '(auto-save-visited-mode nil)
@@ -69,6 +77,7 @@
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate 'full)
  '(lsp-ui-peek-force-fontify t)
+ '(magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
  '(mode-line-format nil)
  '(nav-flash-delay 0.3)
  '(org-M-RET-may-split-line '((default)))
@@ -114,7 +123,7 @@
      (underline . "<span class=\"underline\">%s</span>")
      (verbatim . "<code>%s</code>")))
  '(org-hugo-default-section-directory "post")
- '(org-latex-compiler "xelatex")
+ '(org-latex-compiler "xelatex" t)
  '(org-latex-custom-lang-environments nil)
  '(org-latex-default-packages-alist
    '(("AUTO" "inputenc" t
@@ -174,7 +183,7 @@
  '(recentf-exclude
    '("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/"))
  '(recentf-max-saved-items 10000)
- '(reftex-default-bibliography '("~/zotero.bib") t)
+ '(reftex-default-bibliography '("~/zotero.bib"))
  '(require-final-newline t)
  '(safe-local-variable-values
    '((cmake-ide-build-dir . "/home/amos/git/termite")

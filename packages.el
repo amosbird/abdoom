@@ -7,8 +7,7 @@
 (package! visual-fill-column :ignore t)
 (package! evil-numbers :ignore t)
 (package! centered-window-mode :ignore t)
-;; TODO quelpa bug
-;; (package! realign-mode :recipe (:fetcher github :repo "amosbird/realign-mode.el"))
+(package! realign-mode :recipe (:fetcher github :repo "amosbird/realign-mode.el"))
 (package! rainbow-mode :recipe (:fetcher github :repo "amosbird/rainbow-mode"))
 (package! evil-terminal-cursor-changer :recipe (:fetcher github :repo "amosbird/evil-terminal-cursor-changer"))
 (package! evil-textobj-line :recipe (:fetcher github :repo "syohex/evil-textobj-line"))
@@ -44,7 +43,6 @@
 (package! ov)
 (package! ag)
 (package! unfill)
-(package! evil-ediff)
 (package! yapfify)
 (package! emacsql-sqlite)
 (package! helm-make)
