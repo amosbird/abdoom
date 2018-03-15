@@ -1179,6 +1179,7 @@ This function should be hooked to `buffer-list-update-hook'."
   :load-path (lambda () (interactive) (if (equal (system-name) "t450s") "~/git/cc-playground"))
   :bind (:map cc-playground-mode-map
           ("C-c r" . cc-playground-add-or-modify-tag)
+          ("C-c b" . cc-playground-bench)
           ("C-c d" . cc-playground-debug)
           ("C-c t" . cc-playground-debug-test)
           ("C-c l" . cc-playground-ivy-add-library-link)
