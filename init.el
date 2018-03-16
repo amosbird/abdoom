@@ -14,6 +14,8 @@
 
 (remove-hook! 'doom-popup-mode-hook #'doom|hide-modeline-in-popup)
 
+
+
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'doom-hide-modeline-mode :override #'ignore)
 (advice-add #'fringe-mode :override #'ignore)
@@ -31,6 +33,8 @@
     (advice-add #'evil-switch-to-windows-last-buffer :after (lambda (&rest _) (recenter))))
   nil)
 
+(def-package-hook! evil-snipe :disable)
+(def-package-hook! smerge-mode :disable)
 (def-package-hook! solaire-mode :disable)
 (def-package-hook! stripe-buffer :disable)
 (def-package-hook! visual-fill-column :disable)

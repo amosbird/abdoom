@@ -134,19 +134,12 @@
 
 (defun +amos/projectile-find-other-file ()
   (interactive)
-  (if (cc-playground-mode)
+  (if (and (boundp 'cc-playground-mode) cc-playground-mode)
       (cc-switch-between-src-and-test)
     (projectile-find-other-file)))
 
 (defun nop ()
   (interactive))
-
-(defun ab-switch-to (name)
-  (interactive)
-  (send-string-to-terminal
-   (concat   "\ePtmux;\e\e]12;DarkGoldenrod\007\e\\"
-             "\ePtmux;\e\e[2 q\e\\"))
-  (shell-command! (concat "tmux switch-client -t " name)))
 
 (map!
  :g "<f12>"          (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
@@ -165,8 +158,6 @@
  :g "M-7"            #'+workspace/switch-to-7
  :g "M-8"            #'+workspace/switch-to-8
  :g "M-9"            #'+workspace/switch-to-9
- :g "M-0"            (lambda! (ab-switch-to "amos"))
- :g "M-="            (lambda! (ab-switch-to "htop"))
  :g "M-r"            #'+eval/buffer
  :g "M-R"            #'+eval/region-and-replace
  :g "M-m"            #'evil-switch-to-windows-last-buffer
