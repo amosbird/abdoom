@@ -193,6 +193,7 @@
  :ni "M-F"           (lambda! (+amos/forward-word-insert t))
  :ni "M-d"           #'+amos/forward-delete-word
  :ni "M-D"           (lambda! (+amos/forward-delete-word t))
+ :i "DEL"            #'+amos/backward-delete-char
  :ni [M-backspace]   #'+amos/backward-delete-word
  :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
  :ni [M-S-backspace] (lambda! (+amos/backward-delete-word t))
@@ -218,6 +219,8 @@
  :m "C-f"            #'evilem--motion-evil-find-char
  :m "C-b"            #'evilem--motion-evil-find-char-backward
  :m "C-y"            #'+amos/yank-buffer-filename-with-line-position
+ :i "C-y"            (lambda! (let ((kill-ring my-kill-ring)) (yank)))
+ :i "M-y"            (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
  :m "C-w"            #'bury-buffer
  :i "C-a"            #'evil-beginning-of-line
  :vn "C-a"           #'evil-numbers/inc-at-pt
@@ -225,18 +228,18 @@
  :n "C-e"            #'+amos/maybe-add-end-of-statement
  :i "C-e"            #'+amos/smart-eol-insert
  :i "M-e"            #'+amos/smart-eol-insert
- :i "C-u"            #'doom/backward-kill-to-bol-and-indent
+ :i "C-u"            #'+amos/backward-kill-to-bol-and-indent
  :i [remap newline]  #'doom/newline-and-indent
  :i "C-o"            #'evil-delete-line
  :i "C-n"            #'next-line
  :i "C-p"            #'previous-line
- :i "C-d"            #'delete-char
+ :i "C-d"            #'+amos/delete-char
  :i "C-j"            #'company-dabbrev-code
  :n "C-t"            nil
  :n "C-j"            #'move-text-down
  :n "C-k"            #'move-text-up
  :nv "C-SPC"         #'+amos/other-window
- :i "C-SPC"          #'+company/complete
+ :i "C-SPC"          #'+amos/complete
  :v "R"              #'evil-multiedit-match-all
  :n "!"              #'rotate-text
  :v "u"              #'undo-tree-undo
@@ -428,11 +431,9 @@
      "C-S-h"      #'company-show-doc-buffer
      "C-S-s"      #'company-search-candidates
      "C-s"        #'company-filter-candidates
-     ;; "C-s"        #'counsel-company
      "C-SPC"      #'company-complete-common
-     ;; "C-l"        #'company-complete-selection
      "C-h"        #'company-quickhelp-manual-begin
-     "C-i"        nil
+     "C-i"        #'company-complete-selection
      "RET"        nil
      "SPC"        nil
      ;; [escape]     (lambda! (company-abort) (evil-normal-state 1))
@@ -577,13 +578,11 @@
      "C-e"           #'+snippets/goto-end-of-field
      "C-a"           #'+snippets/goto-start-of-field
      "<M-backspace>" #'+snippets/delete-to-start-of-field
-     "C-i"           #'yas-next-field
      "C-l"           #'yas-next-field
      [escape]        #'evil-normal-state
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
    (:map yas-minor-mode-map
-     :i "C-i" yas-maybe-expand
      :i "C-l" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
 
@@ -713,6 +712,11 @@
  (:after image-mode
    (:map image-mode-map
      :n "q" #'quit-window))
+
+ (:after evil-snipe
+   (:map evil-snipe-parent-transient-map
+     :g "n" #'evil-snipe-repeat
+     :g "N" #'evil-snipe-repeat-reverse))
 
  (:map key-translation-map
    "\035"    [escape]

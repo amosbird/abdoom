@@ -1555,22 +1555,62 @@ The selected history element will be inserted into the minibuffer."
                         (insert (substring-no-properties x))
                         (ivy--cd-maybe)))))
 
-(defun +amos/forward-delete-word (&optional subword)
+(defun +amos/complete ()
+  (interactive)
+  (require 'thingatpt)
+  (require 'company)
+  (if (/= (point)
+          (save-excursion
+            (end-of-thing 'symbol)
+            (point)))
+      (save-excursion (insert " ")))
+  (when (and (company-manual-begin)
+             (= company-candidates-length 1))
+    (company-complete-common)))
+
+(defvar my-kill-ring nil)
+(defmacro mkr! (&rest body)
+  `(let (interprogram-cut-function
+         (kill-ring my-kill-ring))
+     ,@body
+     (setq my-kill-ring kill-ring)))
+
+(defun +amos/delete-char()
+  (interactive)
+  (mkr! (delete-char 1 1)))
+
+(defun +amos/backward-delete-char()
+  (interactive)
+  (mkr! (backward-delete-char-untabify 1 1)))
+
+(defun +amos/kill-line ()
+  (interactive)
+  (mkr! (kill-region (point) (point-at-eol))))
+
+(defun +amos/backward-kill-to-bol-and-indent ()
+  (interactive)
+  (let ((empty-line-p (save-excursion (beginning-of-line)
+                                      (looking-at-p "[ \t]*$"))))
+    (mkr! (kill-region (point-at-bol) (point)))
+    (unless empty-line-p
+      (indent-according-to-mode))))
+
+(defun +amos/forward-delete-word (&optional subword);
   (interactive)
   (evil-signal-at-bob-or-eob 1)
   (unless (evil-insert-state-p)
     (evil-insert-state 1))
   (if subword (subword-mode +1))
-  (delete-region (point)
-                 (max
-                  (save-excursion
-                    (if (looking-at "[ \t\r\n\v\f]")
-                        (progn
-                          (re-search-forward "[^ \t\r\n\v\f]")
-                          (backward-char))
-                      (forward-thing 'evil-word 1))
-                    (point))
-                  (line-beginning-position)))
+  (mkr! (kill-region (point)
+                     (max
+                      (save-excursion
+                        (if (looking-at "[ \t\r\n\v\f]")
+                            (progn
+                              (re-search-forward "[^ \t\r\n\v\f]")
+                              (backward-char))
+                          (forward-thing 'evil-word 1))
+                        (point))
+                      (line-beginning-position))))
   (if subword (subword-mode -1)))
 
 (defun +amos/backward-delete-word (&optional subword)
@@ -1580,7 +1620,7 @@ The selected history element will be inserted into the minibuffer."
     (evil-insert-state 1)
     (forward-char))
   (if subword (subword-mode +1))
-  (delete-region (point)
+  (mkr! (kill-region (point)
                  (min
                   (save-excursion
                     (if (looking-back "[ \t\r\n\v\f]")
@@ -1589,7 +1629,7 @@ The selected history element will be inserted into the minibuffer."
                           (forward-char))
                       (forward-thing 'evil-word -1))
                     (point))
-                  (line-end-position)))
+                  (line-end-position))))
   (if subword (subword-mode -1)))
 
 (defun +amos/backward-word-insert (&optional subword)
@@ -1994,6 +2034,5 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
 (add-hook! 'doom-init-ui-hook
   (set-face-background 'vertical-border "#333333"))
 
-(advice-add #'cc-playground-exec :before #'evil-force-normal-state)
-(advice-add #'cc-playground-debug :before #'evil-force-normal-state)
-(advice-add #'cc-playground-exec-test :before #'evil-force-normal-state)
+(dolist (x '(cc-playground-exec cc-playground-debug cc-playground-exec-test cc-playground-bench))
+  (advice-add x :before #'evil-force-normal-state))
