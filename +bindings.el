@@ -165,7 +165,7 @@
  :g "M-7"            #'+workspace/switch-to-7
  :g "M-8"            #'+workspace/switch-to-8
  :g "M-9"            #'+workspace/switch-to-9
- :g "M-0"            (lambda! (ab-switch-to "htop"))
+ :g "M-0"            (lambda! (ab-switch-to "amos"))
  :g "M-="            (lambda! (ab-switch-to "htop"))
  :g "M-r"            #'+eval/buffer
  :g "M-R"            #'+eval/region-and-replace
