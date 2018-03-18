@@ -493,6 +493,7 @@
      :g "j"   #'dired-next-line
      :g "k"   #'dired-previous-line
      :g "W"   (lambda! (dired-copy-filename-as-kill 0))
+     :g "C-f" #'dired-omit-mode
      :n "C-i" #'peep-dired-toggle
      :n "C-v" #'peep-dired-scroll-page-down
      :g "M-v" #'peep-dired-scroll-page-up
