@@ -33,7 +33,7 @@
     (advice-add #'evil-switch-to-windows-last-buffer :after (lambda (&rest _) (recenter))))
   nil)
 
-(def-package-hook! evil-snipe :disable)
+;; (def-package-hook! evil-snipe :disable)
 (def-package-hook! smerge-mode :disable)
 (def-package-hook! solaire-mode :disable)
 (def-package-hook! stripe-buffer :disable)

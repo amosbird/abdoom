@@ -60,8 +60,9 @@
         evil-switch-to-windows-last-buffer
         mark-whole-buffer
         +amos/counsel-jumpdir-function
-        +amos:multi-next-line
-        +amos:multi-previous-line
+        +amos/smart-jumper-backward
+        +amos/smart-jumper-forward
+        +amos/redisplay-and-recenter
         yas-insert-snippet
         counsel-dash-at-point
         yasdcv-translate-at-point
@@ -73,6 +74,7 @@
         evil-multiedit-match-symbol-and-next
         evil-multiedit-match-symbol-and-prev
         evil-multiedit-match-and-next
+        +amos/evil-find-file-at-point-with-line
         evil-multiedit-match-and-prev
         +amos/counsel-projectile-switch-project
         +amos:redisplay-and-recenter
@@ -163,15 +165,12 @@
  :g "M-m"            #'evil-switch-to-windows-last-buffer
  :g "M-m"            #'evil-switch-to-windows-last-buffer
  :g "M-a"            #'ab-mark-whole-buffer
- :i "M-a"            #'evil-beginning-of-line
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
  :nm "M-<"           #'flycheck-previous-error
  :nm "M->"           #'flycheck-next-error
- :n  "M-n"           #'evil-multiedit-match-symbol-and-next
- :n  "M-N"           #'evil-multiedit-match-symbol-and-prev
- :v  "M-n"           #'evil-multiedit-match-and-next
- :v  "M-N"           #'evil-multiedit-match-and-prev
+ :m  "M-p"           #'evil-multiedit-match-symbol-and-prev
+ :m  "M-n"           #'evil-multiedit-match-symbol-and-next
  :i  "M-n"           #'next-line
  :i  "M-p"           #'previous-line
  :n  "M-o"           #'lsp-ui-mode
@@ -186,6 +185,7 @@
  :ni "M-D"           (lambda! (+amos/forward-delete-word t))
  :i "DEL"            #'+amos/backward-delete-char
  :ni [M-backspace]   #'+amos/backward-delete-word
+ :i "C-w"           #'+amos/backward-delete-word
  :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
  :ni [M-S-backspace] (lambda! (+amos/backward-delete-word t))
  :i "M-r"            #'sp-slurp-hybrid-sexp
@@ -202,7 +202,7 @@
  :g "C-x C-r"        #'+amos/replace-last-sexp
  :env "C-p"          #'+amos/counsel-projectile-switch-project
  :g "C-l"            nil
- :nvm "C-l"          #'+amos:redisplay-and-recenter
+ :nvm "C-l"          #'+amos/redisplay-and-recenter
  :g "C-s"            #'swiper
  :env "C-s"          #'swiper
  :g "C-S-s"          #'counsel-projectile-rg
@@ -221,7 +221,7 @@
  :i "M-e"            #'+amos/smart-eol-insert
  :i "C-u"            #'+amos/backward-kill-to-bol-and-indent
  :i [remap newline]  #'doom/newline-and-indent
- :i "C-o"            #'evil-delete-line
+ :i "C-o"            #'+amos/kill-line
  :i "C-n"            #'next-line
  :i "C-p"            #'previous-line
  :i "C-d"            #'+amos/delete-char
@@ -246,8 +246,8 @@
  :nm "C-,"           #'+amos/tmux-switch-window-previous
  :n "p"              #'+amos@paste/evil-paste-after
  :n "P"              #'+amos@paste/evil-paste-before
- :m "("              #'+amos:previous-open-delim
- :m ")"              #'+amos:next-close-delim
+ :m "("              #'+amos/smart-jumper-backward
+ :m ")"              #'+amos/smart-jumper-forward
  :v "<"              #'+evil/visual-dedent
  :v ">"              #'+evil/visual-indent
  :v "@"              #'+evil:macro-on-all-lines
@@ -256,7 +256,7 @@
  :n "gx"             #'evil-exchange
  :n "gl"             #'counsel-imenu
  :n "gh"             #'lsp-ui-peek-find-references
- :n "gf"             #'+amos:evil-find-file-at-point-with-line
+ :n "gf"             #'+amos/evil-find-file-at-point-with-line
  :m "gd"             #'+jump/definition
  :m "gy"             #'+amos/copy-and-comment-lines-inverse
  :m "gY"             #'+amos/copy-and-comment-lines
@@ -290,21 +290,20 @@
    "C-SPC" #'easy-hugo)
 
  (:prefix "SPC"
-   ;; Most commonly used
-   :desc "Find file in project"     :en "SPC" #'+ivy/switch-workspace-buffer
-   :desc "Switch buffer"            :en "."   #'projectile-find-file
-   :desc "Toggle last popup"        :en ","   #'counsel-recentf
-   :desc "Toggle last popup"        :en "e"   #'shell-command
-   :desc "Blink cursor line"        :en "DEL" #'doom/open-scratch-buffer
-   :desc "Jump to bookmark"         :en "RET" #'eval-expression
-   :desc "Ivy resume"               :en "r" #'ivy-resume
-
-   ;; C-u is used by evil
-   :desc "Universal argument"       :en "u"  #'universal-argument
-   :desc "Save current file"        :en "w"  #'save-buffer
-   :desc "Next diff hunk"           :env "j" #'git-gutter:next-hunk
-   :desc "Previous diff hunk"       :env "k" #'git-gutter:previous-hunk
-   :desc "Switch workspace buffer"  :en "b" #'switch-to-buffer
+   :desc "Switch buffer"                   :en "SPC" #'+ivy/switch-workspace-buffer
+   :desc "Find file in project"            :en "."   #'projectile-find-file
+   :desc "Find file in project (no cache)" :en ">"   (lambda! (projectile-invalidate-cache nil) (projectile-find-file))
+   :desc "Find recent file"                :en ","   #'counsel-recentf
+   :desc "Find recent file (no cache)"     :en "<"   (lambda! (recentf-cleanup) (counsel-recentf))
+   :desc "Shell command"                   :en "e"   #'shell-command
+   :desc "Blink cursor line"               :en "DEL" #'doom/open-scratch-buffer
+   :desc "Elisp command"                   :en "RET" #'eval-expression
+   :desc "Ivy resume"                      :en "r"   #'ivy-resume
+   :desc "Universal argument"              :en "u"   #'universal-argument
+   :desc "Save current file"               :en "w"   #'save-buffer
+   :desc "Next diff hunk"                  :env "j"  #'git-gutter:next-hunk
+   :desc "Previous diff hunk"              :env "k"  #'git-gutter:previous-hunk
+   :desc "Switch workspace buffer"         :en "b"   #'switch-to-buffer
 
    (:desc "file" :prefix "f"
      :desc "File file"                 :en "f" #'find-file
@@ -371,8 +370,6 @@
      :desc "Default browser"     :en  "b" #'browse-url-of-file
      :desc "Dired"               :en  "d" #'+amos/dired-jump
      :desc "REPL"                :en  "r" #'+eval/open-repl
-     :v  "r" #'+eval:repl
-     ;; applications
      :desc "APP: elfeed"  :en "E" #'=rss
      :desc "APP: email"   :en "m" #'=email
      :desc "APP: regex"   :en "X" #'=regex)
@@ -427,7 +424,6 @@
      "C-i"        #'company-complete-selection
      "RET"        nil
      "SPC"        nil
-     ;; [escape]     (lambda! (company-abort) (evil-normal-state 1))
      [return]     nil
      [tab]        nil
      [backtab]    nil)
@@ -441,7 +437,23 @@
  (:after ivy
    (:map ivy-mode-map
      [remap find-file-other-frame]  #'+amos/find-file-other-frame
-     "C-o" #'evil-delete-line))
+     "C-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank)))
+     "M-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
+     "C-r"         #'evil-paste-from-register
+     "C-a"         #'move-beginning-of-line
+     "M-b"         #'+amos/backward-word-insert
+     "M-B"         (lambda! (+amos/backward-word-insert t))
+     "M-f"         #'+amos/forward-word-insert
+     "M-F"         (lambda! (+amos/forward-word-insert t))
+     "M-d"         #'+amos/forward-delete-word
+     "M-D"         (lambda! (+amos/forward-delete-word t))
+     "DEL"         #'+amos/backward-delete-char
+     [M-backspace] #'+amos/backward-delete-word
+     [134217855]   #'+amos/backward-delete-word ; M-DEL
+     "C-w"         #'ivy-yank-word
+     "C-u"         #'+amos/backward-kill-to-bol-and-indent
+     "C-d"         #'+amos/delete-char
+     "C-o"         #'+amos/kill-line))
 
  (:after swiper
    (:map swiper-map
@@ -545,7 +557,7 @@
    :map ivy-minibuffer-map
    [escape]        #'keyboard-escape-quit
    ;; "C-c C-o"       #'+amos/swiper-replace
-   "C-o"           #'evil-delete-line
+   "C-o"           #'+amos/kill-line
    "TAB"           #'ivy-call-and-recenter
    "M-z"           #'undo
    "M-j"           #'ivy-immediate-done
@@ -688,6 +700,61 @@
    :n "TAB" #'vc-annotate-toggle-annotation-visibility
    :n "RET" #'vc-annotate-find-revision-at-line)
 
+ (:after pdf-tools
+   :map pdf-view-mode-map
+   "0"         #'image-bol
+   "$"         #'image-eol
+   "j"         #'pdf-view-next-line-or-next-page
+   "k"         #'pdf-view-previous-line-or-previous-page
+   "l"         #'image-forward-hscroll
+   "h"         #'image-backward-hscroll
+   "J"         #'pdf-view-next-page
+   "K"         #'pdf-view-previous-page
+   "gg"        #'pdf-view-first-page
+   "G"         #'pdf-view-last-page
+   "gt"        #'pdf-view-goto-page
+   "gl"        #'pdf-view-goto-label
+   "u"         #'pdf-view-scroll-down-or-previous-page
+   "d"         #'pdf-view-scroll-up-or-next-page
+   "C-u"       #'pdf-view-scroll-down-or-previous-page
+   "C-d"       #'pdf-view-scroll-up-or-next-page
+   "``"        #'pdf-history-backward
+   "/"         #'isearch-forward
+   "?"         #'isearch-backward
+   "r"         #'pdf-view-revert-buffer
+   "o"         #'pdf-links-action-perform
+   "O"         #'pdf-outline
+   "zr"        #'pdf-view-scale-reset
+
+   :map    pdf-outline-buffer-mode-map
+   "-"         #'negative-argument
+   "j"         #'next-line
+   "k"         #'previous-line
+   "gk"        #'outline-backward-same-level
+   "gj"        #'outline-forward-same-level
+   "<backtab>" #'show-all
+   "gh"        #'pdf-outline-up-heading
+   "gg"        #'beginning-of-buffer
+   "G"         #'pdf-outline-end-of-buffer
+   "TAB"       #'outline-toggle-children
+   "RET"       #'pdf-outline-follow-link
+   "M-RET"     #'pdf-outline-follow-link-and-quit
+   "f"         #'pdf-outline-display-link
+   [mouse-1]   #'pdf-outline-mouse-display-link
+   "o"         #'pdf-outline-select-pdf-window
+   "``"        #'pdf-outline-move-to-current-page
+   "''"        #'pdf-outline-move-to-current-page
+   "Q"         #'pdf-outline-quit-and-kill
+   "q"         #'quit-window
+   "F"         #'pdf-outline-follow-mode
+
+   :map   pdf-annot-list-mode-map
+   "f"         #'pdf-annot-list-display-annotation-from-id
+   "d"         #'tablist-flag-forward
+   "x"         #'tablist-do-flagged-delete
+   "u"         #'tablist-unmark-forward
+   "q"         #'tablist-quit)
+
  (:after  profiler
    (:map profiler-report-mode-map
      :nm "RET" #'profiler-report-expand-entry))
@@ -707,12 +774,14 @@
  (:after evil-snipe
    (:map evil-snipe-parent-transient-map
      :g "n" #'evil-snipe-repeat
-     :g "N" #'evil-snipe-repeat-reverse))
+     :g "j" #'evil-snipe-repeat
+     :g "k" #'evil-snipe-repeat-reverse
+     :g "N" #'evil-snipe-repeat-reverse
+     :g "p" #'evil-snipe-repeat-reverse))
 
  (:map key-translation-map
    "\035"    [escape]
    [S-iso-lefttab] [backtab]
-   "C-RET" [C-return]
    "C-1"   (kbd "1")
    "C-2"   (kbd "2")
    "C-3"   (kbd "3")
@@ -723,10 +792,7 @@
    "C-8"   (kbd "8")
    "C-9"   (kbd "9")
    "C-0"   (kbd "0")
-   "M-`"   (kbd "C-S-s")
-   "C-@"   (kbd "C-SPC")
-   "C-^"   (kbd "C-,")
-   "C-_"   (kbd "C-."))
+   "C-@"   (kbd "C-SPC"))
 
  (:map (minibuffer-local-map
         minibuffer-local-ns-map
@@ -736,16 +802,26 @@
         evil-ex-completion-map
         evil-ex-search-keymap
         read-expression-map)
-   [escape] #'abort-recursive-edit
-   "C-r" #'evil-paste-from-register
-   "C-a" #'move-beginning-of-line
-   "C-w" #'doom/minibuffer-kill-word
-   "C-u" #'doom/minibuffer-kill-line
-   "C-d" #'delete-char
-   "M-b" #'backward-word
-   "M-f" #'forward-word
-   "M-d" #'kill-word
-   "M-z" #'doom/minibuffer-undo)
+   [escape]      #'abort-recursive-edit
+   "C-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank)))
+   "M-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
+   "C-r"         #'evil-paste-from-register
+   "C-a"         #'move-beginning-of-line
+   "M-b"         #'+amos/backward-word-insert
+   "M-B"         (lambda! (+amos/backward-word-insert t))
+   "M-f"         #'+amos/forward-word-insert
+   "M-F"         (lambda! (+amos/forward-word-insert t))
+   "M-d"         #'+amos/forward-delete-word
+   "M-D"         (lambda! (+amos/forward-delete-word t))
+   "DEL"         #'+amos/backward-delete-char
+   [M-backspace] #'+amos/backward-delete-word
+   [134217855]   #'+amos/backward-delete-word ; M-DEL
+   "C-w"         #'ivy-yank-word
+   "C-u"         #'+amos/backward-kill-to-bol-and-indent
+   "C-k"         #'+amos/kill-line
+   "C-o"         #'+amos/kill-line
+   "C-d"         #'+amos/delete-char
+   "M-z"         #'doom/minibuffer-undo)
 
  (:map messages-buffer-mode-map
    "M-;" #'eval-expression

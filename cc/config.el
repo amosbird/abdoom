@@ -1,25 +1,5 @@
 ;;; lang/cc/config.el --- c, c++, and obj-c -*- lexical-binding: t; -*-
 
-(defvar +cc-include-paths (list "include/")
-  "A list of paths, relative to a project root, to search for headers in C/C++.
-Paths can be absolute.
-
-The purpose of this variable is to ensure syntax checkers and code-completion
-knows where to look for headers.")
-
-(defvar +cc-compiler-options
-  `((c-mode . nil)
-    (c++-mode
-     . ,(list "-std=c++17" ; use C++11 by default
-              (when IS-MAC
-                ;; NOTE beware: you'll get abi-inconsistencies when passing
-                ;; std-objects to libraries linked with libstdc++ (e.g. if you
-                ;; use boost which wasn't compiled with libc++)
-                (list "-stdlib=libc++"))))
-    (objc-mode . nil))
-  "A list of default compiler options for the C family. These are ignored if a
-compilation database is present in the project.")
-
 (def-package! cc-mode
   :commands (c-mode c++-mode objc-mode java-mode)
   :mode ("\\.mm" . objc-mode) ("\\.h\\'" . c++-mode)
@@ -40,8 +20,8 @@ compilation database is present in the project.")
          (equal (file-name-extension buffer-file-name) "h")
          (re-search-forward "@\\<interface\\>" magic-mode-regexp-match-limit t)))
 
-  ;; (push (cons #'+cc-c++-header-file-p  'c++-mode)  magic-mode-alist)
-  ;; (push (cons #'+cc-objc-header-file-p 'objc-mode) magic-mode-alist)
+  (push (cons #'+cc-c++-header-file-p  'c++-mode)  magic-mode-alist)
+  (push (cons #'+cc-objc-header-file-p 'objc-mode) magic-mode-alist)
 
   :init
   (setq-default c-basic-offset tab-width)
@@ -49,10 +29,6 @@ compilation database is present in the project.")
   :config
   (set! :electric '(c-mode c++-mode objc-mode java-mode)
     :chars '(?{ ?\n ?}))
-  ;; (set! :company-backend
-  ;;       '(c-mode c++-mode objc-mode)
-  ;;       '(company-irony-c-headers company-irony))
-
 
   ;; Smartparens and cc-mode both try to autoclose angle-brackets intelligently.
   ;; The result isn't very intelligent (causes redundant characters), so just do

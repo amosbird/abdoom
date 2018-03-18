@@ -1,6 +1,9 @@
 ;; -*- no-byte-compile: t; -*-
 ;;; private/amos/packages.el
 (package! evil-commentary :ignore t)
+;; (package! evil-snipe :ignore t)
+(package! evil-snipe :recipe (:fetcher github :repo "hlissner/evil-snipe"))
+
 (package! vi-tilde-fringe :ignore t)
 (package! stripe-buffer :ignore t)
 (package! git-gutter-fringe :ignore t)

@@ -62,21 +62,3 @@
    nil '(("\\<[A-Z]*_[A-Z_]+\\>" . font-lock-constant-face)
          ("\\<[A-Z]\\{3,\\}\\>"  . font-lock-constant-face))
    t))
-
-;;;###autoload
-(defun +cc|irony-init-compile-options ()
-  "Initialize compiler options for irony-mode. It searches for the nearest
-compilation database and initailizes it. If none was found, it uses
-`+cc-c++-compiler-options'.
-
-See https://github.com/Sarcasm/irony-mode#compilation-database for details on
-compilation dbs."
-  (when (memq major-mode '(c-mode c++-mode objc-mode))
-    (require 'irony-cdb)
-    (unless (irony-cdb-autosetup-compile-options)
-      (irony-cdb--update-compile-options
-       (append (delq nil (cdr-safe (assq major-mode +cc-compiler-options)))
-               (cl-loop for path in +cc-include-paths
-                        nconc (list "-I" path)))
-       (doom-project-root)))))
-

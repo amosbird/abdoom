@@ -137,6 +137,7 @@
 (after! cus-edit (evil-set-initial-state 'Custom-mode 'normal))
 (after! wdired (evil-set-initial-state 'wdired-mode 'normal))
 (after! ivy (evil-set-initial-state 'ivy-occur-grep-mode 'normal))
+(after! compile (evil-set-initial-state 'compilation-mode 'normal))
 
 (def-package! evil-magit
   :after magit
@@ -226,15 +227,15 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (add-hook! 'doom-post-init-hook (realign-mode) (blink-cursor-mode -1) (setq-default truncate-lines nil) )
 
 (defun +amos*set-evil-cursors (&rest _)
-  (let ((evil-cursors '(("normal" "DarkGoldenrod" box)
-                        ("insert" "Chartreuse3" bar)
-                        ("emacs" "SkyBlue2" box)
-                        ("replace" "DarkOrange3" hbar)
-                        ("visual" "Gray" hbar)
-                        ("motion" "Plum3" box)
-                        ("lisp" "HotPink1" box)
-                        ("iedit" "firebrick1" box)
-                        ("iedit-insert" "firebrick1" bar))))
+  (let ((evil-cursors '(("normal" "#b8860b" box)
+                        ("insert" "#66cd00" bar)
+                        ("emacs" "#7ec0ee" box)
+                        ("replace" "#cd6600" hbar)
+                        ("visual" "#808080" hbar)
+                        ("motion" "#cd96cd" box)
+                        ("lisp" "#ff6eb4" box)
+                        ("iedit" "#ff3030" box)
+                        ("iedit-insert" "#ff3030" bar))))
     (cl-loop for (state color cursor) in evil-cursors
              do (set (intern (format "evil-%s-state-cursor" state)) (list color cursor)))))
 (advice-add #'+evil*init-cursors :override #'+amos*set-evil-cursors)
@@ -1198,7 +1199,6 @@ This function should be hooked to `buffer-list-update-hook'."
   :init (load "pdf-tools-autoloads" nil t)
   :config
   (pdf-tools-install)
-  (evil-set-initial-state 'pdf-view-mode 'evilified)
 
 
   ;; | color    | toggle                     | meaning      |
@@ -1256,70 +1256,8 @@ This function should be hooked to `buffer-list-update-hook'."
     ("t" pdf-annot-attachment-dired :exit t)
     ("n" pdf-view-midnight-minor-mode)
     ;; Other
-    ("q" nil :exit t))
+    ("q" nil :exit t)))
 
-  (evilified-state-evilify-map pdf-view-mode-map
-    :mode pdf-view-mode
-    :bindings
-    ;; Navigation
-    "0"  'image-bol
-    "$"  'image-eol
-    "j"  'pdf-view-next-line-or-next-page
-    "k"  'pdf-view-previous-line-or-previous-page
-    "l"  'image-forward-hscroll
-    "h"  'image-backward-hscroll
-    "J"  'pdf-view-next-page
-    "K"  'pdf-view-previous-page
-    "gg"  'pdf-view-first-page
-    "G"  'pdf-view-last-page
-    "gt"  'pdf-view-goto-page
-    "gl"  'pdf-view-goto-label
-    "u" 'pdf-view-scroll-down-or-previous-page
-    "d" 'pdf-view-scroll-up-or-next-page
-    (kbd "C-u") 'pdf-view-scroll-down-or-previous-page
-    (kbd "C-d") 'pdf-view-scroll-up-or-next-page
-    (kbd "``")  'pdf-history-backward
-    ;; Search
-    "/" 'isearch-forward
-    "?" 'isearch-backward
-    ;; Actions
-    "r"   'pdf-view-revert-buffer
-    "o"   'pdf-links-action-perform
-    "O"   'pdf-outline
-    "zr"  'pdf-view-scale-reset)
-
-  (evilified-state-evilify-map pdf-outline-buffer-mode-map
-    :mode pdf-outline-buffer-mode
-    :bindings
-    "-"                'negative-argument
-    "j"                'next-line
-    "k"                'previous-line
-    "gk"               'outline-backward-same-level
-    "gj"               'outline-forward-same-level
-    (kbd "<backtab>")  'show-all
-    "gh"               'pdf-outline-up-heading
-    "gg"               'beginning-of-buffer
-    "G"                'pdf-outline-end-of-buffer
-    "TAB"              'outline-toggle-children
-    "RET"              'pdf-outline-follow-link
-    (kbd "M-RET")      'pdf-outline-follow-link-and-quit
-    "f"                'pdf-outline-display-link
-    [mouse-1]          'pdf-outline-mouse-display-link
-    "o"                'pdf-outline-select-pdf-window
-    "``"               'pdf-outline-move-to-current-page
-    "''"               'pdf-outline-move-to-current-page
-    "Q"                'pdf-outline-quit-and-kill
-    "q"                'quit-window
-    "F"                'pdf-outline-follow-mode)
-
-  (evilified-state-evilify-map pdf-annot-list-mode-map
-    :mode pdf-annot-list-mode
-    :bindings
-    "f"                'pdf-annot-list-display-annotation-from-id
-    "d"                'tablist-flag-forward
-    "x"                'tablist-do-flagged-delete
-    "u"                'tablist-unmark-forward
-    "q"                'tablist-quit))
 
 (defvar +amos--ivy-regex-hash
   (make-hash-table :test #'equal)
@@ -1555,6 +1493,41 @@ The selected history element will be inserted into the minibuffer."
                         (insert (substring-no-properties x))
                         (ivy--cd-maybe)))))
 
+(defun +amos/smart-jumper-backward ()
+  (interactive)
+  (+amos/smart-jumper t))
+
+(defun +amos/smart-jumper-forward ()
+  (interactive)
+  (+amos/smart-jumper))
+
+(defun +amos/smart-jumper (&optional f)
+  (unless (or (eq last-command '+amos/smart-jumper-backward)
+              (eq last-command '+amos/smart-jumper-forward))
+    (evil-set-jump))
+  (let* ((dir (if f -1 (forward-char) 1))
+         (c (point))
+         quote
+         delim)
+    (setq quote (save-excursion
+                  (let ((b (progn (forward-evil-quote -1) (point)))
+                        (e (progn (forward-evil-quote 1) (point))))
+                    (if (and (< b c) (< c e))
+                        (if (< 0 dir) e b)
+                      -1))))
+    (if (< 0 quote)
+        (goto-char quote)
+      (let* ((paren (save-excursion (if (= 0 (evil-up-paren ?( ?) dir)) (point) nil)))
+             (bracket (save-excursion (if (= 0 (evil-up-paren ?[ ?] dir)) (point) nil)))
+             (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil))))
+        (setq delim (condition-case nil
+                        (if (< dir 0)
+                            (-max (--filter it (list paren bracket brace)))
+                          (-min (--filter it (list paren bracket brace))))
+                      (error nil))))
+      (if delim (goto-char delim)))
+    (if (< 0 dir) (backward-char))))
+
 (defun +amos/complete ()
   (interactive)
   (require 'thingatpt)
@@ -1598,7 +1571,7 @@ The selected history element will be inserted into the minibuffer."
 (defun +amos/forward-delete-word (&optional subword);
   (interactive)
   (evil-signal-at-bob-or-eob 1)
-  (unless (evil-insert-state-p)
+  (unless (or (evil-insert-state-p) (active-minibuffer-window))
     (evil-insert-state 1))
   (if subword (subword-mode +1))
   (mkr! (kill-region (point)
@@ -1616,7 +1589,7 @@ The selected history element will be inserted into the minibuffer."
 (defun +amos/backward-delete-word (&optional subword)
   (interactive)
   (evil-signal-at-bob-or-eob -1)
-  (unless (or (eolp) (evil-insert-state-p))
+  (unless (or (eolp) (evil-insert-state-p) (active-minibuffer-window))
     (evil-insert-state 1)
     (forward-char))
   (if subword (subword-mode +1))
@@ -1636,7 +1609,7 @@ The selected history element will be inserted into the minibuffer."
   (interactive)
   (evil-signal-at-bob-or-eob -1)
   (if subword (subword-mode +1))
-  (unless (or (eolp) (evil-insert-state-p))
+  (unless (or (eolp) (evil-insert-state-p) (active-minibuffer-window))
     (evil-insert-state 1)
     (forward-char))
   (if (looking-back "[ \t\r\n\v\f]")
@@ -1650,7 +1623,8 @@ The selected history element will be inserted into the minibuffer."
   (interactive)
   (evil-signal-at-bob-or-eob 1)
   (if subword (subword-mode +1))
-  (evil-insert-state 1)
+  (unless (or (active-minibuffer-window) (evil-insert-state-p))
+    (evil-insert-state 1))
   (if (looking-at "[ \t\r\n\v\f]")
       (progn
         (re-search-forward "[^ \t\r\n\v\f]")
@@ -1976,17 +1950,26 @@ current buffer's, reload dir-locals."
       (string-match highlight-string full-string)
       (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
       full-string))
+
+  (def-modeline-segment! host
+    (let ((full-string (string-trim-right (shell-command-to-string "hostname"))))
+      (propertize full-string 'face 'doom-modeline-highlight)))
+
   (def-modeline! main
     (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
-    (buffer-encoding major-mode vcs flycheck)))
+    (host "   " buffer-encoding major-mode vcs flycheck)))
 
 (defun setup-input-decode-map ()
   (map!
    (:map input-decode-map
-     "\e[1;5B" [(control shift j)]
-     "\e[1;5A" [(control shift d)]
-     "\e[1;5C" [S-return]
-     "\e[1;5D" [M-S-backspace])))
+     "\e[5;30017~" [(control shift j)]
+     "\e[5;30016~" [(control shift d)]
+     "\e[5;30015~" [(control shift s)]
+     "\e[5;30014~" (kbd "C-.")
+     "\e[5;30013~" (kbd "C-,")
+     "\e[5;30012~" [S-return]
+     "\e[5;30011~" [M-S-backspace]
+     "\e[5;30010~" [C-return])))
 
 (add-hook 'tty-setup-hook #'setup-input-decode-map)
 
@@ -2032,7 +2015,31 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
      '(("f" switch-to-buffer-other-frame "other frame")))))
 
 (add-hook! 'doom-init-ui-hook
-  (set-face-background 'vertical-border "#333333"))
+  (set-face-background 'vertical-border "#282c34"))
 
 (dolist (x '(cc-playground-exec cc-playground-debug cc-playground-exec-test cc-playground-bench))
   (advice-add x :before #'evil-force-normal-state))
+
+(defun +amos/redisplay-and-recenter ()
+  (interactive)
+  (redraw-display)
+  (recenter))
+
+(defun +amos/evil-find-file-at-point-with-line ()
+  (interactive)
+  (let ((fname (with-no-warnings (ffap-file-at-point))))
+    (if fname
+        (let ((line
+               (save-excursion
+                 (goto-char (cadr ffap-string-at-point-region))
+                 (and (re-search-backward ":\\([0-9]+\\)\\=" (line-beginning-position) t)
+                      (string-to-number (match-string 1))))))
+          (with-no-warnings (ffap))
+          (when line
+            (goto-char (point-min))
+            (forward-line (1- line))))
+      (user-error "File does not exist."))))
+
+(defun +amos*set-jump (&rest _)
+  (evil-set-jump))
+(advice-add 'counsel-git-grep-action :before #'+amos*set-jump)

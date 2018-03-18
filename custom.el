@@ -70,12 +70,19 @@
  '(helm-bibtex-pdf-field "file")
  '(initial-buffer-choice t)
  '(intent-tabs-mode t)
+ '(ivy-do-completion-in-region nil)
+ '(ivy-fixed-height-minibuffer t)
+ '(ivy-format-function 'ivy-format-function-line)
+ '(ivy-height 12)
+ '(ivy-magic-slash-non-match-action nil)
+ '(ivy-mode t)
  '(ivy-rich-abbreviate-paths t)
  '(ivy-rich-switch-buffer-align-virtual-buffer t)
  '(ivy-rich-switch-buffer-delimiter "|")
  '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate 'full)
+ '(ivy-wrap t)
  '(lsp-ui-peek-force-fontify t)
  '(magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
  '(mode-line-format nil)
@@ -183,7 +190,7 @@
  '(recentf-exclude
    '("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/"))
  '(recentf-max-saved-items 10000)
- '(reftex-default-bibliography '("~/zotero.bib"))
+ '(reftex-default-bibliography '("~/zotero.bib") t)
  '(require-final-newline t)
  '(safe-local-variable-values
    '((cmake-ide-build-dir . "/home/amos/git/termite")
@@ -280,6 +287,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ivy-minibuffer-match-face-1 ((t (:background "#1B2229" :weight bold))))
+ '(ivy-virtual ((t (:inherit italic :foreground "white"))))
  '(org-hide ((t (:foreground "black" :height 1.0))))
  '(org-level-1 ((t (:inherit bold :foreground "#4f97d7" :height 1.0))))
  '(org-level-2 ((t (:inherit bold :foreground "#2d9574" :height 1.0))))
