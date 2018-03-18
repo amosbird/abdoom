@@ -167,8 +167,8 @@
  :g "M-a"            #'ab-mark-whole-buffer
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
- :nm "M-<"           #'flycheck-previous-error
- :nm "M->"           #'flycheck-next-error
+ :nm "M-,"           #'flycheck-previous-error
+ :nm "M-."           #'flycheck-next-error
  :m  "M-p"           #'evil-multiedit-match-symbol-and-prev
  :m  "M-n"           #'evil-multiedit-match-symbol-and-next
  :i  "M-n"           #'next-line
