@@ -1962,14 +1962,14 @@ current buffer's, reload dir-locals."
 (defun setup-input-decode-map ()
   (map!
    (:map input-decode-map
-     "\e[5;30017~" [(control shift j)]
-     "\e[5;30016~" [(control shift d)]
-     "\e[5;30015~" [(control shift s)]
-     "\e[5;30014~" (kbd "C-.")
-     "\e[5;30013~" (kbd "C-,")
-     "\e[5;30012~" [S-return]
-     "\e[5;30011~" [M-S-backspace]
-     "\e[5;30010~" [C-return])))
+     "\e[77~" [(control shift j)]
+     "\e[76~" [(control shift d)]
+     "\e[75~" [(control shift s)]
+     "\e[74~" (kbd "C-.")
+     "\e[73~" (kbd "C-,")
+     "\e[72~" [S-return]
+     "\e[71~" [M-S-backspace]
+     "\e[70~" [C-return])))
 
 (add-hook 'tty-setup-hook #'setup-input-decode-map)
 
