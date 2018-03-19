@@ -187,7 +187,7 @@
  :ni [M-backspace]   #'+amos/backward-delete-word
  :i "C-w"           #'+amos/backward-delete-word
  :ni [134217855]     #'+amos/backward-delete-word ; M-DEL
- :ni [M-S-backspace] (lambda! (+amos/backward-delete-word t))
+ :ni "<f7>"          (lambda! (+amos/backward-delete-word t))
  :i "M-r"            #'sp-slurp-hybrid-sexp
  :i "M-R"            #'sp-forward-barf-sexp
  :n "M-e"            #'counsel-dash-at-point
@@ -205,8 +205,8 @@
  :nvm "C-l"          #'+amos/redisplay-and-recenter
  :g "C-s"            #'swiper
  :env "C-s"          #'swiper
- :g "C-S-s"          #'counsel-projectile-rg
- :g "C-S-d"          #'+amos/counsel-rg-cur-dir
+ :g "<f4>"           #'counsel-projectile-rg
+ :g "<f5>"           #'+amos/counsel-rg-cur-dir
  :m "C-f"            #'evilem--motion-evil-find-char
  :m "C-b"            #'evilem--motion-evil-find-char-backward
  :m "C-y"            #'+amos/yank-buffer-filename-with-line-position
@@ -600,6 +600,10 @@
    :n "e"   #'debugger-eval-expression
    :n "n"   #'debugger-step-through
    :n "c"   #'debugger-continue)
+
+ (:after compile
+   :map compilation-mode-map
+   "SPC" nil)
 
  (:after edebug
    :map edebug-mode-map

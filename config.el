@@ -166,6 +166,8 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                             (magit-blame-quit))
                           (not (bound-and-true-p magit-blame-mode)))))
 
+  (push 'git-rebase-mode evil-snipe-disabled-modes)
+
   (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
   (setq magit-display-buffer-noselect t)
   (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     "))
@@ -481,7 +483,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       '(("*Messages*" :noselect t :autoclose t)
         ("*Warnings*" :noselect t :autoclose t)
         (" *Marked Files*" :noselect t :autoclose t :align below) ; fix dired multi file commands hiding ivy minibuffer
-        ("*compilation*" :autoclose t)
+        ("*compilation*" :autoclose nil)
         ("^\\*eww" :regexp t :size 0.5 :select t :autokill t :noesc t)
         ("^\\*ftp " :noselect t :autokill t :noesc t)
         ;; doom
@@ -1179,6 +1181,7 @@ This function should be hooked to `buffer-list-update-hook'."
   :commands cc-playground cc-playground-mode cc-playground-find-snippet
   :load-path (lambda () (interactive) (if (equal (system-name) "t450s") "~/git/cc-playground"))
   :bind (:map cc-playground-mode-map
+          ("<f8>" . cc-playground-rm)
           ("C-c r" . cc-playground-add-or-modify-tag)
           ("C-c b" . cc-playground-bench)
           ("C-c d" . cc-playground-debug)
@@ -1632,16 +1635,6 @@ The selected history element will be inserted into the minibuffer."
     (forward-thing 'evil-word 1))
   (if subword (subword-mode -1)))
 
-(after! subword
-  (progn
-    (define-category ?U "Uppercase")
-    (define-category ?u "Lowercase")
-    (modify-category-entry (cons ?A ?Z) ?U)
-    (modify-category-entry (cons ?a ?z) ?u)
-    (make-variable-buffer-local 'evil-cjk-word-separating-categories)
-    (add-hook 'subword-mode-hook (lambda! (if subword-mode (push '(?u . ?U) evil-cjk-word-separating-categories)
-                                        (setq evil-cjk-word-separating-categories (default-value 'evil-cjk-word-separating-categories)))))))
-
 (defun +amos*subword-backward-internal ()
   (if superword-mode
       (forward-symbol -1)
@@ -1959,19 +1952,19 @@ current buffer's, reload dir-locals."
     (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
     (host "   " buffer-encoding major-mode vcs flycheck)))
 
-(defun setup-input-decode-map ()
-  (map!
-   (:map input-decode-map
-     "\e[77~" [(control shift j)]
-     "\e[76~" [(control shift d)]
-     "\e[75~" [(control shift s)]
-     "\e[74~" (kbd "C-.")
-     "\e[73~" (kbd "C-,")
-     "\e[72~" [S-return]
-     "\e[71~" [M-S-backspace]
-     "\e[70~" [C-return])))
+;; (defun setup-input-decode-map ()
+;;   (map!
+;;    (:map input-decode-map
+;;      "\e[77~" [(control shift j)]
+;;      "\x1b[1;3P" [(control shift s)]
+;;      "\e[76~" [(control shift d)]
+;;      "\e[74~" (kbd "C-.")
+;;      "\e[73~" (kbd "C-,")
+;;      "\e[72~" [S-return]
+;;      "\e[71~" [M-S-backspace]
+;;      "\e[70~" [C-return])))
 
-(add-hook 'tty-setup-hook #'setup-input-decode-map)
+;; (add-hook 'tty-setup-hook #'setup-input-decode-map)
 
 (require 'yasnippet)
 (require 'company)
