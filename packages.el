@@ -84,4 +84,4 @@
 (package! lsp-ui)
 (package! company-lsp)
 
-(package! persistent-scratch)
+(package! direnv :recipe (:fetcher github :repo "wbolster/emacs-direnv"))

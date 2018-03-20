@@ -36,6 +36,7 @@
   (map! (:map (c-mode-map c++-mode-map)
           "<" nil
           :i ">"        #'+cc/autoclose->-maybe
+          :n "C-e"      #'+amos/maybe-add-end-of-statement
           "C-c i"       #'+amos/ivy-add-include)
 
         (:after lsp-ui-peek
@@ -98,7 +99,8 @@
   (("/CMakeLists\\.txt\\'" . cmake-mode)
    ("\\.cmake\\'" . cmake-mode)))
 
-(set! :rotate 'c++-mode
+(set!
+  :rotate 'c++-mode
   :symbols '(("public" "protected" "private")
              ("class" "struct")))
 

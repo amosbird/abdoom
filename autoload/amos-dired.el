@@ -1,17 +1,11 @@
 ;;; private/amos/autoload/amos-dired.el -*- lexical-binding: t; -*-
 
-(setq ;; Always copy/delete recursively
- dired-recursive-copies  'always
- dired-recursive-deletes 'top
- ;; Auto refresh dired, but be quiet about it
- global-auto-revert-non-file-buffers t
- auto-revert-verbose nil
- ;; files
- image-dired-dir (concat doom-cache-dir "image-dired/")
- image-dired-db-file (concat image-dired-dir "image-dired/db.el")
- image-dired-gallery-dir (concat image-dired-dir "gallery/")
- image-dired-temp-image-file (concat image-dired-dir "temp-image")
- image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image"))
+(require 'ring)
+(require 'cl-seq)
+(require 'files)
+(require 'tramp)
+(require 'dired)
+(require 'cl-macs)
 
 (defun +dired|sort-directories-first ()
   "List directories first in dired buffers."
@@ -32,10 +26,6 @@
                (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
       (make-directory parent-directory t))))
 (push #'+dired|create-non-existent-directory find-file-not-found-functions)
-
-(require 'dired)
-(require 'ring)
-(require 'cl-seq)
 
 (defvar +amos-dired-history-ring (make-ring 200))
 (defvar +amos-dired-history-index 0)
@@ -78,9 +68,6 @@
       (setq +amos-dired-history-index goto-idx)
       (+amos/find-file jump-history t))))
 
-(defun +amos--get-all-current-files ()
-  (split-string (shell-command-to-string "ls -a") "\n" t))
-
 (defun +amos--get-all-jump-dirs ()
   (split-string (shell-command-to-string "jump top") "\n" t))
 
@@ -96,28 +83,12 @@
   (interactive)
   (+amos--dired-jump-history 1))
 
-(defun +amos/kill-all-other-dired-buffers (&optional current-buf))
-;; (defun +amos/kill-all-other-dired-buffers (&optional current-buf)
-;;   "kill all dired-buffers and diredp-w32-drivers-mode(w32 use this mode )
-;;   except current-buf ,if current-buf is nil then kill all"
-;;   (dolist (buf (buffer-list))
-;;     (with-current-buffer buf
-;;       (when (and (not (eq current-buf buf))
-;;                  (or  (eq 'dired-mode  major-mode)
-;;                       (eq 'diredp-w32-drives-mode major-mode)))
-;;         (kill-buffer buf)))))
-
-(defadvice dired (before dired-single-buffer activate)
-  "Replace current buffer if file is a directory."
-  (+amos/kill-all-other-dired-buffers))
-
 ;;;###autoload
 (defun +amos/up-directory (&optional other-window)
   (interactive)
   (dired-up-directory other-window)
   (+amos-store-jump-history)
-  (+amos--update-history default-directory +amos-dired-history-ring +amos-dired-history-index)
-  (+amos/kill-all-other-dired-buffers (current-buffer)))
+  (+amos--update-history default-directory +amos-dired-history-ring +amos-dired-history-index))
 
 ;;;###autoload
 (defun +amos/find-file (&optional entry ignore-history)
@@ -133,8 +104,7 @@
             (when (and (file-directory-p find-name)
                        (not (eq (current-buffer) orig)))
               (unless ignore-history
-                (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))
-              (+amos/kill-all-other-dired-buffers (current-buffer))))
+                (+amos--update-history find-name +amos-dired-history-ring +amos-dired-history-index))))
         (message (shell-command-to-string "jump clean"))
         (error "File doesn't exist anymore!")))))
 
@@ -218,10 +188,6 @@
     ;; finally, switch to that window
     (other-window 1)))
 
-(require 'files)
-(require 'tramp)
-(require 'dired)
-
 (defun dired-toggle-sudo-internal (path &optional sudo-user)
   "Convert PATH to its sudoed version. root is used by default
 unless SUDO-USER is provided."
@@ -290,8 +256,6 @@ If called with `universal-argument' (C-u), ask for username.
         (dired fname)
         (when file-now
           (dired-goto-file (expand-file-name file-now fname)))))))
-
-(require 'cl-macs)
 
 (defvar peep-dired-peeped-buffers ()
   "List with buffers of peeped files")

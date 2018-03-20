@@ -115,6 +115,8 @@
         +jump/references
         counsel-imenu
         +eval/buffer
+        flycheck-next-error
+        flycheck-previous-error
         +amos/projectile-find-other-file))
 
 (defun text-scale-reset ()
@@ -215,8 +217,7 @@
  :m "C-w"            #'bury-buffer
  :i "C-a"            #'evil-beginning-of-line
  :vn "C-a"           #'evil-numbers/inc-at-pt
- :v "g C-a"          #'evil-numbers/inc-at-pt-incremental
- :n "C-e"            #'+amos/maybe-add-end-of-statement
+ :v "g C-a"          #'+amos/gca
  :i "C-e"            #'+amos/smart-eol-insert
  :i "M-e"            #'+amos/smart-eol-insert
  :i "C-u"            #'+amos/backward-kill-to-bol-and-indent
@@ -233,6 +234,8 @@
  :i "C-SPC"          #'+amos/complete
  :v "R"              #'evil-multiedit-match-all
  :n "!"              #'rotate-text
+ :v "H"              #'+amos/align-repeat-left
+ :v "L"              #'+amos/align-repeat-right
  :v "u"              #'undo-tree-undo
  :v "C-r"            #'undo-tree-redo
  :n "s"              #'evil-substitute
@@ -291,7 +294,7 @@
 
  (:prefix "SPC"
    :desc "Switch buffer"                   :en "SPC" #'+ivy/switch-workspace-buffer
-   :desc "Find file in project"            :en "."   #'projectile-find-file
+   :desc "Find file in project"            :en "."   #'+amos/projectile-find-file
    :desc "Find file in project (no cache)" :en ">"   (lambda! (projectile-invalidate-cache nil) (projectile-find-file))
    :desc "Find recent file"                :en ","   #'counsel-recentf
    :desc "Find recent file (no cache)"     :en "<"   (lambda! (recentf-cleanup) (counsel-recentf))
@@ -837,8 +840,7 @@
 
  ;; --- Custom evil text-objects ---------------------
  :textobj "a" #'evil-inner-arg                    #'evil-outer-arg
- :textobj "j" #'evil-textobj-anyparen-inner-block #'evil-textobj-anyparen-a-block
- :textobj "u" #'evil-textobj-anyquote-inner-block #'evil-textobj-anyquote-a-block
+ :textobj "j" #'+amos/any-object-inner            #'+amos/any-object-outer
  :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
  :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
  :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down)

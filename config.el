@@ -1,8 +1,7 @@
 ;;; private/amos/config.el -*- lexical-binding: t; -*-
 
 (when (featurep! :feature evil)
-  (load! +bindings)  ; my key bindings
-  (load! +commands)) ; my custom ex commands
+  (load! +bindings))
 
 (defvar +amos-dir (file-name-directory load-file-name))
 (defvar +amos-snippets-dir (expand-file-name "snippets/" +amos-dir))
@@ -22,10 +21,14 @@
     (search-backward ":hint")
     (current-column)))
 (put :hint 'lisp-indent-function 'special-indent-fn)
+(put :color 'lisp-indent-function 'defun)
+(put :pre   'lisp-indent-function 'defun)
+(put :post  'lisp-indent-function 'defun)
+
 (def-hydra! +amos@paste (:hint nil
-                          :foreign-keys nil
-                          :pre (setq hydra-lv nil)
-                          :after-exit (setq hydra-lv t))
+                         :foreign-keys nil
+                         :pre (setq hydra-lv nil)
+                         :after-exit (setq hydra-lv t))
   "Paste"
   ("C-j" evil-paste-pop "Next Paste")
   ("C-k" evil-paste-pop-next "Prev Paste")
@@ -151,13 +154,13 @@
     ("P" evil-paste-before "Paste Before"))
 
   (def-hydra! +amos@git-blame (:hint nil
-                                :title "Git Blame Transient State"
-                                :doc "
+                               :title "Git Blame Transient State"
+                               :doc "
 Press [_b_] again to blame further in the history, [_q_] to go up or quit."
-                                :on-enter (let (golden-ratio-mode)
-                                            (unless (bound-and-true-p magit-blame-mode)
-                                              (call-interactively 'magit-blame)))
-                                :foreign-keys run)
+                               :on-enter (let (golden-ratio-mode)
+                                           (unless (bound-and-true-p magit-blame-mode)
+                                             (call-interactively 'magit-blame)))
+                               :foreign-keys run)
     ("b" magit-blame)
     ;; here we use the :exit keyword because we should exit the
     ;; micro-state only if the magit-blame-quit effectively disable
@@ -262,7 +265,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
     :group 'narrow-reindent)
   (global-narrow-reindent-mode +1))
 
-(when (equal (system-name) "t450s")
+(when (string= (system-name) "t450s")
   (require 'fcitx)
   (fcitx-aggressive-setup))
 
@@ -516,19 +519,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (defadvice hl-line-mode (after +amos*hl-line-mode activate)
   (set-face-background hl-line-face "Gray13"))
 
-(defadvice +tmux/run (after +amos*tmux-run activate)
-  "Run COMMAND in tmux. If NORETURN is non-nil, send the commands as keypresses
-but do not execute them."
-  (interactive
-   (list (read-string "tmux $ ")
-         current-prefix-arg))
-  (+tmux (shell-quote-argument command)
-         (unless noreturn " Enter")))
-
-;; (set-face-background 'show-paren-match (face-background 'default))
-;; (set-face-foreground 'show-paren-match (face-foreground 'default))
-;; (set-face-attribute 'show-paren-match nil :weight 'normal)
-
 (def-package! dired-quick-sort
   :after dired
   :config
@@ -552,9 +542,6 @@ Version 2017-01-27"
   :after dired
   :config
   (push #'+amos/dired-open-callgrind dired-open-functions))
-
-;; (def-package! dired-avfs
-;;   :after dired)
 
 (def-package! org-mime
   :after org-mu4e)
@@ -714,13 +701,18 @@ initialized with the current filename."
 
 ;; BEGIN align functions
 
+(defun +amos/align-repeat-left (start end regexp)
+  (interactive "r\nsAlign regexp: ")
+  (+amos/align-repeat start end regexp))
+(defun +amos/align-repeat-right (start end regexp)
+  (interactive "r\nsAlign regexp: ")
+  (+amos/align-repeat start end regexp t t))
 ;; modified function from http://emacswiki.org/emacs/AlignCommands
 (defun +amos/align-repeat (start end regexp &optional justify-right after)
   "Repeat alignment with respect to the given regular expression.
 If JUSTIFY-RIGHT is non nil justify to the right instead of the
 left. If AFTER is non-nil, add whitespace to the left instead of
 the right."
-  (interactive "r\nsAlign regexp: ")
   (let* ((ws-regexp (if (string-empty-p regexp)
                         "\\(\\s-+\\)"
                       "\\(\\s-*\\)"))
@@ -728,7 +720,6 @@ the right."
                               (concat regexp ws-regexp)
                             (concat ws-regexp regexp)))
          (group (if justify-right -1 1)))
-
     (unless (use-region-p)
       (save-excursion
         (while (and
@@ -740,45 +731,7 @@ the right."
                 (string-match-p complete-regexp (thing-at-point 'line))
                 (= 0 (forward-line 1)))
           (setq end (point-at-eol)))))
-
     (align-regexp start end complete-regexp group 1 t)))
-
-;; Modified answer from http://emacs.stackexchange.com/questions/47/align-vertical-columns-of-numbers-on-the-decimal-point
-(defun +amos/align-repeat-decimal (start end)
-  "Align a table of numbers on decimal points and dollar signs (both optional)"
-  (interactive "r")
-  (require 'align)
-  (align-region start end nil
-                '((nil (regexp . "\\([\t ]*\\)\\$?\\([\t ]+[0-9]+\\)\\.?")
-                       (repeat . t)
-                       (group 1 2)
-                       (spacing 1 1)
-                       (justify nil t)))
-                nil))
-
-(defmacro +amos-create-align-repeat-x! (name regexp &optional justify-right default-after)
-  (let ((new-func (intern (concat "+amos/align-repeat-" name))))
-    `(defun ,new-func (start end switch)
-       (interactive "r\nP")
-       (let ((after (not (eq (if switch t nil) (if ,default-after t nil)))))
-         (+amos/align-repeat start end ,regexp ,justify-right after)))))
-
-(+amos-create-align-repeat-x! "comma" "," nil t)
-(+amos-create-align-repeat-x! "semicolon" ";" nil t)
-(+amos-create-align-repeat-x! "colon" ":" nil t)
-(+amos-create-align-repeat-x! "equal" "=")
-(+amos-create-align-repeat-x! "math-oper" "[+\\-*/]")
-(+amos-create-align-repeat-x! "ampersand" "&")
-(+amos-create-align-repeat-x! "bar" "|")
-(+amos-create-align-repeat-x! "left-paren" "(")
-(+amos-create-align-repeat-x! "right-paren" ")" t)
-(+amos-create-align-repeat-x! "left-curly-brace" "{")
-(+amos-create-align-repeat-x! "right-curly-brace" "}" t)
-(+amos-create-align-repeat-x! "left-square-brace" "\\[")
-(+amos-create-align-repeat-x! "right-square-brace" "\\]" t)
-(+amos-create-align-repeat-x! "backslash" "\\\\")
-
-;; END align functions
 
 (defun +amos/dos2unix ()
   "Converts the current buffer to UNIX file format."
@@ -861,53 +814,6 @@ using a visual block/rectangle selection."
   (interactive)
   (+amos/sort-lines-by-column -1))
 
-(defun +amos/select-current-block ()
-  "Select the current block of text between blank lines."
-  (interactive)
-  (let (p1)
-    (when (re-search-backward "\n[ \t]*\n" nil "move")
-      (re-search-forward "\n[ \t]*\n"))
-    (setq p1 (point))
-    (if (re-search-forward "\n[ \t]*\n" nil "move")
-        (re-search-backward "\n[ \t]*\n"))
-    (set-mark p1)))
-
-;; From http://xugx2007.blogspot.ca/2007/06/benjamin-rutts-emacs-c-development-tips.html
-(setq compilation-finish-function
-      (lambda (buf str)
-
-        (let ((case-fold-search nil))
-          (if (or (string-match "exited abnormally" str)
-                  (string-match "FAILED" (buffer-string)))
-
-              ;; there were errors
-              (message "There were errors. SPC-e-n to visit.")
-            (unless (or (string-match "Grep finished" (buffer-string))
-                        (string-match "Ag finished" (buffer-string))
-                        (string-match "nosetests" (buffer-name)))
-
-              ;; no errors
-              (message "compilation ok."))))))
-
-(defun +amos/close-compilation-window ()
-  "Close the window containing the '*compilation*' buffer."
-  (interactive)
-  (when compilation-last-buffer
-    (delete-windows-on compilation-last-buffer)))
-
-(defun +amos/switch-to-scratch-buffer (&optional arg)
-  "Switch to the `*scratch*' buffer, creating it first if needed.
-if prefix argument ARG is given, switch to it in an other, possibly new window."
-  (interactive "P")
-  (let ((exists (get-buffer "*scratch*")))
-    (if arg
-        (switch-to-buffer-other-window (get-buffer-create "*scratch*"))
-      (switch-to-buffer (get-buffer-create "*scratch*")))
-    (when (and (not exists)
-               (not (eq major-mode dotspacemacs-scratch-mode))
-               (fboundp dotspacemacs-scratch-mode))
-      (funcall dotspacemacs-scratch-mode))))
-
 (defun swap-args (fun)
   (if (not (equal (interactive-form fun)
                   '(interactive "P")))
@@ -943,12 +849,12 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
   :commands +amos@time-machine/body
   :config
   (defhydra +amos@time-machine (:hint nil
-                                 :pre (let (golden-ratio-mode)
-                                        (unless (bound-and-true-p git-timemachine-mode)
-                                          (call-interactively 'git-timemachine)))
-                                 :post (when (bound-and-true-p git-timemachine-mode)
-                                         (git-timemachine-quit))
-                                 :foreign-keys run)
+                                :pre (let (golden-ratio-mode)
+                                       (unless (bound-and-true-p git-timemachine-mode)
+                                         (call-interactively 'git-timemachine)))
+                                :post (when (bound-and-true-p git-timemachine-mode)
+                                        (git-timemachine-quit))
+                                :foreign-keys run)
     "
 [_p_/_N_] previous [_n_] next [_c_] current [_g_] goto nth rev [_Y_] copy hash [_q_] quit"
     ("c" git-timemachine-show-current-revision)
@@ -1050,17 +956,31 @@ if prefix argument ARG is given, switch to it in an other, possibly new window."
       (when projectile-enable-caching
         (message "Empty cache. Projectile is initializing cache..."))
       (setq files
-            (split-string
-             (shell-command-to-string
-              (concat
-               "fd '' --hidden "
-               (directory-file-name (projectile-project-root))))))
+            (projectile-adjust-files
+             (split-string
+              (shell-command-to-string
+               (concat "cd " (projectile-project-root) "; fd --hidden")))))
       ;; cache the resulting list of files
       (when projectile-enable-caching
         (projectile-cache-project (projectile-project-root) files)))
     (projectile-sort-files files)))
 
-(advice-add #'projectile-current-project-files :override #'+amos/projectile-current-project-files)
+(defun +amos/projectile-find-file (&optional arg)
+  "Jump to a file in the current project.
+
+With a prefix ARG, invalidate the cache first."
+  (interactive "P")
+  (require 'projectile)
+  (projectile-maybe-invalidate-cache arg)
+  (ivy-read (projectile-prepend-project-name "Find file: ")
+            (+amos/projectile-current-project-files)
+            ;; (projectile-current-project-files)
+            :matcher counsel-projectile-find-file-matcher
+            :require-match t
+            :sort t
+            :action counsel-projectile-find-file-action
+            :caller '+amos/projectile-find-file))
+
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
 
 (after! xref
@@ -1158,15 +1078,6 @@ This function should be hooked to `buffer-list-update-hook'."
 (+file-templates-append '("/home/amos/git/serverconfig/scripts/.+"   "__"   sh-mode))
 (+file-templates-add '("/home/amos/git/serverconfig/.config/fish/functions/.+" "__func" fish-mode))
 
-(defmacro +amos--def-browse-in! (name dir)
-  `(defun ,(intern (format "+amos/browse-%s" name)) ()
-     (interactive)
-     (doom-project-browse ,dir)))
-
-(+amos--def-browse-in! script "/home/amos/scripts/")
-(+amos--def-browse-in! note "/home/amos/notes/")
-(+amos--def-browse-in! org "/home/amos/org/")
-
 (def-package! go-playground
   :commands (go-playground go-playground-mode)
   :bind (:map go-playground-mode-map
@@ -1179,7 +1090,13 @@ This function should be hooked to `buffer-list-update-hook'."
 
 (def-package! cc-playground
   :commands cc-playground cc-playground-mode cc-playground-find-snippet
-  :load-path (lambda () (interactive) (if (equal (system-name) "t450s") "~/git/cc-playground"))
+  :load-path (lambda () (interactive) (if (string= (system-name) "t450s") "~/git/cc-playground"))
+  :init
+  (put 'cc-exec 'safe-local-variable #'stringp)
+  (put 'cc-flags 'safe-local-variable #'stringp)
+  (put 'cc-links 'safe-local-variable #'stringp)
+  (dolist (x '(cc-playground-exec cc-playground-debug cc-playground-exec-test cc-playground-bench))
+    (advice-add x :before #'evil-force-normal-state))
   :bind (:map cc-playground-mode-map
           ("<f8>" . cc-playground-rm)
           ("C-c r" . cc-playground-add-or-modify-tag)
@@ -1190,11 +1107,6 @@ This function should be hooked to `buffer-list-update-hook'."
           ("C-c c" . cc-playground-change-compiler)
           ("C-c o" . cc-playground-switch-optimization-flag)
           ("C-c f" . cc-playground-add-compilation-flags)))
-
-(put :hint  'lisp-indent-function 1)
-(put :color 'lisp-indent-function 'defun)
-(put :pre   'lisp-indent-function 'defun)
-(put :post  'lisp-indent-function 'defun)
 
 (def-package! pdf-tools
   :if (string= (getenv "GUI") "t")
@@ -1212,9 +1124,9 @@ This function should be hooked to `buffer-list-update-hook'."
   ;; | teal     | :foreign-keys warn :exit t | transient w  |
   ;; | pink     | :foreign-keys run          | nested       |
   (defhydra +amos@pdf-tools (:hint nil
-                              :color amaranth
-                              :pre (setq which-key-inhibit t)
-                              :post (setq which-key-inhibit nil))
+                             :color amaranth
+                             :pre (setq which-key-inhibit t)
+                             :post (setq which-key-inhibit nil))
     "
  Navigation^^^^                Scale/Fit^^                    Annotations^^       Actions^^           Other^^
  ----------^^^^--------------- ---------^^------------------  -----------^^------ -------^^---------- -----^^---
@@ -1321,33 +1233,8 @@ When GREEDY is non-nil, join words in a greedy way."
   (setq ivy--old-re nil)
   (cl-rotatef ivy--regex-function +amos--old-ivy-regex-function ivy--regexp-quote))
 
-;; (add-hook! 'minibuffer-setup-hook (setq-local truncate-lines t) (ivy-toggle-regexp-quote))
-
 (advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)
 (advice-add #'ivy--regex :override #'+amos*ivy-regex-half-quote)
-
-(defun +amos*yas--modes-to-activate (&optional mode)
-  "Compute list of mode symbols that are active for `yas-expand' and friends."
-  (defvar yas--dfs)        ;We rely on dynbind.  We could use `letrec' instead!
-  (let* ((explored (if mode (list mode) ; Building up list in reverse.
-                     (reverse (cons major-mode yas--extra-modes))))
-         (yas--dfs
-          (lambda (mode)
-            (cl-loop for neighbour
-                     in (cl-list* (get mode 'derived-mode-parent)
-                                  ;; NOTE: `fboundp' check is redundant
-                                  ;; since Emacs 24.4.
-                                  (and (fboundp mode) (symbol-function mode))
-                                  (gethash mode yas--parents))
-                     when (and neighbour
-                               (not (memq neighbour explored))
-                               (symbolp neighbour))
-                     do (push neighbour explored)
-                     (funcall yas--dfs neighbour)))))
-    (mapc yas--dfs explored)
-    (nreverse explored)))
-
-(advice-add #'yas--modes-to-activate :override #'+amos*yas--modes-to-activate)
 
 (def-package! dired-ranger
   :after dired)
@@ -1437,24 +1324,24 @@ _p_:perf stat -e 'ext4:*' -a sleep 10
 _q_:perf stat -e 'block:*' -a sleep 10"
 
   ;; TODO
-    ("a" kurecolor-decrease-brightness-by-step)
-    ("b" kurecolor-decrease-brightness-by-step)
-    ("c" kurecolor-decrease-brightness-by-step)
-    ("d" kurecolor-decrease-brightness-by-step)
-    ("e" kurecolor-decrease-brightness-by-step)
-    ("f" kurecolor-decrease-brightness-by-step)
-    ("g" kurecolor-decrease-brightness-by-step)
-    ("h" kurecolor-decrease-brightness-by-step)
-    ("i" kurecolor-decrease-brightness-by-step)
-    ("j" kurecolor-decrease-brightness-by-step)
-    ("k" kurecolor-decrease-brightness-by-step)
-    ("l" kurecolor-decrease-brightness-by-step)
-    ("m" kurecolor-decrease-brightness-by-step)
-    ("n" kurecolor-decrease-brightness-by-step)
-    ("o" kurecolor-decrease-brightness-by-step)
-    ("p" kurecolor-decrease-brightness-by-step)
-    ("q" kurecolor-increase-brightness-by-step)
-    ("r" kurecolor-decrease-saturation-by-step))
+  ("a" kurecolor-decrease-brightness-by-step)
+  ("b" kurecolor-decrease-brightness-by-step)
+  ("c" kurecolor-decrease-brightness-by-step)
+  ("d" kurecolor-decrease-brightness-by-step)
+  ("e" kurecolor-decrease-brightness-by-step)
+  ("f" kurecolor-decrease-brightness-by-step)
+  ("g" kurecolor-decrease-brightness-by-step)
+  ("h" kurecolor-decrease-brightness-by-step)
+  ("i" kurecolor-decrease-brightness-by-step)
+  ("j" kurecolor-decrease-brightness-by-step)
+  ("k" kurecolor-decrease-brightness-by-step)
+  ("l" kurecolor-decrease-brightness-by-step)
+  ("m" kurecolor-decrease-brightness-by-step)
+  ("n" kurecolor-decrease-brightness-by-step)
+  ("o" kurecolor-decrease-brightness-by-step)
+  ("p" kurecolor-decrease-brightness-by-step)
+  ("q" kurecolor-increase-brightness-by-step)
+  ("r" kurecolor-decrease-saturation-by-step))
 
 (defun +amos/replace-last-sexp ()
   (interactive)
@@ -1512,21 +1399,24 @@ The selected history element will be inserted into the minibuffer."
          (c (point))
          quote
          delim)
-    (setq quote (save-excursion
-                  (let ((b (progn (forward-evil-quote -1) (point)))
-                        (e (progn (forward-evil-quote 1) (point))))
-                    (if (and (< b c) (< c e))
-                        (if (< 0 dir) e b)
-                      -1))))
+    (setq quote (if (nth 3 (syntax-ppss))
+                    (save-excursion
+                      (let ((b (progn (forward-evil-quote -1) (point)))
+                            (e (progn (forward-evil-quote 1) (point))))
+                        (if (and (< b c) (< c e))
+                            (if (< 0 dir) e b)
+                          (user-error "syntax-ppss says point is in quotes but we cannot locate the boundary."))))
+                  -1))
     (if (< 0 quote)
         (goto-char quote)
       (let* ((paren (save-excursion (if (= 0 (evil-up-paren ?( ?) dir)) (point) nil)))
              (bracket (save-excursion (if (= 0 (evil-up-paren ?[ ?] dir)) (point) nil)))
-             (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil))))
+             (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil)))
+             (angle (save-excursion (if (= 0 (evil-up-paren ?< ?> dir)) (point) nil))))
         (setq delim (condition-case nil
                         (if (< dir 0)
-                            (-max (--filter it (list paren bracket brace)))
-                          (-min (--filter it (list paren bracket brace))))
+                            (-max (--filter it (list paren bracket brace angle)))
+                          (-min (--filter it (list paren bracket brace angle))))
                       (error nil))))
       (if delim (goto-char delim)))
     (if (< 0 dir) (backward-char))))
@@ -1597,15 +1487,15 @@ The selected history element will be inserted into the minibuffer."
     (forward-char))
   (if subword (subword-mode +1))
   (mkr! (kill-region (point)
-                 (min
-                  (save-excursion
-                    (if (looking-back "[ \t\r\n\v\f]")
-                        (progn
-                          (re-search-backward "[^ \t\r\n\v\f]")
-                          (forward-char))
-                      (forward-thing 'evil-word -1))
-                    (point))
-                  (line-end-position))))
+                     (min
+                      (save-excursion
+                        (if (looking-back "[ \t\r\n\v\f]")
+                            (progn
+                              (re-search-backward "[^ \t\r\n\v\f]")
+                              (forward-char))
+                          (forward-thing 'evil-word -1))
+                        (point))
+                      (line-end-position))))
   (if subword (subword-mode -1)))
 
 (defun +amos/backward-word-insert (&optional subword)
@@ -1654,46 +1544,21 @@ The selected history element will be inserted into the minibuffer."
       (backward-word 1))))
 (advice-add #'subword-backward-internal :override #'+amos*subword-backward-internal)
 
-(def-package! evil-textobj-anyblock
-  :commands
-  evil-textobj-anyparen-inner-block
-  evil-textobj-anyparen-a-block
-  evil-textobj-anyquote-inner-block
-  evil-textobj-anyquote-a-block
-  :config
-  (evil-define-text-object evil-textobj-anyparen-inner-block
-    (count &optional beg end type)
-    "Select the closest inner anyparen block."
-    (let ((evil-textobj-anyblock-blocks '(("(" . ")")
-                                          ("{" . "}")
-                                          ("\\[" . "\\]")
-                                          ("<" . ">")
-                                          ("“" . "”"))))
-      (evil-textobj-anyblock--make-textobj beg end type count nil)))
+(evil-define-text-object +amos/any-object-inner (count &optional beg end type)
+  (save-excursion
+    (+amos/smart-jumper-backward)
+    (forward-char)
+    (exchange-point-and-mark)
+    (+amos/smart-jumper-forward)
+    (evil-range (region-beginning) (region-end) type :expanded t)))
 
-  (evil-define-text-object evil-textobj-anyparen-a-block (count &optional beg end type)
-    "Select the closest outer anyparen block."
-    (let ((evil-textobj-anyblock-blocks '(("(" . ")")
-                                          ("{" . "}")
-                                          ("\\[" . "\\]")
-                                          ("<" . ">")
-                                          ("“" . "”"))))
-      (evil-textobj-anyblock--make-textobj beg end type count t)))
-
-  (evil-define-text-object evil-textobj-anyquote-inner-block
-    (count &optional beg end type)
-    "Select the closest inner anyquote block."
-    (let ((evil-textobj-anyblock-blocks '(("'" . "'")
-                                          ("\"" . "\"")
-                                          ("`" . "`"))))
-      (evil-textobj-anyblock--make-textobj beg end type count nil)))
-
-  (evil-define-text-object evil-textobj-anyquote-a-block (count &optional beg end type)
-    "Select the closest outer anyquote block."
-    (let ((evil-textobj-anyblock-blocks '(("'" . "'")
-                                          ("\"" . "\"")
-                                          ("`" . "`"))))
-      (evil-textobj-anyblock--make-textobj beg end type count t))))
+(evil-define-text-object +amos/any-object-outer (count &optional beg end type)
+  (save-excursion
+    (+amos/smart-jumper-backward)
+    (exchange-point-and-mark)
+    (+amos/smart-jumper-forward)
+    (forward-char)
+    (evil-range (region-beginning) (region-end) type :expanded t)))
 
 (def-package! subword
   :commands subword-forward subword-backward)
@@ -1729,73 +1594,17 @@ The selected history element will be inserted into the minibuffer."
 (require 'cl-lib)
 (require 'subr-x)
 
-(defvar my-cquery-blacklist nil
-  "List of paths that should not enable lsp-cquery")
-
-(defvar my-cquery-whitelist '("Dev/llvm")
-  "List of paths that should enable lsp-cquery. Takes priority over my-cquery-blacklist")
-
 (def-package! cquery
   :after lsp-mode
   :config
-  ;; overlay is slow
-  ;; Use https://github.com/emacs-mirror/emacs/commits/feature/noverlay
-  ;; (setq cquery-sem-highlight-method 'overlay)
-  ;; or WAIT for https://lists.gnu.org/archive/html/emacs-devel/2017-05/msg00084.html
-  ;; (setq cquery-enable-sem-highlight t)
-  ;; (cquery-use-default-rainbow-sem-highlight)
+  ;; (setq cquery-sem-highlight-method 'font-lock)
+  (cquery-use-default-rainbow-sem-highlight)
+  (add-hook 'c-mode-common-hook #'cquery//enable))
 
-  ;; (setq cquery-extra-args '("--log-stdin-stdout-to-stderr" "--log-file=/tmp/cq.log"))
-  (setq cquery-extra-init-params '(:cacheFormat "msgpack" :index (:builtin_types t :comments 0)))
-  (add-hook 'c-mode-common-hook #'my-cquery//enable))
-
-
-(defun my-cquery//enable ()
-  (when
-      (and buffer-file-name
-           (not (and (boundp 'lsp-mode) lsp-mode))
-           (or
-            (cl-some (lambda (x) (string-match-p x buffer-file-name)) my-cquery-whitelist)
-            (cl-notany (lambda (x) (string-match-p x buffer-file-name)) my-cquery-blacklist))
-           (or (locate-dominating-file default-directory "compile_commands.json")
-               (locate-dominating-file default-directory ".cquery")))
-    (setq eldoc-idle-delay 0.2)
-    (lsp-cquery-enable)))
-
-
-;; xref-find-apropos (workspace/symbol)
-
-(defun my/highlight-pattern-in-text (pattern line)
-  (when (> (length pattern) 0)
-    (let ((i 0))
-      (while (string-match pattern line i)
-        (setq i (match-end 0))
-        (add-face-text-property (match-beginning 0) (match-end 0) 'highlight t line)
-        )
-      line)))
-
-(with-eval-after-load 'lsp-methods
-  ;;; Override
-  ;; This deviated from the original in that it highlights pattern appeared in symbol
-  (defun lsp--symbol-information-to-xref (pattern symbol)
-    "Return a `xref-item' from SYMBOL information."
-    (let* ((location (gethash "location" symbol))
-           (uri (gethash "uri" location))
-           (range (gethash "range" location))
-           (start (gethash "start" range))
-           (name (gethash "name" symbol)))
-      (xref-make (format "[%s] %s"
-                         (alist-get (gethash "kind" symbol) lsp--symbol-kind)
-                         (my/highlight-pattern-in-text (regexp-quote pattern) name))
-                 (xref-make-file-location (string-remove-prefix "file://" uri)
-                                          (1+ (gethash "line" start))
-                                          (gethash "character" start)))))
-
-  (cl-defmethod xref-backend-apropos ((_backend (eql xref-lsp)) pattern)
-    (let ((symbols (lsp--send-request (lsp--make-request
-                                       "workspace/symbol"
-                                       `(:query ,pattern)))))
-      (mapcar (lambda (x) (lsp--symbol-information-to-xref pattern x)) symbols))))
+(defun cquery//enable ()
+  (condition-case nil
+      (lsp-cquery-enable)
+    (user-error nil)))
 
 (set!
   :jump 'c-mode
@@ -1857,15 +1666,9 @@ for the last window in each frame."
     (find-file full-name)
     (evil-initialize-state 'insert)))
 
-(def-package! persistent-scratch
-  :commands (persistent-scratch-setup-default)
-  :init
-  (persistent-scratch-setup-default))
-
 (with-eval-after-load 'org-src
   (add-hook 'org-src-mode-hook
             'editorconfig-mode-apply t))
-
 
 (defvar zygospore-spore-formation-register-name
   "zygospore-windows-time-machine"
@@ -1936,7 +1739,7 @@ current buffer's, reload dir-locals."
 
 (advice-remove #'counsel-ag-function #'+ivy*counsel-ag-function)
 
-(unless (equal (system-name) "t450s")
+(unless (string= (system-name) "t450s")
   (def-modeline-segment! tmux
     (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
           (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
@@ -1952,28 +1755,9 @@ current buffer's, reload dir-locals."
     (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
     (host "   " buffer-encoding major-mode vcs flycheck)))
 
-;; (defun setup-input-decode-map ()
-;;   (map!
-;;    (:map input-decode-map
-;;      "\e[77~" [(control shift j)]
-;;      "\x1b[1;3P" [(control shift s)]
-;;      "\e[76~" [(control shift d)]
-;;      "\e[74~" (kbd "C-.")
-;;      "\e[73~" (kbd "C-,")
-;;      "\e[72~" [S-return]
-;;      "\e[71~" [M-S-backspace]
-;;      "\e[70~" [C-return])))
-
-;; (add-hook 'tty-setup-hook #'setup-input-decode-map)
-
 (require 'yasnippet)
 (require 'company)
 (add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet)
-;; (add-hook 'evil-insert-state-exit-hook #'company-complete-selection)
-
-(put 'cc-exec 'safe-local-variable #'stringp)
-(put 'cc-flags 'safe-local-variable #'stringp)
-(put 'cc-links 'safe-local-variable #'stringp)
 
 (defun +amos*helm-dash-result-url (docset-name filename &optional anchor)
   "Return the full, absolute URL to documentation.
@@ -1993,7 +1777,7 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
 (advice-add #'helm-dash-result-url :override #'+amos*helm-dash-result-url)
 
 (unless (string= (getenv "GUI") "t")
-    (advice-add #'switch-to-buffer-other-frame :override #'+amos/switch-to-buffer-other-frame))
+  (advice-add #'switch-to-buffer-other-frame :override #'+amos/switch-to-buffer-other-frame))
 
 (after! ivy
   (dolist (cmd '(counsel-find-file +amos/counsel-projectile-switch-project))
@@ -2009,9 +1793,6 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
 
 (add-hook! 'doom-init-ui-hook
   (set-face-background 'vertical-border "#282c34"))
-
-(dolist (x '(cc-playground-exec cc-playground-debug cc-playground-exec-test cc-playground-bench))
-  (advice-add x :before #'evil-force-normal-state))
 
 (defun +amos/redisplay-and-recenter ()
   (interactive)
@@ -2036,3 +1817,123 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
 (defun +amos*set-jump (&rest _)
   (evil-set-jump))
 (advice-add 'counsel-git-grep-action :before #'+amos*set-jump)
+
+(after! evil-args
+  (push "<" evil-args-openers)
+  (push ">" evil-args-closers))
+
+(defun evil-numbers/inc-at-pt (amount)
+  "Increment the number at point or after point before `end-of-line' by AMOUNT."
+  (interactive "p*")
+  (save-match-data
+    (when (evil-numbers/search-number))
+    (or
+     ;; find binary literals
+     (evil-numbers/search-and-replace "0[bB][01]+" "01" "\\([01]+\\)" amount 2)
+     ;; find octal literals
+     (evil-numbers/search-and-replace "0[oO][0-7]+" "01234567" "\\([0-7]+\\)" amount 8)
+     ;; find hex literals
+     (evil-numbers/search-and-replace "0[xX][0-9a-fA-F]*"
+                                      "0123456789abcdefABCDEF"
+                                      "\\([0-9a-fA-F]+\\)" amount 16)
+     ;; find decimal literals
+     (progn
+       (skip-chars-backward "0123456789")
+       (skip-chars-backward "-")
+       (when (looking-at "-?\\([0-9]+\\)")
+         (replace-match
+          (format (format "%%0%dd" (- (match-end 1) (match-beginning 1)))
+                  (+ amount (string-to-number (match-string 0) 10))))
+         ;; Moves point one position back to conform with Vim
+         (forward-char -1)
+         t)))))
+
+(defun evil-numbers/dec-at-pt (amount)
+  "Decrement the number at point or after point before `end-of-line' by AMOUNT."
+  (interactive "p*")
+  (evil-numbers/inc-at-pt (- amount)))
+
+;;; utils
+
+(defun evil-numbers/search-number ()
+  "Return non-nil if a binary, oct, hex or decimal literal at or after point.
+If point is already within or after a literal it stays.
+
+The literals have to be in the following forms:
+binary: 0[bB][01]+, e.g. 0b101 or 0B0
+octal: 0[oO][0-7]+, e.g. 0o42 or 0O5
+hexadecimal 0[xX][0-9a-fA-F]+, e.g. 0xBEEF or 0Xcafe
+decimal: [0-9]+, e.g. 42 or 23"
+  (or
+   ;; numbers or format specifier in front
+   (looking-back (rx (or (+? digit)
+                         (and "0" (or (and (in "bB") (*? (in "01")))
+                                      (and (in "oO") (*? (in "0-7")))
+                                      (and (in "xX") (*? (in digit "A-Fa-f"))))))))
+   ;; search for number in rest of line
+   ;; match 0 of specifier or digit, being in a literal and after specifier is
+   ;; handled above
+   (and
+    (re-search-forward "[[:digit:]]" (point-at-eol) t)
+    (or
+     (not (memq (char-after) '(?b ?B ?o ?O ?x ?X)))
+     (/= (char-before) ?0)
+     (and (> (point) 2)				; Should also take bofp into consideration
+          (not (looking-back "\\W0" 2)))
+     ;; skip format specifiers and interpret as bool
+     (<= 0 (skip-chars-forward "bBoOxX"))))))
+
+(defun evil-numbers/search-and-replace (look-back skip-back search-forward inc base)
+  "When looking back at LOOK-BACK skip chars SKIP-BACK backwards and
+replace number incremented by INC in BASE and return non-nil."
+  (when (looking-back look-back)
+    (skip-chars-backward skip-back)
+    (search-forward-regexp search-forward)
+    (replace-match (evil-numbers/format (+ inc (string-to-number (match-string 1) base))
+                                        (length (match-string 1))
+                                        base))
+    ;; Moves point one position back to conform with Vim
+    (forward-char -1)
+    t))
+
+(defun evil-numbers/format (num width base)
+  "Format NUM with at least WIDTH space in BASE."
+  (cond
+   ((= base 2) (evil-numbers/format-binary num width))
+   ((= base 8) (format (format "%%0%do" width) num))
+   ((= base 16) (format (format "%%0%dX" width) num))
+   (t "")))
+
+(defun evil-numbers/format-binary (number &optional width fillchar)
+  "Format NUMBER as binary.
+Fill up to WIDTH with FILLCHAR (defaults to ?0) if binary
+representation of `NUMBER' is smaller."
+  (let (nums
+        (fillchar (or fillchar ?0)))
+    (while (> number 0)
+      (push (number-to-string (% number 2)) nums)
+      (setq number (truncate number 2)))
+    (let ((len (length nums)))
+      (apply #'concat
+             (if (and width (< len width))
+                 (make-string (- width len) fillchar)
+               "")
+             nums))))
+
+(defun +amos/inc (s e)
+    (save-restriction
+      (narrow-to-region s e)
+      (goto-char (point-min))
+      (if (evil-numbers/inc-at-pt +amos--gca-count)
+          (setq +amos--gca-count (+ 1 +amos--gca-count)))))
+
+(defvar +amos--gca-count nil)
+
+(defun +amos/gca (count start end)
+  (interactive "*p\nr")
+  (setq +amos--gca-count count)
+  (evil-apply-on-block #'+amos/inc start end nil))
+
+(def-package! direnv
+ :config
+ (direnv-mode))

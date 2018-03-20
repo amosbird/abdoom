@@ -14,6 +14,7 @@
      (output-pdf "Zathura")
      (output-html "xdg-open")))
  '(auto-revert-interval 0.3)
+ '(auto-revert-verbose nil)
  '(auto-save-visited-interval 5)
  '(auto-save-visited-mode nil)
  '(bibtex-completion-browser-function 'browser-url-chromium)
@@ -21,14 +22,21 @@
  '(browse-url-chrome-program (expand-file-name "~/scripts/vivaldi"))
  '(browse-url-firefox-program "luakit")
  '(browse-url-mailto-function 'mu4e~compose-browse-url-mail)
- '(cc-compile-command
-   "clang++ -std=c++17 *.cpp -I/usr/local/include -lpthread -ldl && ./a.out" t)
  '(counsel-org-goto-display-style 'path)
  '(counsel-org-goto-face-style 'org)
  '(counsel-org-goto-separator " ➜ ")
  '(counsel-org-headline-display-style 'path)
  '(counsel-org-headline-path-separator " ➜ ")
  '(cquery-executable "/home/amos/git/cquery/build/release/bin/cquery")
+ '(cquery-extra-args '("--log-all-to-stderr"))
+ '(cquery-extra-init-params
+   '(:cacheFormat "msgpack"
+                  :xref
+                  (:container t)
+                  :diagnostics
+                  (:frequencyMs 5000)))
+ '(cquery-project-root-matchers
+   '(cquery-project-roots-matcher ".cquery" projectile-project-root "compile_commands.json"))
  '(custom-safe-themes
    '("554b7f0439155d6eb648d4837ef03902f51124cacee021217e76f39e9dd314c2" "d0404bd38534a00ee72a4f887a987d6bff87f4cf8d8f85149e32849b262465a5" "73e35ffa5ca98b57a9923954f296c3854ce6d8736b31fdbdda3d27502d4b4d69" "0a3a41085c19d8121ed0ad3eb658a475ccb948a70a83604641ee7d4c3575a4d5" "a7e7804313dbf827a441c86a8109ef5b64b03011383322cbdbf646eb02692f76" "77bddca0879cb3b0ecdf071d9635c818827c57d69164291cb27268ae324efa84" "2e1d19424153d41462ad31144549efa41f55dacda9b76571f73904612b15fd0a" default))
  '(dired-omit-verbose nil)
@@ -49,6 +57,7 @@
      ("pptx" . "xdg-open")
      ("torrent" . "xdg-open")))
  '(dired-open-find-file-function #'+amos/find-file)
+ '(dired-recursive-copies 'always)
  '(display-line-numbers-current-absolute nil)
  '(display-line-numbers-type 'visual)
  '(evil-cjk-emacs-word-boundary t)
@@ -65,6 +74,7 @@
    '(ledger ada-gnat asciidoctor asciidoc cfengine chef-foodcritic coffee coffee-coffeelint coq css-csslint css-stylelint cwl d-dmd dockerfile-hadolint elixir-dogma emacs-lisp emacs-lisp-checkdoc erlang-rebar3 erlang eruby-erubis fortran-gfortran go-gofmt go-golint go-vet go-build go-test go-errcheck go-unconvert go-megacheck groovy haml handlebars haskell-stack-ghc haskell-ghc haskell-hlint html-tidy javascript-eslint javascript-jshint javascript-standard json-jsonlint json-python-json jsonnet less less-stylelint llvm-llc lsp-ui lua-luacheck lua perl perl-perlcritic php php-phpmd php-phpcs processing proselint protobuf-protoc pug puppet-parser puppet-lint python-flake8 python-pylint python-pycompile r-lintr racket rpm-rpmlint markdown-markdownlint-cli markdown-mdl nix rst-sphinx rst ruby-rubocop ruby-reek ruby-rubylint ruby ruby-jruby rust-cargo rust rust-clippy scala scala-scalastyle scheme-chicken scss-lint scss-stylelint sass/scss-sass-lint sass scss sh-bash sh-posix-dash sh-posix-bash sh-zsh sh-shellcheck slim slim-lint sql-sqlint systemd-analyze tcl-nagelfar tex-chktex tex-lacheck texinfo typescript-tslint verilog-verilator vhdl-ghdl xml-xmlstarlet xml-xmllint yaml-jsyaml yaml-ruby))
  '(flycheck-pos-tip-mode nil)
  '(fringes-outside-margins t t)
+ '(global-auto-revert-non-file-buffers t)
  '(helm-bibtex-bibliography '("~/zotero.bib"))
  '(helm-bibtex-notes-path "~/bibnotes.org")
  '(helm-bibtex-pdf-field "file")
@@ -82,7 +92,6 @@
  '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate 'full)
- '(ivy-wrap t)
  '(lsp-ui-peek-force-fontify t)
  '(magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
  '(mode-line-format nil)
@@ -185,7 +194,10 @@
  '(powerline-default-separator 'alternate)
  '(process-environment initial-environment t)
  '(projectile-find-dir-includes-top-level t)
+ '(projectile-globally-ignored-directories
+   '(".idea" ".ensime_cache" ".eunit" ".git" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs" ".tox" ".svn" ".stack-work" "~/.emacs.d/.local/" ".sync" ".cquery_cached_index"))
  '(projectile-require-project-root t)
+ '(projectile-sort-order 'recentf)
  '(query-replace-skip-read-only t)
  '(recentf-exclude
    '("^/tmp/" "^/ssh:" "\\.?ido\\.last$" "\\.revive$" "/TAGS$" "^/var/folders/.+$" "^/home/amos/Mail/" "^/home/amos/.emacs.d/.local/"))
@@ -193,9 +205,7 @@
  '(reftex-default-bibliography '("~/zotero.bib") t)
  '(require-final-newline t)
  '(safe-local-variable-values
-   '((cmake-ide-build-dir . "/home/amos/git/termite")
-     (cmake-ide-project-dir . "/home/amos/git/termite")
-     (rpm-change-log-uses-utc . t)
+   '((rpm-change-log-uses-utc . t)
      (eval c-set-offset 'arglist-close 0)
      (eval c-set-offset 'arglist-intro '++)
      (eval c-set-offset 'case-label 0)
