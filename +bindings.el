@@ -151,7 +151,7 @@
  :g "<f2>"           #'text-scale-increase
  :g "<f1>"           #'text-scale-reset
  :g "<f3>"           #'text-scale-decrease
- :g "M-w"            #'evil-wipeout-buffer
+ :gn "M-w"           #'evil-wipeout-buffer
  :g "M-W"            #'+workspace/close-workspace-or-frame
  :g "M-1"            #'+workspace/switch-to-1
  :g "M-2"            #'+workspace/switch-to-2

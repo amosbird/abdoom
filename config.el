@@ -486,7 +486,7 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
       '(("*Messages*" :noselect t :autoclose t)
         ("*Warnings*" :noselect t :autoclose t)
         (" *Marked Files*" :noselect t :autoclose t :align below) ; fix dired multi file commands hiding ivy minibuffer
-        ("*compilation*" :autoclose nil)
+        ("*compilation*" :autoclose nil :autokill t)
         ("^\\*eww" :regexp t :size 0.5 :select t :autokill t :noesc t)
         ("^\\*ftp " :noselect t :autokill t :noesc t)
         ;; doom
@@ -1411,12 +1411,11 @@ The selected history element will be inserted into the minibuffer."
         (goto-char quote)
       (let* ((paren (save-excursion (if (= 0 (evil-up-paren ?( ?) dir)) (point) nil)))
              (bracket (save-excursion (if (= 0 (evil-up-paren ?[ ?] dir)) (point) nil)))
-             (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil)))
-             (angle (save-excursion (if (= 0 (evil-up-paren ?< ?> dir)) (point) nil))))
+             (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil))))
         (setq delim (condition-case nil
                         (if (< dir 0)
-                            (-max (--filter it (list paren bracket brace angle)))
-                          (-min (--filter it (list paren bracket brace angle))))
+                            (-max (--filter it (list paren bracket brace)))
+                          (-min (--filter it (list paren bracket brace))))
                       (error nil))))
       (if delim (goto-char delim)))
     (if (< 0 dir) (backward-char))))
