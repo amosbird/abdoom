@@ -208,7 +208,9 @@
  :g "C-s"            #'swiper
  :env "C-s"          #'swiper
  :g "<f4>"           #'counsel-projectile-rg
+ :g "C-S-s"          #'counsel-projectile-rg
  :g "<f5>"           #'+amos/counsel-rg-cur-dir
+ :g "C-S-d"          #'+amos/counsel-rg-cur-dir
  :m "C-f"            #'evilem--motion-evil-find-char
  :m "C-b"            #'evilem--motion-evil-find-char-backward
  :m "C-y"            #'+amos/yank-buffer-filename-with-line-position
@@ -216,7 +218,8 @@
  :i "M-y"            (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
  :m "C-w"            #'bury-buffer
  :i "C-a"            #'evil-beginning-of-line
- :vn "C-a"           #'evil-numbers/inc-at-pt
+ :n "C-a"            #'evil-numbers/inc-at-pt
+ :v "C-a"            #'+amos/ca
  :v "g C-a"          #'+amos/gca
  :i "C-e"            #'+amos/smart-eol-insert
  :i "M-e"            #'+amos/smart-eol-insert

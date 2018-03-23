@@ -1546,16 +1546,28 @@ The selected history element will be inserted into the minibuffer."
 
 (evil-define-text-object +amos/any-object-inner (count &optional beg end type)
   (save-excursion
+    (if (looking-at "['\"]")
+        (if (nth 3 (syntax-ppss))
+            (backward-char)
+          (forward-char))
+      (if (looking-at "[[({]")
+          (forward-char)))
     (+amos/smart-jumper-backward)
     (forward-char)
-    (exchange-point-and-mark)
+    (push-mark)
     (+amos/smart-jumper-forward)
     (evil-range (region-beginning) (region-end) type :expanded t)))
 
 (evil-define-text-object +amos/any-object-outer (count &optional beg end type)
   (save-excursion
+    (if (looking-at "['\"]")
+        (if (nth 3 (syntax-ppss))
+            (backward-char)
+          (forward-char))
+      (if (looking-at "[[({]")
+          (forward-char)))
     (+amos/smart-jumper-backward)
-    (exchange-point-and-mark)
+    (push-mark)
     (+amos/smart-jumper-forward)
     (forward-char)
     (evil-range (region-beginning) (region-end) type :expanded t)))
@@ -1920,16 +1932,21 @@ representation of `NUMBER' is smaller."
                "")
              nums))))
 
-(defun +amos/inc (s e)
+(defun +amos/inc (s e &optional inc)
     (save-restriction
       (narrow-to-region s e)
       (goto-char (point-min))
-      (if (evil-numbers/inc-at-pt +amos--gca-count)
+      (if (and (evil-numbers/inc-at-pt +amos--gca-count) inc)
           (setq +amos--gca-count (+ 1 +amos--gca-count)))))
 
 (defvar +amos--gca-count nil)
 
 (defun +amos/gca (count start end)
+  (interactive "*p\nr")
+  (setq +amos--gca-count count)
+  (evil-apply-on-block #'+amos/inc start end nil t))
+
+(defun +amos/ca (count start end)
   (interactive "*p\nr")
   (setq +amos--gca-count count)
   (evil-apply-on-block #'+amos/inc start end nil))
