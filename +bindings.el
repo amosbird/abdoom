@@ -406,27 +406,6 @@
      "C-s"        (lambda! (company-search-abort) (company-filter-candidates))
      [escape]     #'company-search-abort))
 
- (:after ivy
-   (:map ivy-mode-map
-     [remap find-file-other-frame]  #'+amos/find-file-other-frame
-     "C-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank)))
-     "M-y"         (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
-     "C-r"         #'evil-paste-from-register
-     "C-a"         #'move-beginning-of-line
-     "M-b"         #'+amos/backward-word-insert
-     "M-B"         (lambda! (+amos/backward-word-insert t))
-     "M-f"         #'+amos/forward-word-insert
-     "M-F"         (lambda! (+amos/forward-word-insert t))
-     "M-d"         #'+amos/forward-delete-word
-     "M-D"         (lambda! (+amos/forward-delete-word t))
-     "DEL"         #'+amos/backward-delete-char
-     [M-backspace] #'+amos/backward-delete-word
-     [134217855]   #'+amos/backward-delete-word ; M-DEL
-     "C-w"         #'ivy-yank-word
-     "C-u"         #'+amos/backward-kill-to-bol-and-indent
-     "C-d"         #'+amos/delete-char
-     "C-o"         #'+amos/kill-line))
-
  (:after swiper
    (:map swiper-map
      "C-c o"    #'+ivy/wgrep-occur))
@@ -527,26 +506,42 @@
 
  ;; ivy
  (:after ivy
+   :map ivy-mode-map
+   [remap find-file-other-frame] #'+amos/find-file-other-frame
+   "C-y"                         (lambda! (let ((kill-ring my-kill-ring)) (yank)))
+   "M-y"                         (lambda! (let ((kill-ring my-kill-ring)) (yank-pop)))
+   "C-r"                         #'evil-paste-from-register
+   "C-a"                         #'move-beginning-of-line
+   "M-b"                         #'+amos/backward-word-insert
+   "M-B"                         (lambda! (+amos/backward-word-insert t))
+   "M-f"                         #'+amos/forward-word-insert
+   "M-F"                         (lambda! (+amos/forward-word-insert t))
+   "M-d"                         #'+amos/forward-delete-word
+   "M-D"                         (lambda! (+amos/forward-delete-word t))
+   "C-w"                         #'ivy-yank-word
+   "C-u"                         #'+amos/backward-kill-to-bol-and-indent
+   "C-d"                         #'+amos/delete-char
+   "C-o"                         #'+amos/kill-line
+
    :map ivy-minibuffer-map
-   [escape]        #'keyboard-escape-quit
-   ;; "C-c C-o"       #'+amos/swiper-replace
-   "C-o"           #'+amos/kill-line
-   "TAB"           #'ivy-call-and-recenter
-   "M-z"           #'undo
-   "M-j"           #'ivy-immediate-done
-   "M-g"           #'+amos/ivy-complete-dir
-   "C-k"           #'ivy-previous-line
-   "C-j"           #'ivy-next-line
-   "C-l"           #'ivy-alt-done
-   "C-w"           #'ivy-yank-word
-   "<M-backspace>" #'ivy-backward-kill-word
-   "M-r"           #'ivy-toggle-fuzzy
-   "C-u"           #'ivy-kill-line
-   "M-b"           #'backward-word
-   "M-f"           #'forward-word
+   [escape]                      #'keyboard-escape-quit
+   "C-o"                         #'+amos/kill-line
+   "TAB"                         #'ivy-call-and-recenter
+   "M-z"                         #'undo
+   "M-j"                         #'ivy-immediate-done
+   "M-g"                         #'+amos/ivy-complete-dir
+   "C-k"                         #'ivy-previous-line
+   "C-j"                         #'ivy-next-line
+   "C-l"                         #'ivy-alt-done
+   "C-w"                         #'ivy-yank-word
+   "M-r"                         #'ivy-toggle-fuzzy
+   "C-u"                         #'ivy-kill-line
+   "M-b"                         #'backward-word
+   "M-f"                         #'forward-word
+
    :map ivy-occur-grep-mode-map
    "C-d" nil
-   "d"   #'ivy-occur-delete-candidate)
+   "d"                           #'ivy-occur-delete-candidate)
 
  ;; yasnippet
  (:after yasnippet
@@ -558,6 +553,7 @@
      [escape]        #'evil-normal-state
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
+
    (:map yas-minor-mode-map
      :i "C-l" yas-maybe-expand
      :v "<tab>" #'+snippets/expand-on-region))
