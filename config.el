@@ -25,33 +25,6 @@
 (put :pre   'lisp-indent-function 'defun)
 (put :post  'lisp-indent-function 'defun)
 
-(def-hydra! +amos@paste (:hint nil
-                         :foreign-keys nil
-                         :pre (setq hydra-lv nil)
-                         :after-exit (setq hydra-lv t))
-  "Paste"
-  ("C-j" evil-paste-pop "Next Paste")
-  ("C-k" evil-paste-pop-next "Prev Paste")
-  ("p" evil-paste-after "Paste After")
-  ("P" evil-paste-before "Paste Before"))
-
-(after! dired-x
-  (setq dired-omit-files
-        (concat dired-omit-files "\\|\\.directory$")))
-
-(after! dired
-  (add-hook! 'dired-mode-hook
-    (let ((inhibit-message t))
-      (toggle-truncate-lines +1)
-      (dired-omit-mode)
-      (+amos-store-jump-history))))
-
-(define-advice dired-revert (:after (&rest _) +amos*dired-revert)
-  "Call `recenter' after `dired-revert'."
-  (condition-case nil
-      (recenter)
-    (error nil)))
-
 (define-advice +jump-to (:after (&rest _) +amos*jump-to)
   "Call `recenter' after `+jump-to'."
   (condition-case nil
@@ -142,17 +115,17 @@
 (after! ivy (evil-set-initial-state 'ivy-occur-grep-mode 'normal))
 (after! compile (evil-set-initial-state 'compilation-mode 'normal))
 
+(def-hydra! +amos@paste (:hint nil)
+  "Paste"
+  ("0" evil-digit-argument-or-evil-beginning-of-line "bol" :exit t)
+  ("C-j" evil-paste-pop "Next Paste")
+  ("C-k" evil-paste-pop-next "Prev Paste")
+  ("p" evil-paste-after "Paste After")
+  ("P" evil-paste-before "Paste Before"))
+
 (def-package! evil-magit
   :after magit
   :config
-  (def-hydra! +amos@paste (:hint nil)
-    "Paste"
-    ("0" evil-digit-argument-or-evil-beginning-of-line "bol" :exit t)
-    ("C-j" evil-paste-pop "Next Paste")
-    ("C-k" evil-paste-pop-next "Prev Paste")
-    ("p" evil-paste-after "Paste After")
-    ("P" evil-paste-before "Paste Before"))
-
   (def-hydra! +amos@git-blame (:hint nil
                                :title "Git Blame Transient State"
                                :doc "
@@ -169,20 +142,16 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
                             (magit-blame-quit))
                           (not (bound-and-true-p magit-blame-mode)))))
 
-  (push 'git-rebase-mode evil-snipe-disabled-modes)
-
+  (after! evil-snipe
+    (push 'git-rebase-mode evil-snipe-disabled-modes))
   (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
   (setq magit-display-buffer-noselect t)
   (setq magit-revision-show-gravatars '("^Author:     " . "^Commit:     "))
-  (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1))
-  (add-hook! 'git-commit-mode-hook 'fci-mode))
+  (add-hook! 'magit-mode-hook (evil-vimish-fold-mode -1)))
 
 (defun +amos|init-frame (&optional frame)
   (when (and frame (display-graphic-p frame))
     (with-selected-frame frame
-      ;; (dolist (ft (fontset-list))
-      ;;   (set-fontset-font ft 'unicode (font-spec :name "Ubuntu Mono"))
-      ;;   (set-fontset-font ft 'unicode (font-spec :name "Symbola monospacified for Ubuntu Mono") nil 'append))
       (dolist (charset '(kana han cjk-misc bopomofo))
         (set-fontset-font t charset
                           (font-spec :family "WenQuanYi Micro Hei" :size 18)))
@@ -268,13 +237,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (when (string= (system-name) "t450s")
   (require 'fcitx)
   (fcitx-aggressive-setup))
-
-;; (def-package! pangu-spacing
-;;   :demand
-;;   :config
-;;   (push 'dired-mode pangu-spacing-inhibit-mode-alist)
-;;   ;; Always insert `real' space in org-mode.
-;;   (add-hook! org-mode (set (make-local-variable 'pangu-spacing-real-insert-separtor) t) (pangu-spacing-mode +1)))
 
 (def-package! git-gutter
   :demand
@@ -372,6 +334,8 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (add-hook! 'ediff-keymap-setup-hook
     (define-key ediff-mode-map "k" 'ediff-previous-difference)
     (define-key ediff-mode-map "j" 'ediff-next-difference)))
+(define-key emacs-lisp-mode-map (kbd "C-x e") 'macrostep-expand)
+(define-key emacs-lisp-mode-map "#" #'endless/sharp)
 
 (def-package! easy-hugo
   :commands easy-hugo
@@ -456,8 +420,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (setq sp-autoescape-string-quote nil)
 (setq sp-cancel-autoskip-on-backward-movement nil)
 
-(define-key emacs-lisp-mode-map (kbd "C-x e") 'macrostep-expand)
-
 
 ;; stole from https://emacs.stackexchange.com/a/16495/16662
 (defmacro doom-with-advice (args &rest body)
@@ -474,11 +436,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
 (defadvice edebug-pop-to-buffer (around +amos*edebug-pop-to-buffer activate)
   (doom-with-advice (split-window (lambda (orig-fun window) (funcall orig-fun window nil 'right)))
       ad-do-it))
-
-(defadvice message-insert-signature (around +amos*message-insert-signature activate)
-  (let ((old-insert (symbol-function 'insert)))
-    (flet ((insert (str) (eval-when-compile (require 'subr-x)) (funcall old-insert (string-trim-right str))))
-      ad-do-it)))
 
 (setq shackle-default-alignment 'right
       shackle-default-size 0.5
@@ -628,9 +585,6 @@ Skip buffers that match `ivy-ignore-buffers'."
       (when (string-match-p "$[cachegrind|callgrind].out" file)
         (setq process (dired-open--start-process file "kcachegrind"))))
     process))
-
-(def-package! ag
-  :after projectile)
 
 (def-package! helm-make
   :after ivy
@@ -882,9 +836,6 @@ using a visual block/rectangle selection."
   :defer t
   :commands smeargle smeargle-commits smeargle-clear)
 
-(def-package! fill-column-indicator
-  :commands fci-mode)
-
 (def-package! page-break-lines
   :commands global-page-break-lines-mode
   :init
@@ -1061,7 +1012,6 @@ This function should be hooked to `buffer-list-update-hook'."
                 (eq (char-after) ?'))
       (insert "'"))))
 
-(define-key emacs-lisp-mode-map "#" #'endless/sharp)
 
 (add-hook! 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 
@@ -1081,12 +1031,12 @@ This function should be hooked to `buffer-list-update-hook'."
 (def-package! go-playground
   :commands (go-playground go-playground-mode)
   :bind (:map go-playground-mode-map
-          ([S-return] . go-playground-rm)))
+          ("<f8>" . go-playground-rm)))
 
 (def-package! rust-playground
   :commands (rust-playground rust-playground-mode)
   :bind (:map rust-playground-mode-map
-          ([S-return] . rust-playground-rm)))
+          ("<f8>" . rust-playground-rm)))
 
 (def-package! cc-playground
   :commands cc-playground cc-playground-mode cc-playground-find-snippet
@@ -1226,7 +1176,6 @@ When GREEDY is non-nil, join words in a greedy way."
                     ivy--regex-hash)))))
 
 (defvar +amos--old-ivy-regex-function '+amos--old-ivy-regex)
-
 (defun +amos*ivy-toggle-regexp-quote ()
   "Toggle the regexp quoting."
   (interactive)
@@ -1235,9 +1184,6 @@ When GREEDY is non-nil, join words in a greedy way."
 
 (advice-add #'ivy-toggle-regexp-quote :override #'+amos*ivy-toggle-regexp-quote)
 (advice-add #'ivy--regex :override #'+amos*ivy-regex-half-quote)
-
-(def-package! dired-ranger
-  :after dired)
 
 (def-package! rainbow-mode)
 
@@ -1592,24 +1538,14 @@ The selected history element will be inserted into the minibuffer."
 (def-package! lsp-mode
   :config
   (require 'lsp-imenu)
-  (add-hook 'lsp-after-open-hook #'lsp-enable-imenu)
-  (setq lsp-enable-flycheck nil))
+  (add-hook 'lsp-after-open-hook #'lsp-enable-imenu))
 
 (add-hook! (c-mode c++-mode) (flycheck-mode +1))
-
-(def-package! lsp-ui
-  :after lsp-mode
-  :config
-  (flycheck-add-mode 'lsp-ui 'c++-mode))
-
-(require 'cl-lib)
-(require 'subr-x)
 
 (def-package! cquery
   :after lsp-mode
   :config
-  ;; (setq cquery-sem-highlight-method 'font-lock)
-  (cquery-use-default-rainbow-sem-highlight)
+  ;; (cquery-use-default-rainbow-sem-highlight)
   (add-hook 'c-mode-common-hook #'cquery//enable))
 
 (defun cquery//enable ()
@@ -1619,12 +1555,12 @@ The selected history element will be inserted into the minibuffer."
 
 (set!
   :jump 'c-mode
-  :definition #'lsp-ui-peek-find-definitions
+  :definition #'xref-find-definitions
   :references #'xref-find-references
   :documentation #'counsel-dash-at-point)
 (set!
   :jump 'c++-mode
-  :definition #'lsp-ui-peek-find-definitions
+  :definition #'xref-find-definitions
   :references #'xref-find-references
   :documentation #'counsel-dash-at-point)
 
@@ -1665,9 +1601,6 @@ for the last window in each frame."
     (setf (evil-jumps-struct-ring jump-struct) ring)
     (setf (evil-jumps-struct-idx jump-struct) idx))
   (evil-delete-buffer buffer bang))
-
-;; causes undo-tree-canary an infinite loop when doing evil-repeat
-;; (add-hook! 'evil-insert-state-exit-hook (if buffer-file-name (save-buffer)))
 
 (defun +amos/create-fish-function (name)
   (interactive "sNew function's name: ")
@@ -1766,9 +1699,8 @@ current buffer's, reload dir-locals."
     (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
     (host "   " buffer-encoding major-mode vcs flycheck)))
 
-(require 'yasnippet)
-(require 'company)
-(add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet)
+(after! yasnippet
+  (add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet))
 
 (defun +amos*helm-dash-result-url (docset-name filename &optional anchor)
   "Return the full, absolute URL to documentation.
@@ -1794,9 +1726,7 @@ Either a file:/// URL joining DOCSET-NAME, FILENAME & ANCHOR with sanitization
   (dolist (cmd '(counsel-find-file +amos/counsel-projectile-switch-project))
     (ivy-add-actions
      cmd
-     '(("f" find-file-other-frame "other frame")))))
-
-(after! ivy
+     '(("f" find-file-other-frame "other frame"))))
   (dolist (cmd '(ivy-switch-buffer))
     (ivy-add-actions
      cmd
@@ -1953,3 +1883,37 @@ representation of `NUMBER' is smaller."
 (def-package! direnv
  :config
  (direnv-mode))
+
+(def-package! esup)
+
+(defun +amos/maybe-add-end-of-statement ()
+  (interactive)
+  (save-excursion
+    (let (s e)
+      (beginning-of-line)
+      (setq s (point))
+      (end-of-line)
+      (setq e (point))
+      (if (looking-back "[ \t\r\n\v\f]")
+          (delete-trailing-whitespace s e)
+        (if (not (looking-back ";" 1))
+            (insert ?\;))))))
+
+(defun +amos/mark-whole-buffer ()
+  (interactive)
+  (evil-visual-line (point-min) (point-max)))
+
+(defun +amos/smart-eol-insert ()
+  (interactive)
+  (when (eolp)
+    (save-excursion
+      (let (s e)
+        (beginning-of-line)
+        (setq s (point))
+        (end-of-line)
+        (setq e (point))
+        (delete-trailing-whitespace s e)))
+    (if (looking-back ";" 1)
+        (funcall-interactively (key-binding (kbd "RET")))
+      (insert ?\;)))
+  (end-of-line))

@@ -332,3 +332,18 @@ If called with `universal-argument' (C-u), ask for username.
   (interactive)
   (if peep-dired-window (peep-dired-disable)
     (peep-dired-enable)))
+
+(after! dired-x
+  (setq dired-omit-files
+        (concat dired-omit-files "\\|\\.directory$"))
+  (add-hook! 'dired-mode-hook
+    (let ((inhibit-message t))
+      (toggle-truncate-lines +1)
+      (dired-omit-mode)
+      (+amos-store-jump-history))))
+
+(define-advice dired-revert (:after (&rest _) +amos*dired-revert)
+  "Call `recenter' after `dired-revert'."
+  (condition-case nil
+      (recenter)
+    (error nil)))

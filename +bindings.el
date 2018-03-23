@@ -4,38 +4,6 @@
       '(company-dabbrev-code
         +company/complete))
 
-(defun +amos/maybe-add-end-of-statement ()
-  (interactive)
-  (save-excursion
-    (let (s e)
-      (beginning-of-line)
-      (setq s (point))
-      (end-of-line)
-      (setq e (point))
-      (if (looking-back "[ \t\r\n\v\f]")
-          (delete-trailing-whitespace s e)
-        (if (not (looking-back ";" 1))
-            (insert ?\;))))))
-
-(defun ab-mark-whole-buffer ()
-  (interactive)
-  (evil-visual-line (point-min) (point-max)))
-
-(defun +amos/smart-eol-insert ()
-  (interactive)
-  (when (eolp)
-    (save-excursion
-      (let (s e)
-        (beginning-of-line)
-        (setq s (point))
-        (end-of-line)
-        (setq e (point))
-        (delete-trailing-whitespace s e)))
-    (if (looking-back ";" 1)
-        (funcall-interactively (key-binding (kbd "RET")))
-      (insert ?\;)))
-  (end-of-line))
-
 (mapc #'evil-declare-ignore-repeat
       '(execute-extended-command
         text-scale-increase
@@ -146,12 +114,12 @@
   (interactive))
 
 (map!
- :g "<f12>"          (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
+ :gme "<f12>"        (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
  :g "M-x"            #'execute-extended-command
  :g "<f2>"           #'text-scale-increase
  :g "<f1>"           #'text-scale-reset
  :g "<f3>"           #'text-scale-decrease
- :gn "M-w"           #'evil-wipeout-buffer
+ :gme "M-w"          #'evil-wipeout-buffer
  :g "M-W"            #'+workspace/close-workspace-or-frame
  :g "M-1"            #'+workspace/switch-to-1
  :g "M-2"            #'+workspace/switch-to-2
@@ -166,7 +134,7 @@
  :g "M-R"            #'+eval/region-and-replace
  :g "M-m"            #'evil-switch-to-windows-last-buffer
  :g "M-m"            #'evil-switch-to-windows-last-buffer
- :g "M-a"            #'ab-mark-whole-buffer
+ :g "M-a"            #'+amos/mark-whole-buffer
  :ne "M-g"           #'+amos/counsel-jumpdir-function
  :i "M-i"            #'yas-insert-snippet
  :nm "M-,"           #'flycheck-previous-error
@@ -258,21 +226,19 @@
  :v ">"              #'+evil/visual-indent
  :v "@"              #'+evil:macro-on-all-lines
  :n "g@"             #'+evil:macro-on-all-lines
- :n "gc"             #'evilnc-comment-or-uncomment-lines
  :n "gx"             #'evil-exchange
- :n "gl"             #'counsel-imenu
- :n "gh"             #'lsp-ui-peek-find-references
  :n "gf"             #'+amos/evil-find-file-at-point-with-line
  :m "gd"             #'+jump/definition
- :m "gy"             #'+amos/copy-and-comment-lines-inverse
- :m "gY"             #'+amos/copy-and-comment-lines
  :m "gh"             #'+jump/documentation
  :n "go"             #'+amos/evil-insert-line-below
  :n "gO"             #'+amos/evil-insert-line-above
  :n "gp"             #'+evil/reselect-paste
  :n "gr"             #'+jump/references
- :n "gR"             #'+eval/buffer
+ :n "gR"             #'cquery/callers
  :v "gR"             #'+eval:replace-region
+ :m "gy"             #'evil-commentary-yank
+ :m "gc"             #'evil-commentary
+ :m "gl"             #'evil-commentary-line
  :n ",,"             #'+amos/projectile-find-other-file
 
  (:prefix "C-x"
@@ -679,7 +645,7 @@
      :i  "DEL"   #'org-delete-backward-char
      :n  "gj"   #'evil-next-visual-line
      :n  "gk"   #'evil-previous-visual-line
-     :n  "M-a"   #'ab-mark-whole-buffer
+     :n  "M-a"   #'+amos/mark-whole-buffer
      :g "C-c e"     #'+amos/org-babel-edit
      :g "C-c C-j"   #'counsel-org-goto
      :g "C-c C-S-l" #'+org/remove-link))

@@ -19,7 +19,7 @@
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'doom-hide-modeline-mode :override #'ignore)
 (advice-add #'fringe-mode :override #'ignore)
-(advice-add #'eldoc-mode :override #'ignore)
+;; (advice-add #'eldoc-mode :override #'ignore)
 (advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
 (advice-add #'recenter-top-bottom :override #'recenter)
 (advice-add #'git-gutter:next-hunk :after (lambda (arg) (recenter)))

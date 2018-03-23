@@ -28,15 +28,18 @@
  '(counsel-org-headline-display-style 'path)
  '(counsel-org-headline-path-separator " ➜ ")
  '(cquery-executable "/home/amos/git/cquery/build/release/bin/cquery")
- '(cquery-extra-args '("--log-all-to-stderr"))
+ '(cquery-extra-args '("--log-file=/tmp/cq.log"))
  '(cquery-extra-init-params
-   '(:cacheFormat "msgpack"
-                  :xref
-                  (:container t)
-                  :diagnostics
-                  (:frequencyMs 5000)))
+   '(:client (:snippetSupport t)
+     :index
+     (:comments 0)
+     (:whitelist
+      ("./dbms" "./libs"))
+     (:blacklist
+      ("/home/amos/git/ClickHouse/.*"))))
  '(cquery-project-root-matchers
    '(cquery-project-roots-matcher ".cquery" projectile-project-root "compile_commands.json"))
+ '(cquery-sem-highlight-method 'overlay)
  '(custom-safe-themes
    '("554b7f0439155d6eb648d4837ef03902f51124cacee021217e76f39e9dd314c2" "d0404bd38534a00ee72a4f887a987d6bff87f4cf8d8f85149e32849b262465a5" "73e35ffa5ca98b57a9923954f296c3854ce6d8736b31fdbdda3d27502d4b4d69" "0a3a41085c19d8121ed0ad3eb658a475ccb948a70a83604641ee7d4c3575a4d5" "a7e7804313dbf827a441c86a8109ef5b64b03011383322cbdbf646eb02692f76" "77bddca0879cb3b0ecdf071d9635c818827c57d69164291cb27268ae324efa84" "2e1d19424153d41462ad31144549efa41f55dacda9b76571f73904612b15fd0a" default))
  '(dired-omit-verbose nil)
@@ -92,6 +95,7 @@
  '(ivy-use-selectable-prompt t)
  '(ivy-use-virtual-buffers nil)
  '(ivy-virtual-abbreviate 'full)
+ '(lsp-project-whitelist '("^/home/amos/git/ClickHouse/$"))
  '(lsp-ui-peek-force-fontify t)
  '(magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
  '(mode-line-format nil)

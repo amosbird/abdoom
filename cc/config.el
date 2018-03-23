@@ -66,8 +66,8 @@
 
   ;;; Better fontification (also see `modern-cpp-font-lock')
   ;; (add-hook 'c-mode-common-hook #'rainbow-delimiters-mode)
-  (add-hook! (c-mode c++-mode) #'highlight-numbers-mode)
-  (add-hook! (c-mode c++-mode) #'+cc|fontify-constants)
+  ;; (add-hook! (c-mode c++-mode) #'highlight-numbers-mode)
+  ;; (add-hook! (c-mode c++-mode) #'+cc|fontify-constants)
 
   ;; Improve indentation of inline lambdas in C++11
   (advice-add #'c-lineup-arglist :around #'+cc*align-lambda-arglist)
@@ -90,9 +90,9 @@
       (sp-local-pair "/*!" "*/" :post-handlers '(("||\n[i]" "RET") ("[d-1]< | " "SPC"))))))
 
 
-(def-package! modern-cpp-font-lock
-  :commands modern-c++-font-lock-mode
-  :init (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+;; (def-package! modern-cpp-font-lock
+;;   :commands modern-c++-font-lock-mode
+;;   :init (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
 (def-package! cmake-mode
   :mode

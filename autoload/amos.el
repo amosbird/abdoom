@@ -156,17 +156,21 @@ the current state and point position."
   (interactive)
   (shell-command! "tmux source-file ~/.tmux/.tmux.conf.emacs"))
 
-;;;###autoload
-(defun +amos/copy-and-comment-lines-inverse (&optional arg)
-  (interactive "p")
-  (let ((evilnc-invert-comment-line-by-line t))
-    (evilnc-copy-and-comment-lines arg)))
-
-;;;###autoload
-(defun +amos/copy-and-comment-lines (&optional arg)
-  (interactive "p")
-  (let ((evilnc-invert-comment-line-by-line nil))
-    (evilnc-copy-and-comment-lines arg)))
+(evil-define-operator +amos/evil-commentary-yank-line (beg end type)
+  "Saves whole lines into the kill-ring."
+  :motion evil-line
+  :move-point nil
+  (interactive "<R>")
+  (let* ((beg (save-excursion (beginning-of-line) (point)))
+         (end (save-excursion (end-of-line) (point)))
+         (column (evil-column))
+         (line (buffer-substring-no-properties beg end)))
+    (evil-commentary-line beg end)
+    (end-of-line)
+    (open-line 1)
+    (forward-line 1)
+    (insert line)
+    (move-to-column column)))
 
 ;;;###autoload
 (defun +amos/org-babel-edit (arg)

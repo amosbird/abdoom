@@ -7,6 +7,3 @@
 (package! disaster)
 (package! clang-format)
 (package! opencl-mode)
-(package! modern-cpp-font-lock)
-(package! lsp-mode)
-(package! company-lsp)
