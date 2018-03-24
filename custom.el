@@ -30,7 +30,8 @@
  '(cquery-executable "/home/amos/git/cquery/build/release/bin/cquery")
  '(cquery-extra-args '("--log-file=/tmp/cq.log"))
  '(cquery-extra-init-params
-   '(:client (:snippetSupport t)
+   '(:client
+     (:snippetSupport t)
      :index
      (:comments 0)
      (:whitelist
@@ -118,8 +119,7 @@
       "** %a " :prepend t :empty-lines-before 1 :empty-lines-after 1)
      ("i" "idea" entry
       (file "~/org/idea.org")
-      "* %u %?
-%i" :prepend t :empty-lines-before 1 :empty-lines-after 1)
+      "* %u %?\n%i" :prepend t :empty-lines-before 1 :empty-lines-after 1)
      ("n" "notes" entry
       (file "~/org/notes.org")
       (file "~/org/template/idea")
