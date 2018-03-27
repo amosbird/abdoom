@@ -27,6 +27,7 @@
  '(counsel-org-goto-separator " ➜ ")
  '(counsel-org-headline-display-style 'path)
  '(counsel-org-headline-path-separator " ➜ ")
+ '(cquery-cache-dir "/home/amos/.cache/.cquery_cached_index/")
  '(cquery-executable "/home/amos/git/cquery/build/release/bin/cquery")
  '(cquery-extra-args '("--log-file=/tmp/cq.log"))
  '(cquery-extra-init-params
