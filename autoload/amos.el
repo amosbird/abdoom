@@ -122,7 +122,8 @@ the current state and point position."
   (interactive)
   (if (functionp func)
       (shell-command! (format "tmux new-window emacsclient -t -eval '(%s)'" (symbol-name func)))
-    (shell-command! "tmux new-window emacsclient -t")))
+    (shell-command! "tmux new-window emacsclient -t"))
+  (+amos/update-tmux-modeline))
 
 ;;;###autoload
 (defun +amos/find-file-other-frame (filename &optional wildcards)

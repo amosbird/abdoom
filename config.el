@@ -334,8 +334,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
   (add-hook! 'ediff-keymap-setup-hook
     (define-key ediff-mode-map "k" 'ediff-previous-difference)
     (define-key ediff-mode-map "j" 'ediff-next-difference)))
-(define-key emacs-lisp-mode-map (kbd "C-x e") 'macrostep-expand)
-(define-key emacs-lisp-mode-map "#" #'endless/sharp)
 
 (def-package! easy-hugo
   :commands easy-hugo
@@ -349,7 +347,6 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
    easy-hugo-root "/var/www/blog/"
    easy-hugo-previewtime "300"
    easy-hugo-default-ext ".org"))
-
 
 (def-package! link-hint
   :commands link-hint-open-link link-hint-open-all-links
@@ -934,41 +931,6 @@ With a prefix ARG, invalidate the cache first."
 
 (advice-add #'projectile-cache-files-find-file-hook :override #'ignore)
 
-(after! xref
-  (defun ivy-xref-make-collection (xrefs)
-    "Transform XREFS into a collection for display via `ivy-read'."
-    (let ((collection nil))
-      (dolist (xref xrefs)
-        (with-slots (summary location) xref
-          (let ((line (xref-location-line location))
-                (file (xref-location-group location))
-                (candidate nil))
-            (setq candidate (concat
-                             ;; use file name only
-                             (car (reverse (split-string file "\\/")))
-                             (when (string= "integer" (type-of line))
-                               (concat ":" (int-to-string line) ": "))
-                             ;; (propertize summary 'font-lock-face 'font-lock-string-face)))
-                             summary))
-            (push `(,candidate . ,location) collection))))
-      collection))
-
-  (defun ivy-xref-select (candidate)
-    "Select CANDIDATE."
-    (let* ((marker (xref-location-marker (cdr candidate)))
-           (buf (marker-buffer marker))
-           (offset (marker-position marker)))
-      (with-current-buffer buf
-        (goto-char offset)
-        (switch-to-buffer buf))))
-
-  (defun ivy-xref-show-xrefs (xrefs _alist)
-    "Show the list of XREFS via ivy."
-    (ivy-read "xref: " (ivy-xref-make-collection xrefs)
-              :require-match t
-              :action #'ivy-xref-select))
-  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
-
 (defvar switch-buffer-functions
   nil
   "A list of functions to be called when the current buffer has been changed.
@@ -1310,7 +1272,6 @@ Version 2017-11-01"
     (setq buffer-offer-save t)
     buf))
 
-
 (defun +amos/ivy-complete-dir ()
   "Enter a recursive `ivy-read' session using the current history.
 The selected history element will be inserted into the minibuffer."
@@ -1355,8 +1316,8 @@ The selected history element will be inserted into the minibuffer."
                   -1))
     (if (< 0 quote)
         (goto-char quote)
-      (let* ((paren (save-excursion (if (= 0 (evil-up-paren ?( ?) dir)) (point) nil)))
-             (bracket (save-excursion (if (= 0 (evil-up-paren ?[ ?] dir)) (point) nil)))
+      (let* ((paren (save-excursion (if (= 0 (evil-up-paren ?\( ?\) dir)) (point) nil)))
+             (bracket (save-excursion (if (= 0 (evil-up-paren ?\[ ?\] dir)) (point) nil)))
              (brace (save-excursion (if (= 0 (evil-up-paren ?{ ?} dir)) (point) nil))))
         (setq delim (condition-case nil
                         (if (< dir 0)
@@ -1683,21 +1644,23 @@ current buffer's, reload dir-locals."
 
 (advice-remove #'counsel-ag-function #'+ivy*counsel-ag-function)
 
-(unless (string= (system-name) "t450s")
-  (def-modeline-segment! tmux
-    (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
-          (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
-      (string-match highlight-string full-string)
-      (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
-      full-string))
+(defvar +amos--tmux-modeline "")
+(defun +amos/update-tmux-modeline ()
+  (interactive)
+  (setq +amos--tmux-modeline
+        (let ((full-string (shell-command-to-string "tmux list-windows | awk -F: 'BEGIN{printf \"|\"} {printf \" %d |\", $1}'"))
+              (highlight-string (shell-command-to-string "printf ' %d ' $(tmux display-message -p '#I')")))
+          (string-match highlight-string full-string)
+          (add-face-text-property (match-beginning 0) (match-end 0) '(:background "darkred") nil full-string)
+          full-string)))
+(def-modeline-segment! tmux +amos--tmux-modeline)
 
-  (def-modeline-segment! host
-    (let ((full-string (string-trim-right (shell-command-to-string "hostname"))))
-      (propertize full-string 'face 'doom-modeline-highlight)))
+(defvar +amos--hostname (propertize system-name 'face '(:weight bold :foreground "#51afef")))
+(def-modeline-segment! host +amos--hostname)
 
-  (def-modeline! main
-    (bar matches " " buffer-info "  %l:%c %p  " selection-info tmux)
-    (host "   " buffer-encoding major-mode vcs flycheck)))
+(def-modeline! main
+  (matches " " buffer-info "  %l:%c %p  " selection-info tmux)
+  (host "  " buffer-encoding major-mode vcs flycheck))
 
 (after! yasnippet
   (add-hook 'evil-insert-state-exit-hook #'yas-abort-snippet))
@@ -1884,7 +1847,12 @@ representation of `NUMBER' is smaller."
  :config
  (direnv-mode))
 
-(def-package! esup)
+(defun +amos/direnv-reload ()
+  (interactive)
+  (shell-command! "/home/amos/go/bin/direnv allow")
+  (direnv-update-environment)
+  (kill-buffer " *direnv*")
+  (direnv-mode +1))
 
 (defun +amos/maybe-add-end-of-statement ()
   (interactive)
@@ -1917,3 +1885,135 @@ representation of `NUMBER' is smaller."
         (funcall-interactively (key-binding (kbd "RET")))
       (insert ?\;)))
   (end-of-line))
+
+(defun +amos*evil--jumps-push ()
+  "Pushes the current cursor/file position to the jump list."
+  (let ((target-list (evil--jumps-get-window-jump-list)))
+    (let ((file-name (buffer-file-name))
+          (buffer-name (buffer-name))
+          (current-pos (point-marker))
+          (first-pos nil)
+          (first-file-name nil)
+          (excluded nil))
+      (when (and (not file-name)
+                 (string-match-p evil--jumps-buffer-targets buffer-name))
+        (setq file-name buffer-name))
+      (when file-name
+        (dolist (pattern evil-jumps-ignored-file-patterns)
+          (when (string-match-p pattern file-name)
+            (setq excluded t)))
+        (unless excluded
+          (unless (ring-empty-p target-list)
+            (setq first-pos (car (ring-ref target-list 0)))
+            (setq first-file-name (car (cdr (ring-ref target-list 0)))))
+          (unless (and (equal first-file-name file-name)
+                       (save-excursion
+                         (let ((a (progn (goto-char first-pos) (end-of-line) (point)))
+                               (b (progn (goto-char current-pos) (end-of-line) (point))))
+                           (= a b))))
+            (ring-insert target-list `(,current-pos ,file-name))))))))
+
+(advice-add #'evil--jumps-push :override #'+amos*evil--jumps-push)
+
+(defun +amos*evil--jumps-jump (idx shift)
+  (let ((target-list (evil--jumps-get-window-jump-list)))
+    (let* ((current-file-name (or (buffer-file-name) (buffer-name)))
+           (size (ring-length target-list))
+           (jump nil))
+      (let* ((place (ring-ref target-list idx))
+             (pos (car place))
+             (file-name (cadr place)))
+        (unless (and (string= (if buffer-file-name
+                                  buffer-file-name
+                                (buffer-name))
+                              file-name)
+                     (save-excursion
+                       (let ((a (progn (end-of-line) (point)))
+                             (b (progn (goto-char pos) (end-of-line) (point))))
+                         (= a b))))
+          (setq shift 0)))
+      (setq idx (+ idx shift))
+      (while (and (< idx size) (>= idx 0) (not jump))
+        ;; actual jump
+        (run-hooks 'evil-jumps-pre-jump-hook)
+        (let* ((place (ring-ref target-list idx))
+               (pos (car place))
+               (file-name (cadr place)))
+          (setq evil--jumps-jumping t)
+          (if (string-match-p evil--jumps-buffer-targets file-name)
+              (switch-to-buffer file-name)
+            (if (get-file-buffer file-name)
+                (progn
+                  (find-file file-name)
+                  (setq evil--jumps-jumping nil)
+                  (goto-char pos)
+                  (setf (evil-jumps-struct-idx (evil--jumps-get-current)) idx)
+                  (setq jump t)
+                  (run-hooks 'evil-jumps-post-jump-hook))
+              ;; remove marks when file isn't opened anymore
+              (ring-remove target-list idx)
+              (setq size (- size 1)))))))))
+(advice-add #'evil--jumps-jump :override #'+amos*evil--jumps-jump)
+
+(defun ivy-xref-make-collection (xrefs)
+  "Transform XREFS into a collection for display via `ivy-read'."
+  (let ((collection nil))
+    (dolist (xref xrefs)
+      (with-slots (summary location) xref
+        (let ((line (xref-location-line location))
+              (file (xref-location-group location))
+              (candidate nil))
+          (setq candidate (concat
+                           ;; use file name only
+                           (car (reverse (split-string file "\\/")))
+                                  (when (string= "integer" (type-of line))
+                                    (concat ":" (int-to-string line) ": "))
+                                  summary))
+          (push `(,candidate . ,location) collection))))
+    (nreverse collection)))
+
+(defun +amos*xref--find-xrefs (input kind arg display-action)
+  (let ((xrefs (funcall (intern (format "xref-backend-%s" kind))
+                        (xref-find-backend)
+                        arg)))
+    (unless xrefs
+      (user-error "No %s found for: %s" (symbol-name kind) input))
+    (if (= 1 (length xrefs))
+        (dolist (xref xrefs)
+          (with-slots (summary location) xref
+            (let* ((marker (xref-location-marker location))
+                   (buf (marker-buffer marker)))
+              (evil-set-jump)
+              (if (not (eq buf (current-buffer)))
+                  (switch-to-buffer buf))
+              (goto-char marker)
+              (evil-set-jump)
+              (recenter))))
+      (let ((xref-pos (point))
+            (xref-buffer (current-buffer))
+            (success nil))
+        (ivy-read "Find XRefs: " (ivy-xref-make-collection xrefs)
+                  :unwind (lambda ()
+                            (unless success
+                              (switch-to-buffer xref-buffer)
+                              (goto-char xref-pos)
+                              (recenter)))
+                  :action (lambda (x)
+                            (let ((location (cdr x)))
+                              (let* ((marker (xref-location-marker location))
+                                     (buf (marker-buffer marker)))
+                                (evil-set-jump)
+                                (if (not (eq buf xref-buffer))
+                                    (switch-to-buffer buf))
+                                (with-ivy-window
+                                  (goto-char marker)
+                                  (recenter)
+                                  (evil-set-jump))
+                                (unless (eq 'ivy-call this-command)
+                                  (setq success t))))))))))
+(advice-add #'xref--find-xrefs :override #'+amos*xref--find-xrefs)
+
+(defun +amos*ivy-call (orig-fun &rest args)
+  (doom-with-advice (evil-set-jump (lambda (&optional _)))
+      (apply orig-fun args)))
+(advice-add #'ivy-call :around #'+amos*ivy-call)

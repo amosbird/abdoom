@@ -13,13 +13,9 @@
   (define-key minibuffer-local-map "\C-n" #'next-line-or-history-element))
 
 (remove-hook! 'doom-popup-mode-hook #'doom|hide-modeline-in-popup)
-
-
-
 (advice-add #'nlinum-mode :override #'ignore)
 (advice-add #'doom-hide-modeline-mode :override #'ignore)
 (advice-add #'fringe-mode :override #'ignore)
-;; (advice-add #'eldoc-mode :override #'ignore)
 (advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
 (advice-add #'recenter-top-bottom :override #'recenter)
 (advice-add #'git-gutter:next-hunk :after (lambda (arg) (recenter)))
@@ -43,7 +39,13 @@
     (add-hook 'subword-mode-hook (lambda! (if subword-mode (push '(?u . ?U) evil-cjk-word-separating-categories)
                                         (setq evil-cjk-word-separating-categories (default-value 'evil-cjk-word-separating-categories)))))))
 
-;; (def-package-hook! evil-snipe :disable)
+(remove-hook! 'doom-popup-mode-hook #'doom|hide-modeline-in-popup)
+(advice-add #'nlinum-mode :override #'ignore)
+(advice-add #'doom-hide-modeline-mode :override #'ignore)
+(advice-add #'fringe-mode :override #'ignore)
+(advice-add #'dired-k--highlight-by-file-attribyte :override #'ignore)
+(advice-add #'recenter-top-bottom :override #'recenter)
+(advice-add #'git-gutter:next-hunk :after (lambda (arg) (recenter)))
 (def-package-hook! smerge-mode :disable)
 (def-package-hook! solaire-mode :disable)
 (def-package-hook! stripe-buffer :disable)

@@ -114,7 +114,7 @@
   (interactive))
 
 (map!
- :gme "<f12>"        (lambda! (evil-refresh-cursor)) ; also used to refresh terminal frames
+ :g "<f12>"          (lambda! (evil-refresh-cursor) (realign-windows) (+amos/update-tmux-modeline)) ; also used to refresh terminal frames
  :g "M-x"            #'execute-extended-command
  :g "<f2>"           #'text-scale-increase
  :g "<f1>"           #'text-scale-reset
@@ -168,6 +168,7 @@
  :gme "M-k"          #'evil-window-up
  :gme "M-l"          #'evil-window-right
  :g "C-x 1"          #'zygospore-toggle-delete-other-windows
+ :g "C-x d"          #'+amos/direnv-reload
  :g "C-x e"          #'pp-eval-last-sexp
  :g "C-x C-r"        #'+amos/replace-last-sexp
  :env "C-p"          #'+amos/counsel-projectile-switch-project
@@ -391,9 +392,7 @@
      "C-S-h"      #'company-show-doc-buffer
      "C-S-s"      #'company-search-candidates
      "C-s"        #'company-filter-candidates
-     "C-SPC"      #'company-complete-common
      "C-h"        #'company-quickhelp-manual-begin
-     "C-i"        #'company-complete-selection
      "RET"        nil
      "SPC"        nil
      [return]     nil
@@ -809,3 +808,14 @@
  :textobj "i" #'evil-indent-plus-i-indent         #'evil-indent-plus-a-indent
  :textobj "I" #'evil-indent-plus-i-indent-up      #'evil-indent-plus-a-indent-up
  :textobj "J" #'evil-indent-plus-i-indent-up-down #'evil-indent-plus-a-indent-up-down)
+
+(after! company
+	(bind-keys :map company-active-map
+		   :filter (company-explicit-action-p)
+		   ("C-i" . company-complete-selection)))
+
+(bind-keys :map emacs-lisp-mode-map
+           ("C-x e" . macrostep-expand)
+           ("#"     . endless/sharp)
+           ("M-r"   . +eval/buffer)
+           ("M-R"   . +eval/region-and-replace))
