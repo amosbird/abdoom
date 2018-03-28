@@ -37,14 +37,10 @@
           "<" nil
           :i ">"        #'+cc/autoclose->-maybe
           :n "C-e"      #'+amos/maybe-add-end-of-statement
-          "C-c i"       #'+amos/ivy-add-include)
-
-        (:after lsp-ui-peek
-          :map lsp-ui-peek-mode-map
-          "M-j" #'lsp-ui-peek--select-next-file
-          "M-k" #'lsp-ui-peek--select-prev-file
-          "C-j" #'lsp-ui-peek--select-next
-          "C-k" #'lsp-ui-peek--select-prev))
+          :n "gh"       #'cquery-call-hierarchy
+          :n "gt"       #'cquery-member-hierarchy
+          :n "ge"       #'cquery-inheritance-hierarchy
+          "C-c i"       #'+amos/ivy-add-include))
 
   ;;; Style/formatting
   ;; C/C++ style settings
@@ -60,14 +56,9 @@
   (c-set-offset 'arglist-intro     '+)
   (c-set-offset 'arglist-close     '0)
   ;; Indent privacy keywords at same level as class properties
-  ;; (c-set-offset 'inclass #'+cc-c-lineup-inclass)
+  (c-set-offset 'inclass #'+cc-c-lineup-inclass)
 
   (add-hook 'c-mode-common-hook #'(lambda () (modify-syntax-entry ?_ "w")))
-
-  ;;; Better fontification (also see `modern-cpp-font-lock')
-  ;; (add-hook 'c-mode-common-hook #'rainbow-delimiters-mode)
-  ;; (add-hook! (c-mode c++-mode) #'highlight-numbers-mode)
-  ;; (add-hook! (c-mode c++-mode) #'+cc|fontify-constants)
 
   ;; Improve indentation of inline lambdas in C++11
   (advice-add #'c-lineup-arglist :around #'+cc*align-lambda-arglist)
@@ -75,24 +66,18 @@
   ;;; Keybindings
   ;; Completely disable electric keys because it interferes with smartparens and
   ;; custom bindings. We'll do this ourselves.
-  ;; (setq c-tab-always-indent t
-  ;;       c-electric-flag nil)
-  ;; (dolist (key '("#" "{" "}" "/" "*" ";" "," ":" "(" ")"))
-  ;;   (define-key c-mode-base-map key nil))
+  (setq c-tab-always-indent t
+        c-electric-flag nil)
+  (dolist (key '("#" "{" "}" "/" "*" ";" "," ":" "(" ")"))
+    (define-key c-mode-base-map key nil))
 
   ;; ...and leave it to smartparens
   (after! smartparen
     (sp-with-modes '(c-mode c++-mode objc-mode java-mode)
-      ;; (sp-local-pair "<" ">" :when '(+cc-sp-point-is-template-p +cc-sp-point-after-include-p))
       (sp-local-pair "/*" "*/" :post-handlers '(("||\n[i]" "RET") ("| " "SPC")))
       ;; Doxygen blocks
       (sp-local-pair "/**" "*/" :post-handlers '(("||\n[i]" "RET") ("||\n[i]" "SPC")))
       (sp-local-pair "/*!" "*/" :post-handlers '(("||\n[i]" "RET") ("[d-1]< | " "SPC"))))))
-
-
-;; (def-package! modern-cpp-font-lock
-;;   :commands modern-c++-font-lock-mode
-;;   :init (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
 (def-package! cmake-mode
   :mode
@@ -163,7 +148,9 @@
   (interactive)
   (ivy-read "Include: "
             (append
+             (if-let ((includes (getenv "CC_INCLUDE_LIST")))
+                 (split-string  includes ","))
              +amos/default-include-headers
              (split-string
-              (shell-command-to-string "(cd /usr/local/include ; find . -type f ; cd /usr/include ; find ./sys -type f) | sed 's=^./=='")))
+              (shell-command-to-string "(cd /usr/local/include ; find . -type f ; cd /usr/include ; find -L ./sys -type f) | sed 's=^./=='")))
             :action #'+amos/add-include))

@@ -545,17 +545,13 @@
  ;; yasnippet
  (:after yasnippet
    (:map yas-keymap
-     "C-e"           #'+snippets/goto-end-of-field
-     "C-a"           #'+snippets/goto-start-of-field
-     "<M-backspace>" #'+snippets/delete-to-start-of-field
      "C-l"           #'yas-next-field
      [escape]        #'evil-normal-state
      [backspace]     #'+snippets/delete-backward-char
      [delete]        #'+snippets/delete-forward-char-or-field)
 
    (:map yas-minor-mode-map
-     :i "C-l" yas-maybe-expand
-     :v "<tab>" #'+snippets/expand-on-region))
+     :i "C-l" yas-maybe-expand))
 
 
  ;; --- Built-in plugins -----------------------------
@@ -570,7 +566,9 @@
 
  (:after compile
    :map compilation-mode-map
-   "SPC" nil)
+   "SPC" nil
+   "0" nil
+   "g" nil)
 
  (:after edebug
    :map edebug-mode-map
@@ -750,6 +748,28 @@
      :g "k" #'evil-snipe-repeat-reverse
      :g "N" #'evil-snipe-repeat-reverse
      :g "p" #'evil-snipe-repeat-reverse))
+
+ (:after cquery
+   (:map cquery-tree-mode-map
+     :m "C-i"      #'cquery-tree-toggle-expand
+     :n "c"        #'cquery-tree-toggle-calling
+     :n "f"        #'cquery-tree-press
+     :n "h"        #'cquery-tree-collapse-or-select-parent
+     :n "j"        #'cquery-tree-next-line
+     :n "k"        #'cquery-tree-prev-line
+     :n "J"        #'cquery-tree-next-sibling
+     :n "K"        #'cquery-tree-prev-sibling
+     :n "l"        #'cquery-tree-expand-or-set-root
+     :n "oh"       #'cquery-tree-press-and-horizontal-split
+     :n "ov"       #'cquery-tree-press-and-vertical-split
+     :n "oo"       #'cquery-tree-press-and-switch
+     :n "q"        #'cquery-tree-quit
+     :n "<escape>" #'cquery-tree-quit
+     :n "Q"        #'quit-window
+     :n "yy"       #'cquery-tree-yank-path
+     :n "RET"      #'cquery-tree-press-and-switch
+     :n "<left>"   #'cquery-tree-collapse-or-select-parent
+     :n "<right>"  #'cquery-tree-expand-or-set-root))
 
  (:map key-translation-map
    "\035"    [escape]

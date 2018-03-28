@@ -2017,3 +2017,5 @@ representation of `NUMBER' is smaller."
   (doom-with-advice (evil-set-jump (lambda (&optional _)))
       (apply orig-fun args)))
 (advice-add #'ivy-call :around #'+amos*ivy-call)
+
+(setq xref-after-jump-hook nil)
